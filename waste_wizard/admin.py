@@ -10,7 +10,9 @@ class WasteItemAdmin(admin.ModelAdmin):
     ]
     # inlines = [ChoiceInline]
     list_display = ('description', 'destination', 'notes', 'keywords')
-    list_filter = ['description']
+    list_filter = ['destination']
+    list_editable = ['destination', 'keywords', 'notes']
     search_fields = ['description', 'keywords']
+    ordering = ['description']
 
 admin.site.register(WasteItem, WasteItemAdmin)
