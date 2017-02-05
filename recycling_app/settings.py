@@ -20,11 +20,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# TODO FOR DEPLOY change this in production
 SECRET_KEY = '8!_6rv*n$2-=j08sti=yb8eyclotahwn06ufc3n^i=-9nz0_1c'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# TODO FOR DEPLOY change this in production
 DEBUG = True
 
+# TODO FOR DEPLOY change this in production
 ALLOWED_HOSTS = []
 
 
@@ -84,7 +87,9 @@ DATABASES = {
         'NAME': 'WitSandbox',
         'ENGINE': 'sqlserver_ado',
         'HOST': 'CODSQL2012Dev1',
+        # TODO FOR DEPLOY change this in production
         'USER': 'witAdmin',
+        # TODO FOR DEPLOY change this in production
         'PASSWORD': 'Wit_Admin',
     }
 }
