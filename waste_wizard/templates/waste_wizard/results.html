@@ -10,8 +10,9 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Waste Item</th>
-                        <th>Destination</th>
+                        <th class="description">Waste Item</th>
+                        <th class="destination">Destination</th>
+                        <th class="notes">Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -19,6 +20,7 @@
                         <tr>
                             <td>{{ item.description }}</td>
                             <td>{{ item.destination }}</td>
+                            <td>{{ item.notes }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

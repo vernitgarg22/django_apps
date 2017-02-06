@@ -8,3 +8,30 @@ li a {
     color: green;
 }
 
+body {
+    font-family: "Segoe UI", Arial, sans-serif
+}
+
+label {
+    margin-right: 10px;    
+}
+
+table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.description {
+    width: 20%;
+    text-align: left;
+}
+
+.destination {
+    width: 10%;
+    text-align: left;
+}
+
+.notes {
+    width: 70%;
+    text-align: left;
+}
