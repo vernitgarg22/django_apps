@@ -1,19 +1,13 @@
-/*
-body {
-    background: white url("images/background.png") no-repeat right bottom;
-}
-*/
-
-li a {
-    color: green;
-}
-
 body {
     font-family: "Segoe UI", Arial, sans-serif;
 }
 
-label {
+label[for=id_description] {
     margin-right: 10px;    
+}
+
+input[type=text]#id_description {
+    width: 15%;
 }
 
 table {
