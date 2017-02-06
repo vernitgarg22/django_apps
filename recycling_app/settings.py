@@ -12,23 +12,38 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import json
+
+from django.core.exceptions import ImproperlyConfigured
+
+with open("secrets.json") as f:
+    secrets = json.loads(f.read())
+
+def get_secret(setting, secrets=secrets, default=None):
+    try:
+        return secrets[setting]
+    except KeyError:
+        if default != None:
+            secrets[setting] = default
+            return secrets[setting]
+        else:
+            error_msg = "Set the {0} environment variable".format(setting)
+            raise ImproperlyConfigured(error_msg)
+
+def get_databases():
+    tmp = get_secret('DATABASES')
+    if tmp['default']['NAME'] == 'db.sqlite3':
+        tmp['default']['NAME'] = os.path.join(BASE_DIR, 'db.sqlite3')
+    return tmp
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+SECRET_KEY = get_secret("SECRET_KEY")
+DATABASES = get_databases()
+DEBUG = get_secret('DEBUG', default=False)
+ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS', default=[])
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# TODO FOR DEPLOY change this in production
-SECRET_KEY = '8!_6rv*n$2-=j08sti=yb8eyclotahwn06ufc3n^i=-9nz0_1c'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-# TODO FOR DEPLOY change this in production
-DEBUG = True
-
-# TODO FOR DEPLOY change this in production
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -78,21 +93,23 @@ WSGI_APPLICATION = 'recycling_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     },
     # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # },
-    'default': {
-        'NAME': 'WitSandbox',
-        'ENGINE': 'sqlserver_ado',
-        'HOST': 'CODSQL2012Dev1',
-        # TODO FOR DEPLOY change this in production
-        'USER': 'witAdmin',
-        # TODO FOR DEPLOY change this in production
-        'PASSWORD': 'Wit_Admin',
-    }
-}
+    #     'NAME': 'WitSandbox',
+    #     'ENGINE': 'sqlserver_ado',
+    #     'HOST': 'CODSQL2012Dev1',
+    #     # TODO FOR DEPLOY change this in production
+    #     'USER': 'witAdmin',
+    #     # TODO FOR DEPLOY change this in production
+    #     'PASSWORD': 'Wit_Admin',
+    # }
+# }
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
