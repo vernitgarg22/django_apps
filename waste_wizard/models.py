@@ -18,8 +18,6 @@ class WasteItem(models.Model):
     keywords = models.CharField('Keywords associated with the item', max_length=300, default='', blank=True)
     def __str__(self):
         return self.description + ' (' + self.destination + ')'
-    def urlsafe(self):
-        return urllib.parse.quote(self.description)
 
 
 # TODO:

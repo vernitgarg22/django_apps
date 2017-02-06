@@ -19,7 +19,7 @@
                     {% for item in waste_item_results %}
                         <tr>
                             <td>{{ item.description }}</td>
-                            <td>{{ item.destination }}</td>
+                            <td>{{ item.destination | title }}</td>
                             <td>{{ item.notes }}</td>
                         </tr>
                     {% endfor %}

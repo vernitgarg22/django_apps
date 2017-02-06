@@ -9,7 +9,7 @@
         {% if waste_item_list %}
             <ul>
             {% for item in waste_item_list %}
-                <li><a href="/waste_wizard/results/{{ item.urlsafe }}" "/waste_wizard/results/">{{ item.description }}</a></li>
+                <li><a href="{% url 'waste_wizard:results' item.description %}">{{ item.description }}</a></li>
             {% endfor %}
             </ul>
         {% else %}
