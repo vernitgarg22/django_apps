@@ -12,7 +12,11 @@ input[type=text]#id_description {
 
 table {
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
+}
+
+th {
+    padding-bottom: 10px;
 }
 
 .description {
