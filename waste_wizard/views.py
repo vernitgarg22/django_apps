@@ -1,3 +1,4 @@
+import json
 import requests
 import urllib.parse
 
@@ -17,10 +18,19 @@ class IndexView(generic.ListView):
 
     def get(self, request, *args, **kwargs):
         list = self.get_queryset()
-        return render(request, 'waste_wizard/index.html', { 'form': WasteItemSearchForm(), 'waste_item_list': list })
+        keywords = self.get_keywords_json()
+        return render(request, 'waste_wizard/index.html', 
+            { 'form': WasteItemSearchForm(), 'waste_item_list': list, 'keywords': keywords })
 
     def get_queryset(self):
         return WasteItem.objects.order_by('description')[:128]
+
+    def get_keywords_json(self):
+        keywords = set()
+        for item in WasteItem.objects.all():
+            keywords.update(item.description.split() + item.keywords.split(', '))
+        return json.dumps(list(keywords))
+
 
 class ResultsView(generic.ListView):
     template_name = 'waste_wizard/results.html'

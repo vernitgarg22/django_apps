@@ -3,6 +3,19 @@
 <html>
     <head>
         <link rel="stylesheet" type="text/css" href="{% static 'waste_wizard/style.css' %}" />
+
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+        <script>
+          $( function() {
+            var availableTags = {{ keywords | safe }};
+            $( "#id_description" ).autocomplete({
+              source: availableTags
+            });
+          } );
+          </script>
+
     </head>
     <body>
 
