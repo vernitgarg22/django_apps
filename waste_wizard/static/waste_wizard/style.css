@@ -34,10 +34,14 @@ th {
     text-align: left;
 }
 
-.waste_item_info_type {
+table.waste_item_detail tbody td {
+    padding-bottom: 10px;
+}
+
+table.waste_item_detail tbody td:first-child {
     width: 10%;
 }
 
-.waste_item_info {
-
+table.waste_item_detail tbody tr:last-child td:last-child {
+    padding-top: 20px;
 }

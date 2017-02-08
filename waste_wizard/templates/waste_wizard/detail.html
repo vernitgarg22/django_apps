@@ -6,20 +6,14 @@
     </head>
     <body>
 
-        <table>
-            <thead>
-                <tr>
-                    <th class="waste_item_info_type"></th>
-                    <th class="waste_item_info"></th>
-                </tr>
-            </thead>
+        <table class="waste_item_detail">
             <tbody>
                 <tr>
                     <td>Waste Item</td>
                     <td>{{ waste_item.description }}</td>
                 </tr>
                 <tr>
-                    <td>Appropriate Container</td>
+                    <td>Appropriate Bin</td>
                     <td>{{ waste_item.destination | title }}</td>
                 </tr>
                 <tr>
