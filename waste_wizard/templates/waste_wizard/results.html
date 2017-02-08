@@ -31,7 +31,7 @@
                 <tbody>
                     {% for item in waste_item_results %}
                         <tr>
-                            <td>{{ item.description }}</td>
+                            <td><a href="/waste_wizard/detail/{{ item.description | safe }}">{{ item.description }}</a></td>
                             <td>{{ item.destination | title }}</td>
                             <td>{{ item.notes }}</td>
                         </tr>

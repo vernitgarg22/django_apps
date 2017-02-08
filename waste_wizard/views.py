@@ -39,7 +39,7 @@ class ResultsView(generic.ListView):
     context_object_name = 'waste_item_results'
 
     def get(self, request, *args, **kwargs):
-        self.description = args[0]
+        self.description = args[0] if args else ''
         return self.handle_request(request)
 
     def post(self, request, *args, **kwargs):
@@ -67,3 +67,14 @@ class ResultsView(generic.ListView):
         if False == results.exists():
             return results, "No results found for " + description
         return results.order_by('description')[:128], ''
+
+class DetailView(generic.ListView):
+    template_name = 'waste_wizard/detail.html'
+    model = WasteItem
+    context_object_name = 'waste_item'
+
+    def get(self, request, *args, **kwargs):
+        waste_item = WasteItem.objects.get(description__contains=args[0])
+        image_url = "/waste_wizard/images/" + waste_item.image_url
+        return render(request, 'waste_wizard/detail.html', 
+            { 'form': WasteItemResultsForm(), 'waste_item': waste_item, 'image_url': image_url })
