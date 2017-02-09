@@ -1,10 +1,47 @@
-/*
 body {
-    background: white url("images/background.png") no-repeat right bottom;
-}
-*/
-
-li a {
-    color: green;
+    font-family: "Segoe UI", Arial, sans-serif;
 }
 
+label[for=id_description] {
+    margin-right: 10px;    
+}
+
+input[type=text]#id_description {
+    width: 15%;
+}
+
+table {
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+th {
+    padding-bottom: 10px;
+}
+
+.description {
+    width: 20%;
+    text-align: left;
+}
+
+.destination {
+    width: 10%;
+    text-align: left;
+}
+
+.notes {
+    width: 70%;
+    text-align: left;
+}
+
+table.waste_item_detail tbody td {
+    padding-bottom: 10px;
+}
+
+table.waste_item_detail tbody td:first-child {
+    width: 10%;
+}
+
+table.waste_item_detail tbody tr:last-child td:last-child {
+    padding-top: 20px;
+}

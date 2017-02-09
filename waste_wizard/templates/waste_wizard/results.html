@@ -1,0 +1,52 @@
+{% load static %}
+
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'waste_wizard/style.css' %}" />
+
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+        <script>
+          $( function() {
+            var availableTags = {{ keywords | safe }};
+            $( "#id_description" ).autocomplete({
+              source: availableTags
+            });
+          } );
+        </script>
+
+    </head>
+    <body>
+
+        {% if waste_item_results %}
+            <table>
+                <thead>
+                    <tr>
+                        <th class="description">Waste Item</th>
+                        <th class="destination">Destination</th>
+                        <th class="notes">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in waste_item_results %}
+                        <tr>
+                            <td><a href="/waste_wizard/detail/{{ item.description | safe }}">{{ item.description }}</a></td>
+                            <td>{{ item.destination | title }}</td>
+                            <td>{{ item.notes }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No waste items were found.</p>
+        {% endif %}
+
+        <form action="/waste_wizard/results/" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Search" />
+        </form>
+
+    </body>
+</html>

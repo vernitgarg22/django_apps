@@ -14,8 +14,12 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.views.generic.base import RedirectView
+
 
 urlpatterns = [
+	# url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
+	url(r'^$', RedirectView.as_view(url='http://app.detroitmi.gov/codcityservices/', permanent=False)),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^waste_wizard/', include('waste_wizard.urls')),
 ]

@@ -1,0 +1,36 @@
+{% load static %}
+
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'waste_wizard/style.css' %}" />
+    </head>
+    <body>
+
+        <table class="waste_item_detail">
+            <tbody>
+                <tr>
+                    <td>Waste Item</td>
+                    <td>{{ waste_item.description }}</td>
+                </tr>
+                <tr>
+                    <td>Appropriate Bin</td>
+                    <td>{{ waste_item.destination | title }}</td>
+                </tr>
+                {% if waste_item.notes %}
+                    <tr>
+                        <td>Notes</td>
+                        <td>{{ waste_item.notes }}</td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td></td>
+                    <td>
+                        <img src="{% static image_url %}" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </body>
+</html>
+

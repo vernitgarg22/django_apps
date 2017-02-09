@@ -3,13 +3,26 @@
 <html>
     <head>
         <link rel="stylesheet" type="text/css" href="{% static 'waste_wizard/style.css' %}" />
+
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+        <script>
+          $( function() {
+            var availableTags = {{ keywords | safe }};
+            $( "#id_description" ).autocomplete({
+              source: availableTags
+            });
+          } );
+        </script>
+
     </head>
     <body>
 
         {% if waste_item_list %}
             <ul>
             {% for item in waste_item_list %}
-                <li><a href="/waste_wizard/results/{{ item.urlsafe }}" "/waste_wizard/results/">{{ item.description }}</a></li>
+                <li><a href="{% url 'waste_wizard:results' item.description %}">{{ item.description }}</a></li>
             {% endfor %}
             </ul>
         {% else %}
