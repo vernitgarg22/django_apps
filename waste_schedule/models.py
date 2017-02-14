@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 class ScheduleException(models.Model):
     app_label = 'waste_schedule'
 
-    SERVICE_TYPE_CHOICES = ((('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES)
+    SERVICE_TYPE_CHOICES = (('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES
 
     # TODO Add in waste area id
 
