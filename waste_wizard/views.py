@@ -2,7 +2,7 @@ import json
 import requests
 import urllib.parse
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, render_to_response
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.views import generic
@@ -75,6 +75,6 @@ class DetailView(generic.ListView):
 
     def get(self, request, *args, **kwargs):
         waste_item = WasteItem.objects.get(description__contains=args[0])
-        image_url = "/waste_wizard/images/" + waste_item.image_url
+        image_url = "waste_wizard/images/" + waste_item.image_url
         return render(request, 'waste_wizard/detail.html', 
             { 'form': WasteItemResultsForm(), 'waste_item': waste_item, 'image_url': image_url })
