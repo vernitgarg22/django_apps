@@ -15,12 +15,19 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic.base import RedirectView
+from rest_framework import routers
+from waste_schedule import views
 
+
+router = routers.DefaultRouter()
+router.register(r'waste_schedule', views.ScheduleExceptionViewSet)
 
 urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
 	# url(r'^$', RedirectView.as_view(url='http://app.detroitmi.gov/codcityservices/', permanent=False)),
+    url(r'^api/', include(router.urls)),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
+    url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
