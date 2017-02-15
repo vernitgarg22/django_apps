@@ -26,6 +26,7 @@ urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
 	# url(r'^$', RedirectView.as_view(url='http://app.detroitmi.gov/codcityservices/', permanent=False)),
     url(r'^api/', include(router.urls)),
+    url(r'^api_simple/', views.schedule_exception_list),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
