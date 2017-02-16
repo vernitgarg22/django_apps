@@ -9,7 +9,7 @@ class ScheduleExceptionAdmin(admin.ModelAdmin):
     ]
     list_display = ('service_type', 'normal_day', 'rescheduled_day', 'reason', 'note')
     list_filter = ['service_type']
-    list_editable = ['service_type', 'normal_day', 'rescheduled_day', 'reason', 'note']
+    # list_editable = ['service_type', 'normal_day', 'rescheduled_day', 'reason', 'note']
     search_fields = ['reason', 'note']
     ordering = ['normal_day', 'service_type']
 

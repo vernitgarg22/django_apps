@@ -18,4 +18,4 @@ class ScheduleException(models.Model):
 
     def clean(self):
         if self.rescheduled_day <= self.normal_day:
-            raise ValidationError('Rescheduled day must be after normally scheduled day')
+            raise ValidationError({'rescheduled_day': 'Rescheduled day must be after normally scheduled day'})
