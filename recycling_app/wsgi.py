@@ -7,10 +7,11 @@ For more information on this file, see
 https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 """
 
-import os
+import os, sys
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "recycling_app.settings")
 
+sys.path.append("c:/cygwin64/home/kaebnickk/recycling_app")
+os.environ["DJANGO_SETTINGS_MODULE"] = "recycling_app.settings"
 application = get_wsgi_application()
