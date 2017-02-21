@@ -16,7 +16,7 @@ import json
 
 from django.core.exceptions import ImproperlyConfigured
 
-with open("secrets.json") as f:
+with open("c:/cygwin64/home/kaebnickk/recycling_app/secrets.json") as f:
     secrets = json.loads(f.read())
 
 def get_secret(setting, secrets=secrets, default=None):
@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'waste_schedule',
     'waste_wizard',
+    'mod_wsgi.server',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -137,4 +138,5 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
+STATIC_ROOT = "c:/cygwin64/home/kaebnickk/recycling_app/static"
 STATIC_URL = '/static/'
