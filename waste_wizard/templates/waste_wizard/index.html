@@ -19,6 +19,7 @@
     </head>
     <body>
 
+<!--
         {% if waste_item_list %}
             <ul>
             {% for item in waste_item_list %}
@@ -28,6 +29,7 @@
         {% else %}
             <p>No waste items are available.</p>
         {% endif %}
+-->
 
         <form action="/waste_wizard/results/" method="post">
             {% csrf_token %}
