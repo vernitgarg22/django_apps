@@ -42,6 +42,17 @@ DATABASES = get_databases()
 DEBUG = get_secret('DEBUG', default=False)
 ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS', default=[])
 
+AUTO_LOADED_DATA = {}
+def load_auto_loaded_data():
+    if AUTO_LOADED_DATA:
+        return
+    auto_names = get_secret('AUTO_LOADED_DATA_NAMES', default=[])
+    for auto_name in auto_names:
+        value = get_secret(auto_name)
+        AUTO_LOADED_DATA[auto_name] = value
+
+load_auto_loaded_data()
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
