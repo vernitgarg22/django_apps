@@ -16,15 +16,17 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework import routers
-from waste_schedule import views
+import waste_schedule.views
+import lobbyist_data.views
 
 
 urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
 	# url(r'^$', RedirectView.as_view(url='http://app.detroitmi.gov/codcityservices/', permanent=False)),
-    url(r'^api/waste_schedule/changes', views.schedule_exception_list),
+    url(r'^api/waste_schedule/changes', waste_schedule.views.schedule_exception_list),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
 ]

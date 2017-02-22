@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'waste_schedule',
     'waste_wizard',
+    'lobbyist_data',
     'mod_wsgi.server',
 )
 
