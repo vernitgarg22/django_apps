@@ -7,16 +7,15 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from django.conf import settings
+from .lobbyist import Lobbyist
 
 import smartsheet
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the lookup index.")
-
 def get_cell_value(cells, idx):
     if len(cells) > idx + 1:
-        return cells[idx].display_value
+        cell = cells[idx]
+        return cell.display_value or cell.value
     return None
 
 
@@ -33,13 +32,25 @@ def lookup(request, format=None):
         ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
         sheet = ssheet.Sheets.get_sheet(SHEETID)
 
-        last_name = ""
+        lobbyists = {}
 
         content = []
         for row in sheet.rows:
-            name = get_cell_value(row.cells, 0)
-            value = get_cell_value(row.cells, 1)
-            last_name = name or last_name
-            content.append( { last_name: value } )
+            regid = get_cell_value(row.cells, 0)
+            name = get_cell_value(row.cells, 1)
+            date = get_cell_value(row.cells, 2)
+            
+            if regid == None:
+                continue
+
+            lobbyist = lobbyists.get(regid)
+            if lobbyist:
+                lobbyist.add_date(date)
+            else:
+                lobbyist = Lobbyist(regid, name, date)
+                lobbyists[regid] = lobbyist
+
+        for lobbyist in sorted(lobbyists.values()):
+            content.append(lobbyist.to_json())
 
         return Response(content)
