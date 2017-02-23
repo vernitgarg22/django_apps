@@ -7,7 +7,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from django.conf import settings
+from .attachment import Attachment
 from .lobbyist import Lobbyist
+from .lobbyist_data import LobbyistData
 
 import smartsheet
 
@@ -32,25 +34,20 @@ def lookup(request, format=None):
         ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
         sheet = ssheet.Sheets.get_sheet(SHEETID)
 
-        lobbyists = {}
+        lobbyists = LobbyistData()
 
-        content = []
         for row in sheet.rows:
             regid = get_cell_value(row.cells, 0)
             name = get_cell_value(row.cells, 1)
             date = get_cell_value(row.cells, 2)
-            
-            if regid == None:
-                continue
 
-            lobbyist = lobbyists.get(regid)
-            if lobbyist:
-                lobbyist.add_date(date)
-            else:
-                lobbyist = Lobbyist(regid, name, date)
-                lobbyists[regid] = lobbyist
+            attachment = None
 
-        for lobbyist in sorted(lobbyists.values()):
-            content.append(lobbyist.to_json())
+            rowTmp = ssheet.Sheets.get_row(SHEETID, row.id, include='attachments')
+            if len(rowTmp.attachments):
+                attachment = Attachment(rowTmp.attachments[0].id, rowTmp.attachments[0].name)
 
-        return Response(content)
+            if regid != None:
+                lobbyists.add_lobbyist(regid, name, date, attachment)
+
+        return Response(lobbyists.to_json())
