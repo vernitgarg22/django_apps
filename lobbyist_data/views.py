@@ -11,6 +11,9 @@ from .attachment import Attachment
 from .lobbyist import Lobbyist
 from .lobbyist_data import LobbyistData
 
+from rest_framework.parsers import JSONParser
+
+
 import smartsheet
 
 
@@ -51,3 +54,27 @@ def lookup(request, format=None):
                 lobbyists.add_lobbyist(regid, name, date, attachment)
 
         return Response(lobbyists.to_json())
+
+@api_view(['GET'])
+def file(request, format=None):
+    """
+    Return lobbyist filing
+    """
+
+    ACCESS_TOKEN = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_ACCESS_TOKEN']
+    SHEETID = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_SHEETID']
+
+    if request.method == 'GET':
+        ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
+
+        # TODO get this from kwargs
+        attachmentId = 6945649062111108
+        attachment = ssheet.Attachments.get_attachment(SHEETID, attachmentId)
+
+        content = { 
+            "name": attachment.name,
+            "mimeType": attachment.mime_type,
+            "url": attachment.url
+        }
+
+        return Response(content)

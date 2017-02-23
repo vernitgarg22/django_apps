@@ -29,4 +29,7 @@ urlpatterns = [
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
+    url(r'^api/lobbyist_data/files/([0-9]*)/$', lobbyist_data.views.file),
 ]
+
+# url(r'^detail/([ %0-9a-zA-Z\,]*)/$', views.DetailView.as_view(), name='detail'),
