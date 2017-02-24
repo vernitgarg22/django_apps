@@ -5,7 +5,7 @@ from .registration import Registration
 class Lobbyist:
 
     def __init__(self, regid, name, date, attachment = None):
-        self.regid = regid
+        self.regid = int(regid)
         self.name = name
         self.registrations = []
         self.add_registration(date, attachment)
@@ -27,7 +27,7 @@ class Lobbyist:
         return content
 
     def __lt__(self, other):
-         return self.name < other.name
+         return self.regid < other.regid
 
     def __str__(self):
         return 'regid: ' + str(self.regid) + ' - name: ' + str(self.name) + ' - num dates: ' + str(len(self.dates))
