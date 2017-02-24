@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from django.conf import settings
+from django.http import Http404
 from .attachment import Attachment
 from .lobbyist import Lobbyist
 from .lobbyist_data import LobbyistData
@@ -55,6 +56,7 @@ def lookup(request, format=None):
 
         return Response(lobbyists.to_json())
 
+
 @api_view(['GET'])
 def file(request, format=None):
     """
@@ -68,10 +70,15 @@ def file(request, format=None):
         ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
 
         # TODO get this from kwargs
-        attachmentId = 6945649062111108
+        # attachmentId = 6945649062111108
+        attachmentId = request.path_info.split('/')[4]
         attachment = ssheet.Attachments.get_attachment(SHEETID, attachmentId)
 
-        content = { 
+        if type(attachment) is not smartsheet.models.attachment.Attachment:
+             raise Http404("Attachment does not exist")
+
+        content = {
+            "id": attachment.id,
             "name": attachment.name,
             "mimeType": attachment.mime_type,
             "url": attachment.url
