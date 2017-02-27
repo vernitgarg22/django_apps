@@ -16,7 +16,13 @@ class Client:
     def to_json(self):
         return {
             "name": self.name,
-            "start_date": self.start_date
+            "address": self.address,
+            "city": self.city,
+            "state": self.state,
+            "zipcode": self.zipcode,
+            "phone": self.phone,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
         }
 
     def __lt__(self, other):
