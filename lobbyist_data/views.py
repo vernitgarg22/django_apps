@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.http import Http404
 from .attachment import Attachment
+from .registration import Registration
 from .client import Client
 from .lobbyist import Lobbyist
 from .lobbyist_data import LobbyistData
@@ -35,6 +36,16 @@ def add_lobbyists(ssheet, sheetID, lobbyists):
         regid = get_cell_value(row.cells, 0)
         name = get_cell_value(row.cells, 1)
         date = get_cell_value(row.cells, 2)
+        address = get_cell_value(row.cells, 3)
+        city = get_cell_value(row.cells, 4)
+        state = get_cell_value(row.cells, 5)
+        zipcode = get_cell_value(row.cells, 6)
+        phone = get_cell_value(row.cells, 7)
+        reg_type_fed = get_cell_value(row.cells, 8)
+        reg_type_mi = get_cell_value(row.cells, 9)
+        reg_type_state_other = get_cell_value(row.cells, 10)
+        expend_1000 = get_cell_value(row.cells, 11)
+        expend_250 = get_cell_value(row.cells, 12)
 
         attachment = None
 
@@ -43,7 +54,9 @@ def add_lobbyists(ssheet, sheetID, lobbyists):
             attachment = Attachment(rowTmp.attachments[0].id, rowTmp.attachments[0].name)
 
         if regid != None:
-            lobbyists.add_lobbyist(regid, name, date, attachment)
+            lobbyist = lobbyists.add_lobbyist(regid, name)
+            registration = Registration(date, address, city, state, zipcode, phone, reg_type_fed, reg_type_mi, reg_type_state_other, expend_1000, expend_250, attachment)
+            lobbyist.add_registration(registration)
 
 
 def add_clients(ssheet, sheetID, lobbyists):

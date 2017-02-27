@@ -5,15 +5,14 @@ from .registration import Registration
 
 class Lobbyist:
 
-    def __init__(self, regid, name, date, attachment = None):
+    def __init__(self, regid, name):
         self.regid = int(regid)
         self.name = name
         self.registrations = []
         self.clients = []
-        self.add_registration(date, attachment)
 
-    def add_registration(self, date, attachment = None):
-        self.registrations.append(Registration(date, attachment))
+    def add_registration(self, registration):
+        self.registrations.append(registration)
 
     def add_client(self, client):
         self.clients.append(client)

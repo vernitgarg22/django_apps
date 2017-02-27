@@ -8,13 +8,12 @@ class LobbyistData:
     def __init__(self):
         self.lobbyists = {}
 
-    def add_lobbyist(self, regid, name, date, attachment = None):
+    def add_lobbyist(self, regid, name):
             lobbyist = self.lobbyists.get(regid)
-            if lobbyist:
-                lobbyist.add_registration(date, attachment)
-            else:
-                lobbyist = Lobbyist(regid, name, date, attachment)
+            if not lobbyist:
+                lobbyist = Lobbyist(regid, name)
                 self.lobbyists[regid] = lobbyist
+            return lobbyist
 
     def add_client(self, regid, client):
         if self.lobbyists.get(regid):
