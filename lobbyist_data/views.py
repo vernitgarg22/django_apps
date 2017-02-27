@@ -26,6 +26,46 @@ def get_cell_value(cells, idx):
     return None
 
 
+def add_lobbyists(ssheet, sheetID, lobbyists):
+    """
+    Populate lobbyst data, including lobbyst registration attachment data
+    """
+    sheet = ssheet.Sheets.get_sheet(sheetID)
+    for row in sheet.rows:
+        regid = get_cell_value(row.cells, 0)
+        name = get_cell_value(row.cells, 1)
+        date = get_cell_value(row.cells, 2)
+
+        attachment = None
+
+        rowTmp = ssheet.Sheets.get_row(sheetID, row.id, include='attachments')
+        if len(rowTmp.attachments):
+            attachment = Attachment(rowTmp.attachments[0].id, rowTmp.attachments[0].name)
+
+        if regid != None:
+            lobbyists.add_lobbyist(regid, name, date, attachment)
+
+
+def add_clients(ssheet, sheetID, lobbyists):
+    """
+    Populate lobbyist client data
+    """
+    sheet = ssheet.Sheets.get_sheet(sheetID)
+    for row in sheet.rows:
+        regid = get_cell_value(row.cells, 0)
+        name = get_cell_value(row.cells, 1)
+        address = get_cell_value(row.cells, 2)
+        city = get_cell_value(row.cells, 3)
+        state = get_cell_value(row.cells, 4)
+        zipcode = get_cell_value(row.cells, 5)
+        phone = get_cell_value(row.cells, 6)
+        start_date = get_cell_value(row.cells, 7)
+        # end_date = get_cell_value(row.cells, 8)
+
+        client = Client(name, address, city, state, zipcode, phone, start_date)
+        lobbyists.add_client(regid, client)
+
+
 @api_view(['GET'])
 def lookup(request, format=None):
     """
@@ -38,38 +78,11 @@ def lookup(request, format=None):
 
     if request.method == 'GET':
         ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
-        sheet = ssheet.Sheets.get_sheet(LOBBYIST_DATA_SHEETID)
 
         lobbyists = LobbyistData()
 
-        for row in sheet.rows:
-            regid = get_cell_value(row.cells, 0)
-            name = get_cell_value(row.cells, 1)
-            date = get_cell_value(row.cells, 2)
-
-            attachment = None
-
-            rowTmp = ssheet.Sheets.get_row(LOBBYIST_DATA_SHEETID, row.id, include='attachments')
-            if len(rowTmp.attachments):
-                attachment = Attachment(rowTmp.attachments[0].id, rowTmp.attachments[0].name)
-
-            if regid != None:
-                lobbyists.add_lobbyist(regid, name, date, attachment)
-
-        sheet = ssheet.Sheets.get_sheet(LOBBYIST_CLIENT_SHEET_ID)
-        for row in sheet.rows:
-            regid = get_cell_value(row.cells, 0)
-            name = get_cell_value(row.cells, 1)
-            address = get_cell_value(row.cells, 2)
-            city = get_cell_value(row.cells, 3)
-            state = get_cell_value(row.cells, 4)
-            zipcode = get_cell_value(row.cells, 5)
-            phone = get_cell_value(row.cells, 6)
-            start_date = get_cell_value(row.cells, 7)
-            # end_date = get_cell_value(row.cells, 8)
-
-            client = Client(name, address, city, state, zipcode, phone, start_date)
-            lobbyists.add_client(regid, client)
+        add_lobbyists(ssheet, LOBBYIST_DATA_SHEETID, lobbyists)
+        add_clients(ssheet, LOBBYIST_CLIENT_SHEET_ID, lobbyists)
 
         return Response(lobbyists.to_json())
 
