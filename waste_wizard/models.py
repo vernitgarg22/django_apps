@@ -19,3 +19,23 @@ class WasteItem(models.Model):
     image_url = models.CharField('Associated image (optional)', max_length=100, default='', blank=True)
     def __str__(self):
         return self.description + ' (' + self.destination + ')'
+
+# TODO start using this
+class Destination(models.Model):
+    DESTINATION_CHOICES = (
+        ('trash', 'Trash'),
+        ('recycling', 'Recycling'),
+        ('bulk', 'Bulk'),
+        ('yard waste', 'Yard Waste'),
+        ('compost', 'Compost'),
+    )
+
+    SCHEDULE_CHOICES = (
+        ('weekly', 'Weekly'),
+        ('biweekly', 'Bi-Weekly'),
+    )
+
+    name = models.CharField('Destination name', max_length=32, unique=True, db_index=True, choices=DESTINATION_CHOICES)
+    schedule = models.CharField('Schedule', max_length=32, db_index=True, choices=SCHEDULE_CHOICES)
+    date_start = models.DateField('Next service start date', null=True)
+    date_end = models.DateField('Next service end date', null=True)
