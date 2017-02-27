@@ -70,6 +70,7 @@ INSTALLED_APPS = (
     'waste_schedule',
     'waste_wizard',
     'lobbyist_data',
+    'corsheaders',
     'mod_wsgi.server',
 )
 
@@ -82,9 +83,14 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 )
 
 ROOT_URLCONF = 'recycling_app.urls'
+
+# TODO is this safe?
+CORS_ORIGIN_ALLOW_ALL = True 
 
 TEMPLATES = [
     {
