@@ -27,11 +27,11 @@ def get_cell_value(cells, idx):
     return None
 
 
-def add_lobbyists(ssheet, sheetID, lobbyists):
+def add_lobbyists(ssheet, sheet_id, lobbyists):
     """
     Populate lobbyst data, including lobbyst registration attachment data
     """
-    sheet = ssheet.Sheets.get_sheet(sheetID)
+    sheet = ssheet.Sheets.get_sheet(sheet_id)
     for row in sheet.rows:
         regid = get_cell_value(row.cells, 0)
         name = get_cell_value(row.cells, 1)
@@ -49,7 +49,7 @@ def add_lobbyists(ssheet, sheetID, lobbyists):
 
         attachment = None
 
-        rowTmp = ssheet.Sheets.get_row(sheetID, row.id, include='attachments')
+        rowTmp = ssheet.Sheets.get_row(sheet_id, row.id, include='attachments')
         if len(rowTmp.attachments):
             attachment = Attachment(rowTmp.attachments[0].id, rowTmp.attachments[0].name)
 
@@ -59,11 +59,11 @@ def add_lobbyists(ssheet, sheetID, lobbyists):
             lobbyist.add_registration(registration)
 
 
-def add_clients(ssheet, sheetID, lobbyists):
+def add_clients(ssheet, sheet_id, lobbyists):
     """
     Populate lobbyist client data
     """
-    sheet = ssheet.Sheets.get_sheet(sheetID)
+    sheet = ssheet.Sheets.get_sheet(sheet_id)
     for row in sheet.rows:
         regid = get_cell_value(row.cells, 0)
         name = get_cell_value(row.cells, 1)
@@ -86,7 +86,7 @@ def lookup(request, format=None):
     """
 
     ACCESS_TOKEN = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_ACCESS_TOKEN']
-    LOBBYIST_DATA_SHEETID = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_SHEETID']
+    LOBBYIST_DATA_SHEET_ID = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_SHEET_ID']
     LOBBYIST_CLIENT_SHEET_ID = settings.AUTO_LOADED_DATA['LOBBYIST_CLIENT_SHEET_ID']
 
     if request.method == 'GET':
@@ -94,7 +94,7 @@ def lookup(request, format=None):
 
         lobbyists = LobbyistData()
 
-        add_lobbyists(ssheet, LOBBYIST_DATA_SHEETID, lobbyists)
+        add_lobbyists(ssheet, LOBBYIST_DATA_SHEET_ID, lobbyists)
         add_clients(ssheet, LOBBYIST_CLIENT_SHEET_ID, lobbyists)
 
         return Response(lobbyists.to_json())
@@ -107,7 +107,7 @@ def file(request, format=None):
     """
 
     ACCESS_TOKEN = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_ACCESS_TOKEN']
-    LOBBYIST_DATA_SHEETID = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_SHEETID']
+    LOBBYIST_DATA_SHEET_ID = settings.AUTO_LOADED_DATA['LOBBYIST_DATA_SHEET_ID']
 
     if request.method == 'GET':
         ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
@@ -115,7 +115,7 @@ def file(request, format=None):
         # TODO get this from kwargs
         # attachmentId = 6945649062111108
         attachmentId = request.path_info.split('/')[4]
-        attachment = ssheet.Attachments.get_attachment(LOBBYIST_DATA_SHEETID, attachmentId)
+        attachment = ssheet.Attachments.get_attachment(LOBBYIST_DATA_SHEET_ID, attachmentId)
 
         if type(attachment) is not smartsheet.models.attachment.Attachment:
              raise Http404("Attachment does not exist")
