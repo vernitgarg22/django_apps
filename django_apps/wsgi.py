@@ -1,5 +1,5 @@
 """
-WSGI config for recycling_app project.
+WSGI config for django_apps project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -12,6 +12,6 @@ import os, sys
 from django.core.wsgi import get_wsgi_application
 
 
-sys.path.append("c:/cygwin64/home/kaebnickk/recycling_app")
-os.environ["DJANGO_SETTINGS_MODULE"] = "recycling_app.settings"
+sys.path.append("c:/cygwin64/home/kaebnickk/django_apps")
+os.environ["DJANGO_SETTINGS_MODULE"] = "django_apps.settings"
 application = get_wsgi_application()

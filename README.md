@@ -1,1 +1,1 @@
-# recycling_app
+# django_apps
