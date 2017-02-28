@@ -16,7 +16,9 @@ import json
 
 from django.core.exceptions import ImproperlyConfigured
 
-with open("c:/cygwin64/home/kaebnickk/django_apps/secrets.json") as f:
+DJANGO_HOME = os.environ['DJANGO_HOME']
+
+with open(DJANGO_HOME + "/secrets.json") as f:
     secrets = json.loads(f.read())
 
 def get_secret(setting, secrets=secrets, default=None):
@@ -156,5 +158,5 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_ROOT = "c:/cygwin64/home/kaebnickk/django_apps/static"
+STATIC_ROOT = DJANGO_HOME + "/static"
 STATIC_URL = '/static/'

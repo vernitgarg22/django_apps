@@ -12,6 +12,8 @@ import os, sys
 from django.core.wsgi import get_wsgi_application
 
 
-sys.path.append("c:/cygwin64/home/kaebnickk/django_apps")
+DJANGO_HOME = os.environ['DJANGO_HOME']
+
+sys.path.append(DJANGO_HOME)
 os.environ["DJANGO_SETTINGS_MODULE"] = "django_apps.settings"
 application = get_wsgi_application()
