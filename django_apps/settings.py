@@ -73,7 +73,6 @@ INSTALLED_APPS = (
     'waste_wizard',
     'lobbyist_data',
     'corsheaders',
-    'mod_wsgi.server',
 )
 
 MIDDLEWARE_CLASSES = (
