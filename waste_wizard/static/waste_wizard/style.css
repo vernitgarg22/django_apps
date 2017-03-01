@@ -45,7 +45,7 @@ table.waste_item_detail tbody td {
 }
 
 table.waste_item_detail tbody td:first-child {
-    width: 10%;
+    width: 20%;
 }
 
 table.waste_item_detail tbody tr:last-child td:last-child {
