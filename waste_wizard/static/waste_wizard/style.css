@@ -2,6 +2,10 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
 }
 
+.back_link {
+    margin-left: 5px;
+}
+
 label[for=id_description] {
     margin-right: 10px;    
 }
@@ -13,6 +17,7 @@ input[type=text]#id_description {
 table {
     width: 100%;
     margin-bottom: 40px;
+    margin-top: 20px;
 }
 
 th {
@@ -32,6 +37,7 @@ th {
 .notes {
     width: 70%;
     text-align: left;
+    padding-left: 20px;
 }
 
 table.waste_item_detail tbody td {

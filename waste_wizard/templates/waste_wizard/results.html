@@ -19,6 +19,8 @@
     </head>
     <body>
 
+        <a class="back_link" href="/waste_wizard/">Back</a>
+
         {% if waste_item_results %}
             <table>
                 <thead>
@@ -31,9 +33,9 @@
                 <tbody>
                     {% for item in waste_item_results %}
                         <tr>
-                            <td><a href="/waste_wizard/detail/{{ item.description | safe }}">{{ item.description }}</a></td>
-                            <td>{{ item.destination | title }}</td>
-                            <td>{{ item.notes }}</td>
+                            <td class="description"><a href="/waste_wizard/detail/{{ item.description | safe }}">{{ item.description }}</a></td>
+                            <td class="destination">{{ item.destination | title }}</td>
+                            <td class="notes">{{ item.notes }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
