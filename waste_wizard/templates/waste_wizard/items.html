@@ -1,0 +1,34 @@
+{% load static %}
+
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'waste_wizard/style.css' %}" />
+    </head>
+    <body>
+
+        <a class="back_link" href="/waste_wizard/">Back</a>
+
+        <div class="item_topics">
+        Waste Item Topics
+        </div>
+
+        <div style="clear: both;">
+            <div style="float: left; padding-right: 50px;">
+                <ul>
+                    {% for item in waste_item_list1 %}
+                        <li><a href="{% url 'waste_wizard:detail' item.description %}">{{ item.description }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div style="float: left;">
+                <ul>
+                    {% for item in waste_item_list2 %}
+                        <li><a href="{% url 'waste_wizard:detail' item.description %}">{{ item.description }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </body>
+</html>

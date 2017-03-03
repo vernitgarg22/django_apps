@@ -2,6 +2,10 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
 }
 
+.item_topics {
+    padding: 20px 0 0 5px;
+}
+
 .back_link {
     margin-left: 5px;
 }

@@ -18,9 +18,21 @@ def get_keywords_json():
         keywords.update(item.description.split(', ') + item.keywords.split(', '))
     return json.dumps(list(keywords))
 
-
 class IndexView(generic.ListView):
     template_name = 'waste_wizard/index.html'
+    model = WasteItem
+    context_object_name = 'waste_item_list'
+
+    def get(self, request, *args, **kwargs):
+        keywords = get_keywords_json()
+        return render(request, 'waste_wizard/index.html', 
+            { 'form': WasteItemSearchForm(), 'keywords': keywords })
+
+    def get_queryset(self):
+        return WasteItem.objects.order_by('description')[:128]
+
+class ItemsView(generic.ListView):
+    template_name = 'waste_wizard/items.html'
     model = WasteItem
     context_object_name = 'waste_item_list'
 
@@ -38,11 +50,10 @@ class IndexView(generic.ListView):
             'waste_item_list2': items_list_2,
             'keywords': keywords
             }
-        return render(request, 'waste_wizard/index.html', context)
+        return render(request, 'waste_wizard/items.html', context)
 
     def get_queryset(self):
         return WasteItem.objects.order_by('description')[:128]
-
 
 class ResultsView(generic.ListView):
     template_name = 'waste_wizard/results.html'
