@@ -96,7 +96,7 @@ class DetailView(generic.ListView):
     context_object_name = 'waste_item'
 
     def get(self, request, *args, **kwargs):
-        waste_item = WasteItem.objects.get(description__contains=args[0])
-        image_url = "waste_wizard/images/" + waste_item.image_url
+        waste_item = WasteItem.objects.get(description=args[0])
+        image_url = "waste_wizard/images/" + waste_item.image_url if waste_item.image_url else ""
         return render(request, 'waste_wizard/detail.html', 
             { 'form': WasteItemResultsForm(), 'waste_item': waste_item, 'image_url': image_url })

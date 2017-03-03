@@ -27,7 +27,9 @@
                 <tr>
                     <td></td>
                     <td>
-                        <img src="{% static image_url %}" />
+                        {% if image_url %}
+                            <img src="{% static image_url %}" />
+                        {% endif %}
                     </td>
                 </tr>
             </tbody>
@@ -35,4 +37,3 @@
 
     </body>
 </html>
-
