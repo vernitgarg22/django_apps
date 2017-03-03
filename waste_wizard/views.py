@@ -1,4 +1,5 @@
 import json
+import math
 import requests
 import urllib.parse
 
@@ -24,10 +25,20 @@ class IndexView(generic.ListView):
     context_object_name = 'waste_item_list'
 
     def get(self, request, *args, **kwargs):
-        list = self.get_queryset()
         keywords = get_keywords_json()
-        return render(request, 'waste_wizard/index.html', 
-            { 'form': WasteItemSearchForm(), 'waste_item_list': list, 'keywords': keywords })
+        items_list = self.get_queryset()
+        mid = math.ceil(items_list.count() / 2)
+        items_list_1 = items_list[0 : mid]
+        items_list_2 = items_list[mid: items_list.count()]
+        zipped_items_list = list(zip(items_list_1, items_list_2))
+        context = {
+            'form': WasteItemSearchForm(),
+            'waste_item_list': zipped_items_list,
+            'waste_item_list1': items_list_1,
+            'waste_item_list2': items_list_2,
+            'keywords': keywords
+            }
+        return render(request, 'waste_wizard/index.html', context)
 
     def get_queryset(self):
         return WasteItem.objects.order_by('description')[:128]

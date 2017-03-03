@@ -19,24 +19,36 @@
     </head>
     <body>
 
+
 <!--
-        {% if waste_item_list %}
-            <ul>
-            {% for item in waste_item_list %}
-                <li><a href="{% url 'waste_wizard:results' item.description %}">{{ item.description }}</a></li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>No waste items are available.</p>
-        {% endif %}
+        Waste Item Topics
+
+        <div style="clear: both;">
+            <div style="float: left; padding-right: 50px;">
+                <ul>
+                    {% for item in waste_item_list1 %}
+                        <li><a href="{% url 'waste_wizard:detail' item.description %}">{{ item.description }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div style="float: left;">
+                <ul>
+                    {% for item in waste_item_list2 %}
+                        <li><a href="{% url 'waste_wizard:detail' item.description %}">{{ item.description }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
 -->
 
-        <form action="/waste_wizard/results/" method="post">
-            {% csrf_token %}
-            {{ form }}
-            <input type="submit" value="Search" />
-        </form>
+        <div style="clear: both;">
+            <form action="/waste_wizard/results/" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <input type="submit" value="Search" />
+            </form>
+        </div>
 
     </body>
 </html>
-

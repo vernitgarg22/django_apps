@@ -6,6 +6,10 @@ body {
     margin-left: 5px;
 }
 
+ul {
+    list-style-type: circle;
+}
+
 label[for=id_description] {
     margin-right: 10px;    
 }
