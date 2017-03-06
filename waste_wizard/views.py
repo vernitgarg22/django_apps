@@ -12,11 +12,17 @@ from .forms import WasteItemSearchForm, WasteItemResultsForm
 from .models import WasteItem
 
 
+def char_range(c1, c2):
+    """Generates the characters from `c1` to `c2`, inclusive."""
+    for c in range(ord(c1), ord(c2)+1):
+        yield chr(c)
+
 def get_keywords_json():
     keywords = set()
     for item in WasteItem.objects.all():
         keywords.update(item.description.split(', ') + item.keywords.split(', '))
     return json.dumps(list(keywords))
+
 
 class IndexView(generic.ListView):
     template_name = 'waste_wizard/index.html'
@@ -31,29 +37,34 @@ class IndexView(generic.ListView):
     def get_queryset(self):
         return WasteItem.objects.order_by('description')[:128]
 
+
 class ItemsView(generic.ListView):
     template_name = 'waste_wizard/items.html'
     model = WasteItem
     context_object_name = 'waste_item_list'
 
     def get(self, request, *args, **kwargs):
-        keywords = get_keywords_json()
-        items_list = self.get_queryset()
-        mid = math.ceil(items_list.count() / 2)
-        items_list_1 = items_list[0 : mid]
-        items_list_2 = items_list[mid: items_list.count()]
-        zipped_items_list = list(zip(items_list_1, items_list_2))
-        context = {
-            'form': WasteItemSearchForm(),
-            'waste_item_list': zipped_items_list,
-            'waste_item_list1': items_list_1,
-            'waste_item_list2': items_list_2,
-            'keywords': keywords
-            }
+
+        context = { 'form': WasteItemSearchForm() }
+        items = self.get_queryset()
+
+        keywords = {}
+        for item in items:
+            letter = item.description.upper()[0]
+            if not keywords.get(letter):
+                keywords[letter] = []
+            keywords[letter].append(item.description)
+
+        context['keyword_sets'] = []
+        for c in char_range('A', 'Z'):
+            if keywords.get(c):
+                context['keyword_sets'].append({ 'letter': c, 'keywords': keywords.get(c) })
+
         return render(request, 'waste_wizard/items.html', context)
 
     def get_queryset(self):
         return WasteItem.objects.order_by('description')[:128]
+
 
 class ResultsView(generic.ListView):
     template_name = 'waste_wizard/results.html'
@@ -89,6 +100,7 @@ class ResultsView(generic.ListView):
         if False == results.exists():
             return results, "No results found for " + description
         return results.order_by('description')[:128], ''
+
 
 class DetailView(generic.ListView):
     template_name = 'waste_wizard/detail.html'

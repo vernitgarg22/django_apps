@@ -9,26 +9,12 @@
         <a class="back_link" href="/waste_wizard/">Back</a>
 
         <div class="item_topics">
-        Waste Item Topics
+            Waste Item Topics
         </div>
 
-        <div style="clear: both;">
-            <div style="float: left; padding-right: 50px;">
-                <ul>
-                    {% for item in waste_item_list1 %}
-                        <li><a href="{% url 'waste_wizard:detail' item.description %}">{{ item.description }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <div style="float: left;">
-                <ul>
-                    {% for item in waste_item_list2 %}
-                        <li><a href="{% url 'waste_wizard:detail' item.description %}">{{ item.description }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+        {% for keyword_set in keyword_sets %}
+            {% include "waste_wizard/partials/letter_items.html" with letter=keyword_set.letter keywords=keyword_set.keywords %}
+        {% endfor %}
 
     </body>
 </html>
