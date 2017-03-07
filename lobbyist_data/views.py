@@ -63,7 +63,7 @@ def add_clients(ssheet, sheet_id, lobbyists):
     """
     Populate lobbyist client data
     """
-    sheet = ssheet.Sheets.get_sheet(sheet_id)
+    sheet = ssheet.Sheets.get_sheet(sheet_id)           
     for row in sheet.rows:
         regid = get_cell_value(row.cells, 0)
         name = get_cell_value(row.cells, 1)
@@ -111,14 +111,25 @@ def file(request, format=None):
 
     if request.method == 'GET':
         ssheet = smartsheet.Smartsheet(ACCESS_TOKEN)
+        sheet = ssheet.Sheets.get_sheet(LOBBYIST_DATA_SHEET_ID)
 
         # TODO get this from kwargs
-        # attachmentId = 6945649062111108
-        attachmentId = request.path_info.split('/')[4]
-        attachment = ssheet.Attachments.get_attachment(LOBBYIST_DATA_SHEET_ID, attachmentId)
+        row_num = int(request.path_info.split('/')[4])
+        if row_num >= len(sheet.rows):
+            raise Http404("Row index not available")
+
+        row_tmp = sheet.rows[row_num]
+        row = ssheet.Sheets.get_row(LOBBYIST_DATA_SHEET_ID, row_tmp.id, include='attachments')
+
+        if len(row.attachments) < 1:
+            raise Http404("Row has no attachments")
+
+        attachment = row.attachments[0]
 
         if type(attachment) is not smartsheet.models.attachment.Attachment:
              raise Http404("Attachment does not exist")
+
+        attachment = ssheet.Attachments.get_attachment(LOBBYIST_DATA_SHEET_ID, attachment.id)
 
         content = {
             "id": attachment.id,
