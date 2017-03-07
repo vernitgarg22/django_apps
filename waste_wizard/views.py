@@ -56,9 +56,20 @@ class ItemsView(generic.ListView):
             keywords[letter].append(item.description)
 
         context['keyword_sets'] = []
+        arr = []
         for c in char_range('A', 'Z'):
             if keywords.get(c):
                 context['keyword_sets'].append({ 'letter': c, 'keywords': keywords.get(c) })
+                arr.append({ 'letter': c, 'keywords': keywords.get(c) })
+
+        context['tuples'] = []
+        length = len(arr)
+        middle = int(length / 2)
+        for idx in range(middle):
+            context['tuples'].append( (arr[idx], arr[idx + middle]) )
+
+        if middle * 2 < length:
+            context['tuples'].append( (arr[length - 1], ) )
 
         return render(request, 'waste_wizard/items.html', context)
 

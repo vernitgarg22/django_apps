@@ -12,8 +12,15 @@
             Waste Item Topics
         </div>
 
-        {% for keyword_set in keyword_sets %}
-            {% include "waste_wizard/partials/letter_items.html" with letter=keyword_set.letter keywords=keyword_set.keywords %}
+        {% for t0, t1 in tuples %}
+            <div class="item_list_row">
+                <div class="item_list_first">
+                    {% include "waste_wizard/partials/letter_items.html" with letter=t0.letter keywords=t0.keywords %}
+                </div>
+                <div>
+                    {% include "waste_wizard/partials/letter_items.html" with letter=t1.letter keywords=t1.keywords %}
+                </div>
+            </div>
         {% endfor %}
 
     </body>

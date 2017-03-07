@@ -3,11 +3,21 @@ body {
 }
 
 .item_topics {
-    padding: 20px 0 0 5px;
+    padding: 20px 0 20px 5px;
 }
 
 .back_link {
     margin-left: 5px;
+}
+
+.item_list_row {
+    clear: left;
+}
+
+.item_list_first {
+    float: left;
+    margin-right: 40px;
+    width: 50%;
 }
 
 ul {
