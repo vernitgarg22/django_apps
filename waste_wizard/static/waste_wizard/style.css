@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
 body {
-    font-family: "Segoe UI", Arial, sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
 
 .item_topics {
@@ -20,6 +22,15 @@ body {
     width: 50%;
 }
 
+a {
+    color: #09C;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
 ul {
     list-style-type: circle;
 }
@@ -30,6 +41,17 @@ label[for=id_description] {
 
 input[type=text]#id_description {
     width: 15%;
+    border: 1px solid #09C;
+    padding: 10px;
+}
+
+input[type=submit] {
+    border: 1px solid #09C;
+    padding: 10px;
+    background: #09C;
+    color: #FFF;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
 table {
