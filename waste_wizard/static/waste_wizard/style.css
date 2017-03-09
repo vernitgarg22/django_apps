@@ -37,7 +37,12 @@ ul {
 }
 
 #ui-id-1 {
-    width: 100%;
+    width: 262px;
+    left: 0;
+    border-top: 1px solid #09c;
+    border-bottom: 1px solid #09c;
+    border-left: 1px solid #09c;
+    top: -11px !important;
     height: 200px;
     overflow-y: scroll;
 }
@@ -47,11 +52,12 @@ ul {
 }
 
 label[for=id_description] {
+    display: block;
     margin-right: 10px;    
 }
 
 input[type=text]#id_description {
-    width: 15%;
+    width: 220px;
     border: 2px solid #09C;
     padding: 10px;
 }
@@ -65,6 +71,7 @@ input[type=submit] {
     text-transform: uppercase;
     font-size: 14px;
     cursor: pointer;
+    width: 80px;
 }
 
 table {
@@ -104,11 +111,3 @@ table.waste_item_detail tbody td:first-child {
 table.waste_item_detail tbody tr:last-child td:last-child {
     padding-top: 20px;
 }
-
-label[for="id_description"] {display: block;}
-
-#ui-id-1 {width: 262px; left: 0; border-top: 1px solid #09c;  border-bottom: 1px solid #09c; border-left: 1px solid #09c; top: -11px !important;}
-
-input#id_description[type="text"] {width: 220px;}
-
-input[type="submit"] {width: 80px;}
