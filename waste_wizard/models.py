@@ -15,6 +15,7 @@ class WasteItem(models.Model):
 
     IMAGE_CHOICES = (
         ('bulk.png', 'Bulk'),
+        ('recycle_here.jpg', 'Recycle Here'),
         ('recycling.png', 'Recycling'),
         ('trash.png', 'Trash'),
         ('yard_waste.png', 'Yard Waste'),
