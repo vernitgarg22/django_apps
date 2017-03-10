@@ -6,6 +6,7 @@ import urllib.parse
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.http import HttpResponseNotFound
 from django.views import generic
 
 from .forms import WasteItemSearchForm, WasteItemResultsForm
@@ -119,7 +120,10 @@ class DetailView(generic.ListView):
     context_object_name = 'waste_item'
 
     def get(self, request, *args, **kwargs):
-        waste_item = WasteItem.objects.get(description=args[0])
+        try:
+            waste_item = WasteItem.objects.get(description=args[0])
+        except WasteItem.DoesNotExist:
+            return HttpResponseNotFound("<h2>Waste item '" + args[0] + "' does not exist</h2>")
         image_url = "waste_wizard/images/" + waste_item.image_url if waste_item.image_url else ""
         return render(request, 'waste_wizard/detail.html', 
             { 'form': WasteItemResultsForm(), 'waste_item': waste_item, 'image_url': image_url })
