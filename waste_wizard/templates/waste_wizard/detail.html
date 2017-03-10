@@ -15,8 +15,8 @@
                     <td>{{ waste_item.description }}</td>
                 </tr>
                 <tr>
-                    <td>Appropriate Bin</td>
-                    <td>{{ waste_item.destination | title }}</td>
+                    <td>Destination</td>
+                    <td>{{ waste_item.get_destination }}</td>
                 </tr>
                 {% if waste_item.notes %}
                     <tr>
