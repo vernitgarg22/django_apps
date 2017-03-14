@@ -1,17 +1,17 @@
 from django.contrib import admin
 
-from .models import ScheduleException
+from .models import ScheduleChange
 
 
-class ScheduleExceptionAdmin(admin.ModelAdmin):
+class ScheduleChangeAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None, {'fields': ['service_type', 'normal_day', 'rescheduled_day', 'reason', 'note']}),
+        (None, {'fields': ['service_type', 'waste_area', 'normal_day', 'rescheduled_day', 'reason', 'note']}),
     ]
-    list_display = ('service_type', 'normal_day', 'rescheduled_day', 'reason', 'note')
-    list_filter = ['service_type']
-    # list_editable = ['service_type', 'normal_day', 'rescheduled_day', 'reason', 'note']
+    list_display = ('waste_area', 'service_type', 'normal_day', 'rescheduled_day', 'reason', 'note')
+    list_filter = ['service_type', 'waste_area']
+    list_editable = ['waste_area', 'normal_day', 'rescheduled_day', 'reason', 'note']
     search_fields = ['reason', 'note']
     ordering = ['normal_day', 'service_type']
 
 
-admin.site.register(ScheduleException, ScheduleExceptionAdmin)
+admin.site.register(ScheduleChange, ScheduleChangeAdmin)

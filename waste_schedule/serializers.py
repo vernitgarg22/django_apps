@@ -1,8 +1,8 @@
-from .models import ScheduleException
+from .models import ScheduleChange
 from rest_framework import serializers
 
 
-class ScheduleExceptionSerializer(serializers.HyperlinkedModelSerializer):
+class ScheduleChangeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = ScheduleException
+        model = ScheduleChange
         fields = ('service_type', 'normal_day', 'rescheduled_day', 'reason', 'note')
