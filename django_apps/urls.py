@@ -22,8 +22,7 @@ import lobbyist_data.views
 
 urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
-	# url(r'^$', RedirectView.as_view(url='http://app.detroitmi.gov/codcityservices/', permanent=False)),
-    url(r'^api/waste_schedule/changes', waste_schedule.views.schedule_exception_list),
+    url(r'^api/waste_schedule/changes/([0-9]*)/$', waste_schedule.views.get_schedule_changes),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
@@ -31,5 +30,3 @@ urlpatterns = [
     url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
     url(r'^api/lobbyist_data/files/([0-9]*)/$', lobbyist_data.views.file),
 ]
-
-# url(r'^detail/([ %0-9a-zA-Z\,]*)/$', views.DetailView.as_view(), name='detail'),
