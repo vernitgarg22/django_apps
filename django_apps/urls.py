@@ -20,6 +20,11 @@ import waste_schedule.views
 import lobbyist_data.views
 
 
+# To change this see 
+# http://stackoverflow.com/questions/4938491/django-admin-change-header-django-administration-text
+admin.site.site_header = 'Waste Admin'
+
+
 urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
     url(r'^api/waste_schedule/changes/([0-9]*)/$', waste_schedule.views.get_schedule_changes),
