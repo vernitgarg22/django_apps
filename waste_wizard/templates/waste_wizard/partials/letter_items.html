@@ -1,6 +1,8 @@
-{{ letter }}
-<ul>
-    {% for keyword in keywords %}
-        <li><a href="{% url 'waste_wizard:detail' keyword %}">{{ keyword }}</a></li>
-    {% endfor %}
-</ul>
+{% if keywords %}
+    {{ letter }}
+    <ul>
+        {% for keyword in keywords %}
+            <li><a href="{% url 'waste_wizard:detail' keyword %}">{{ keyword }}</a></li>
+        {% endfor %}
+    </ul>
+{% endif %}

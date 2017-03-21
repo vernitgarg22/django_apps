@@ -3,6 +3,8 @@ import math
 import requests
 import urllib.parse
 
+from itertools import zip_longest
+
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
@@ -11,6 +13,9 @@ from django.views import generic
 
 from .forms import WasteItemSearchForm, WasteItemResultsForm
 from .models import WasteItem
+
+
+import pdb
 
 
 def char_range(c1, c2):
@@ -56,21 +61,15 @@ class ItemsView(generic.ListView):
                 keywords[letter] = []
             keywords[letter].append(item.description)
 
-        context['keyword_sets'] = []
-        arr = []
-        for c in char_range('A', 'Z'):
-            if keywords.get(c):
-                context['keyword_sets'].append({ 'letter': c, 'keywords': keywords.get(c) })
-                arr.append({ 'letter': c, 'keywords': keywords.get(c) })
+        arr = [ { 'letter': c, 'keywords': keywords.get(c) } for c in char_range('A', 'Z') if keywords.get(c) ]
 
-        context['tuples'] = []
-        length = len(arr)
-        middle = int(length / 2)
-        for idx in range(middle):
-            context['tuples'].append( (arr[idx], arr[idx + middle]) )
+        MIDDLE = int(len(arr) / 2)
+        if len(arr) % 2 == 1:
+            MIDDLE = MIDDLE + 1
 
-        if middle * 2 < length:
-            context['tuples'].append( (arr[length - 1], ) )
+        l1 = [ arr[idx] for idx in range(MIDDLE) ]
+        l2 = [ arr[idx] for idx in range(MIDDLE, len(arr)) ]
+        context['tuples'] = zip_longest(l1, l2)
 
         return render(request, 'waste_wizard/items.html', context)
 
