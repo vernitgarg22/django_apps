@@ -82,6 +82,17 @@ class ScheduleDetail(models.Model):
     def __str__(self):
         return self.detail_type + " - " + self.description
 
+    def json(self):
+        return {
+            "type": self.detail_type,
+            "service": self.service_type,
+            "description": self.description,
+            "normalDay": self.normal_day,
+            "newDay": self.new_day,
+            "note": self.note,
+            "wasteAreaIds": self.waste_area_ids,
+        }
+
     def clean(self):
         if self.waste_area_ids is None and self.normal_day is None:
             raise ValidationError({'normal_day': "If waste area(s) are not set then normal day must be set"})
@@ -119,8 +130,6 @@ class ScheduleDetail(models.Model):
         r = requests.get(url)
         id_list = [ str(id) +',' for id in r.json()['objectIds'] or [] ]
         ids = ''.join(id_list)
-        if ids.endswith(','):
-            ids = ids[0: len(ids) - 1]
         return ids
 
 # 

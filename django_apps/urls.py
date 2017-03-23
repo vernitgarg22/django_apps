@@ -28,6 +28,7 @@ admin.site.site_header = 'Waste Admin'
 urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
     url(r'^api/waste_schedule/changes/([0-9]*)/$', waste_schedule.views.get_schedule_changes),
+    url(r'^waste_schedule/details/([0-9]*)/$', waste_schedule.views.get_schedule_details),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
