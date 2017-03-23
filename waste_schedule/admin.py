@@ -33,5 +33,5 @@ class ScheduleDetailAdmin(admin.ModelAdmin):
     #     }
 
 
-# admin.site.register(ScheduleDetail, ScheduleDetailAdmin)
-admin.site.register(ScheduleChange, ScheduleChangeAdmin)
+admin.site.register(ScheduleDetail, ScheduleDetailAdmin)
+# admin.site.register(ScheduleChange, ScheduleChangeAdmin)
