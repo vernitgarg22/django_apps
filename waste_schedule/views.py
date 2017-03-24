@@ -13,9 +13,6 @@ from .models import ScheduleChange, ScheduleDetail, WasteArea
 from .serializers import ScheduleChangeSerializer
 
 
-import pdb
-
-
 def date_as_json(date):
     return date.strftime('%Y-%m-%dT%H:%M:%SZ')
 
@@ -56,7 +53,6 @@ def get_schedule_details(request, format=None):
     """
     List details to the waste collection schedule for a waste area
     """
-
     if request.method != 'GET':
         raise Http404("Method not supported")
 
