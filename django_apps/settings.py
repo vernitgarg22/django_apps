@@ -120,27 +120,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     },
-    # 'default': {
-    #     'NAME': 'WitSandbox',
-    #     'ENGINE': 'sqlserver_ado',
-    #     'HOST': 'CODSQL2012Dev1',
-    #     # TODO FOR DEPLOY change this in production
-    #     'USER': 'witAdmin',
-    #     # TODO FOR DEPLOY change this in production
-    #     'PASSWORD': 'Wit_Admin',
-    # }
-# }
-
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
@@ -153,6 +132,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+APPEND_SLASH = True
 
 
 # Static files (CSS, JavaScript, Images)

@@ -1,17 +1,3 @@
-"""django_apps URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/1.8/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
-Including another URLconf
-    1. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
-"""
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic.base import RedirectView
@@ -38,7 +24,9 @@ urlpatterns = [
     # apis
     url(r'^api/waste_schedule/changes/([0-9]*)/$', waste_schedule.views.get_schedule_changes),
     url(r'^waste_schedule/details/([0-9]*)/$', waste_schedule.views.get_schedule_details),
-    url(r'^assessments/([a-zA-Z0-9\.]*)/$', assessments.views.get_sales_property),
+    # url(r'^assessments/([a-zA-Z0-9\.\-]*)/$', assessments.views.get_sales_property),
+    url(r'^assessments/(?P<pnum>[-\w\.]+)/$', assessments.views.get_sales_property),
+    
     url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
     url(r'^api/lobbyist_data/files/([0-9]*)/$', lobbyist_data.views.file),
 
