@@ -9,9 +9,6 @@ from django.http import Http404
 from .models import Sales
 
 
-import pdb
-
-
 @api_view(['GET'])
 def get_sales_property(request, format=None):
     """

@@ -69,6 +69,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'assessments',
     'waste_schedule',
     'waste_wizard',
     'lobbyist_data',
