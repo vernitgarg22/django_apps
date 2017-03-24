@@ -166,6 +166,10 @@ class Sales(models.Model):
             "saleprice": self.saleprice,
             "saledate": self.saledate,
             "addresscombined": self.addresscombined,
+            "terms": self.terms,
+            "instr": self.instr,
+            "grantee": self.grantee,
+            "grantor": self.grantor
         }
 
 
