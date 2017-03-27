@@ -28,7 +28,9 @@ def get_schedule_changes(request, format=None):
         try:
             wa = WasteArea.objects.get(id = wa_id)
         except WasteArea.DoesNotExist:
-            raise Http404("Waste area " + str(wa_id) + " not found")
+            # raise Http404("Waste area " + str(wa_id) + " not found")
+            return Response([])
+
         wa_changes = wa.schedulechange_set.all()
         all_wa_changes = all_wa.schedulechange_set.all()
 
