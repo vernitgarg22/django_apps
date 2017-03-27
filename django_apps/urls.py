@@ -24,6 +24,7 @@ urlpatterns = [
     # apis
     url(r'^api/waste_schedule/changes/([0-9]*)/$', waste_schedule.views.get_schedule_changes),
     url(r'^waste_schedule/details/([0-9]*)/$', waste_schedule.views.get_schedule_details),
+    url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/$', assessments.views.get_sales_property_address),
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/$', assessments.views.get_sales_property),
     
     url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
