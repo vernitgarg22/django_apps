@@ -13,6 +13,10 @@ def get_parcels(parcels):
     """
     Retrieve property info
     """
+
+    # remove any parcels with null saledate
+    parcels = [ parcel for parcel in parcels if parcel.saledate ]
+
     # Sort the parcels in reverse order by sale date
     parcels = sorted(parcels, key=attrgetter('saledate'), reverse=True)
 
