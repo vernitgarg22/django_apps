@@ -24,8 +24,7 @@ urlpatterns = [
     # apis
     url(r'^api/waste_schedule/changes/([0-9]*)/$', waste_schedule.views.get_schedule_changes),
     url(r'^waste_schedule/details/([0-9]*)/$', waste_schedule.views.get_schedule_details),
-    # url(r'^assessments/([a-zA-Z0-9\.\-]*)/$', assessments.views.get_sales_property),
-    url(r'^assessments/(?P<pnum>[-\w\.]+)/$', assessments.views.get_sales_property),
+    url(r'^assessments/(?P<pnum>[-\w\_\.]+)/$', assessments.views.get_sales_property),
     
     url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
     url(r'^api/lobbyist_data/files/([0-9]*)/$', lobbyist_data.views.file),

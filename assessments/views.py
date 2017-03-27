@@ -35,8 +35,14 @@ def get_sales_property(request, pnum=None, format=None):
     """
     Retrieve property info via parcel id (aka 'pnum')
     """
+
+    # strictly GET-only
     if request.method != 'GET':
         raise Http404("Method not supported")
+
+    # urls with dots are problematic: substitute underscores for dots in the url
+    # (and replace underscores with dots here)
+    pnum = pnum.replace('_', '.')
 
     # Search for parcels with the given parcel num
     # pnum = request.path_info.split('/')[2]
