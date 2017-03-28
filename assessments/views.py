@@ -34,7 +34,7 @@ def filter_years_back(results, years_back):
     # results = results.filter(saledate__gte=date_min)
 
     today = datetime.now()
-    return [ result for result in results if today.year - result.saledate.year < int(years_back) ]
+    return [ result for result in results if today.year - result.saledate.year <= int(years_back) ]
 
 
 @api_view(['GET'])
