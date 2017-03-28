@@ -36,17 +36,3 @@ class WasteItem(models.Model):
 
     def  get_destination(self):
         return self.DESTINATION_NOTES.get(self.destination, self.destination.title())
-
-
-# class Destination(models.Model):
-#     SCHEDULE_CHOICES = (
-#         ('weekly', 'Weekly'),
-#         ('biweekly', 'Bi-Weekly'),
-#     )
-
-#     name = models.CharField('Destination name', max_length=32, unique=True, db_index=True, choices=WasteItem.DESTINATION_CHOICES)
-#     schedule = models.CharField('Schedule', max_length=32, choices=SCHEDULE_CHOICES)
-
-
-# class WasteArea(models.Model):
-#     description = models.CharField('Waste area description', max_length=128, unique=True, db_index=True)
