@@ -60,13 +60,13 @@ class ScheduleDetail(models.Model):
     )
 
     DAYS = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday"
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
     ]
 
     GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/Services/services/MapServer/0/query?where=day+%3D%27{0}%27&returnIdsOnly=true&f=json"
