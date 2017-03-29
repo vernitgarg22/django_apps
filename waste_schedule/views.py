@@ -10,11 +10,17 @@ from django.http import Http404
 from .models import ScheduleDetail
 
 
-def filter_month(month, details):
-    return [ detail for detail in details if (detail.normal_day and detail.normal_day.month == month) or (detail.new_day and detail.new_day.month == month) ]
+def check_month_val(year, month, day):
+    return (day and day.year == year and day.month == month)
+
+def check_month(year, month, normal_day, new_day):
+    return check_month_val(year, month, normal_day) or check_month_val(year, month, new_day)
+
+def filter_month(year, month, details):
+    return [ detail for detail in details if check_month(year, month, detail.normal_day, detail.new_day) ]
 
 @api_view(['GET'])
-def get_schedule_details(request, waste_area_ids=None, month=None, format=None):
+def get_schedule_details(request, waste_area_ids=None, year=None, month=None, format=None):
     """
     List details to the waste collection schedule for a waste area
     """
@@ -31,10 +37,11 @@ def get_schedule_details(request, waste_area_ids=None, month=None, format=None):
     for wa_id in wa_ids:
         wa_details = wa_details | ScheduleDetail.objects.filter(waste_area_ids__contains=wa_id)
 
-    if month != None:
+    if month and year:
+        year = int(year)
         month = int(month)
-        citywide_details = filter_month(month, citywide_details)
-        wa_details = filter_month(month, wa_details)
+        citywide_details = filter_month(year, month, citywide_details)
+        wa_details = filter_month(year, month, wa_details)
 
     # sort the different sets of results by 'normal_day'
     details = sorted(chain(citywide_details, wa_details), key=attrgetter('sort_value'))
