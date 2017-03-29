@@ -11,7 +11,15 @@ from .models import ScheduleDetail
 
 
 def check_month_val(year, month, day):
-    return (day and day.year == year and day.month == month)
+    if not day:
+        return False
+    if year:
+        if day.year != int(year):
+            return False
+    if month:
+        if day.month != int(month):
+            return False
+    return True
 
 def check_month(year, month, normal_day, new_day):
     return check_month_val(year, month, normal_day) or check_month_val(year, month, new_day)
@@ -37,9 +45,7 @@ def get_schedule_details(request, waste_area_ids=None, year=None, month=None, fo
     for wa_id in wa_ids:
         wa_details = wa_details | ScheduleDetail.objects.filter(waste_area_ids__contains=wa_id)
 
-    if month and year:
-        year = int(year)
-        month = int(month)
+    if month or year:
         citywide_details = filter_month(year, month, citywide_details)
         wa_details = filter_month(year, month, wa_details)
 
