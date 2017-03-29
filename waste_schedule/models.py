@@ -91,6 +91,10 @@ class ScheduleDetail(models.Model):
     note = models.CharField('Note', max_length = 256, null=True, blank=True)
     waste_area_ids = models.CharField('Waste area(s) effected', max_length = 1028, null=True, blank=True, validators=[validate_comma_separated_integer_list])
 
+    @property
+    def sort_value(self):
+        return (self.normal_day if self.normal_day else self.new_day)
+
     def __str__(self):
         return self.detail_type + " - " + self.description
 
@@ -106,6 +110,11 @@ class ScheduleDetail(models.Model):
         }
 
     def clean(self):
+
+        # every detail must have either a normal date or a new date (required for sorting)
+        if not self.normal_day and not self.new_day:
+            raise ValidationError({'normal_day': "Must have either a normal date or a new date"})
+
         # if schedule change, then either waste_area_ids or normal_day must be provided
         if self.detail_type == 'schedule' and not self.waste_area_ids and not self.normal_day:
             raise ValidationError({'normal_day': "For schedule change, if waste area(s) are not set then normal day must be set"})

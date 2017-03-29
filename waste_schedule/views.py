@@ -32,7 +32,7 @@ def get_schedule_details(request, waste_area_ids=None, month=datetime.now().mont
         wa_details = wa_details | ScheduleDetail.objects.filter(waste_area_ids__contains=wa_id)
 
     # sort the different sets of results by 'normal_day'
-    details = sorted(chain(citywide_details, wa_details), key=attrgetter('normal_day'))
+    details = sorted(chain(citywide_details, wa_details), key=attrgetter('sort_value'))
 
     # build an array of json objects, one for each detail
     content = [detail.json() for detail in details]
