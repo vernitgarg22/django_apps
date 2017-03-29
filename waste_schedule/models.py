@@ -1,5 +1,6 @@
 import requests
 from datetime import date
+from enum import Enum
 
 from django.db import models
 from waste_wizard.models import WasteItem
@@ -79,6 +80,10 @@ class ScheduleDetail(models.Model):
         TRASH: 2,
     }
 
+    class BiWeekType(Enum):
+        A = 1
+        B = 2
+
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
     GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
@@ -149,13 +154,25 @@ class ScheduleDetail(models.Model):
         # conflicts with recycling or bulk pickup
         if not self.waste_area_ids and self.detail_type == 'schedule':
             self.waste_area_ids = self.find_waste_areas(self.normal_day)
-            recycling_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.RECYCLING)
-            bulk_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.BULK)
+
+            bulk_ids=recycling_ids=''
+
+            # TODO find out if waste area is A or B and pass that to check_date_service()
+            if self.check_date_service(self.normal_day, self.BiWeekType.A):
+                recycling_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.RECYCLING)
+                bulk_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.BULK)
 
             self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def check_date_service(date, week_type):
+        if week_type == ScheduleDetail.BiWeekType.A:
+            return date.year % 2 != date.isocalendar()[1] % 2
+        else:
+            return date.year % 2 == date.isocalendar()[1] % 2
 
     @staticmethod
     def find_waste_areas(date, service_type = TRASH):
