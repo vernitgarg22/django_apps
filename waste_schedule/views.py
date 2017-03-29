@@ -10,6 +10,9 @@ from django.http import Http404
 from .models import ScheduleDetail
 
 
+import pdb
+
+
 def check_month_val(year, month, day):
     if not day:
         return False
@@ -21,11 +24,15 @@ def check_month_val(year, month, day):
             return False
     return True
 
-def check_month(year, month, normal_day, new_day):
-    return check_month_val(year, month, normal_day) or check_month_val(year, month, new_day)
+def check_month(year, month, detail):
+    # TODO add filter on year here
+    # pdb.set_trace()
+    if detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
+        return True
+    return check_month_val(year, month, detail.normal_day) or check_month_val(year, month, detail.new_day)
 
 def filter_month(year, month, details):
-    return [ detail for detail in details if check_month(year, month, detail.normal_day, detail.new_day) ]
+    return [ detail for detail in details if check_month(year, month, detail) ]
 
 @api_view(['GET'])
 def get_schedule_details(request, waste_area_ids=None, year=None, month=None, format=None):
