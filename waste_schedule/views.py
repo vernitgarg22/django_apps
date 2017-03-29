@@ -10,11 +10,11 @@ from django.http import Http404
 from .models import ScheduleDetail
 
 
-import pdb
-
+def filter_month(month, details):
+    return [ detail for detail in details if (detail.normal_day and detail.normal_day.month == month) or (detail.new_day and detail.new_day.month == month) ]
 
 @api_view(['GET'])
-def get_schedule_details(request, waste_area_ids=None, month=datetime.now().month, format=None):
+def get_schedule_details(request, waste_area_ids=None, month=None, format=None):
     """
     List details to the waste collection schedule for a waste area
     """
@@ -30,6 +30,11 @@ def get_schedule_details(request, waste_area_ids=None, month=datetime.now().mont
     # get waste schedule details for each waste area requested
     for wa_id in wa_ids:
         wa_details = wa_details | ScheduleDetail.objects.filter(waste_area_ids__contains=wa_id)
+
+    if month != None:
+        month = int(month)
+        citywide_details = filter_month(month, citywide_details)
+        wa_details = filter_month(month, wa_details)
 
     # sort the different sets of results by 'normal_day'
     details = sorted(chain(citywide_details, wa_details), key=attrgetter('sort_value'))
