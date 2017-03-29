@@ -69,10 +69,20 @@ class ScheduleDetail(models.Model):
         "sunday"
     ]
 
-    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/Services/services/MapServer/0/query?where=day+%3D%27{0}%27&returnIdsOnly=true&f=json"
+    RECYCLING = WasteItem.DESTINATION_CHOICES[2][0]
+    BULK = WasteItem.DESTINATION_CHOICES[0][0]
+    TRASH = WasteItem.DESTINATION_CHOICES[4][0]
+
+    SERVICE_ID_MAP = {
+        RECYCLING: 0,
+        BULK: 1,
+        TRASH: 2,
+    }
+
+    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
 
     detail_type = models.CharField('Type of information', max_length = 128, choices=CHANGE_CHOICES)
-    service_type = models.CharField('Service', max_length=32, choices=SERVICE_TYPE_CHOICES, default=SERVICE_TYPE_CHOICES[0][0])
+    service_type = models.CharField('Service', max_length=32, default=SERVICE_TYPE_CHOICES[0][0])
     description = models.CharField('Description of change', max_length = 256)
     normal_day = models.DateField('Normal day of service', db_index=True, null=True, blank=True)
     new_day = models.DateField('Rescheduled day of service', db_index=True, null=True, blank=True)
@@ -94,10 +104,14 @@ class ScheduleDetail(models.Model):
         }
 
     def clean(self):
-        if self.waste_area_ids is None and self.normal_day is None:
+        # either waste_area_ids or normal_day must be provided
+        if not self.waste_area_ids and not self.normal_day:
             raise ValidationError({'normal_day': "If waste area(s) are not set then normal day must be set"})
 
-        if self.detail_type == 'info':
+        # perform validations related to detail_type
+        if not self.detail_type:
+            raise ValidationError({'detail_type': 'Detail type is required'})
+        elif self.detail_type == 'info':
             if self.new_day is not None:
                 raise ValidationError({'new_day': 'Information alerts should not change scheduled services'})
         elif self.detail_type == 'schedule':
@@ -109,39 +123,41 @@ class ScheduleDetail(models.Model):
             if self.new_day is None:
                 raise ValidationError({'new_day': 'Please indicate the relevant date'})
         else:
-            raise ValidationError({'new_day': "Invalid change type " + self.detail_type})
+            raise ValidationError({'detail_type': "Invalid detail type: " + self.detail_type})
+
+        # validate the different comma-separated values in the service_type string
+        service_map = { val[0]: val[1] for val in self.SERVICE_TYPE_CHOICES }
+        for type_val in self.service_type.split(','):
+            if not service_map.get(type_val):
+                raise ValidationError({'service_type': "Invalid service type: " + type_val})
 
     def save(self, *args, **kwargs):
 
+        # if admin did not specify waste area ids, look them up for trash service
+        # and add in recycling & bulk to the detail note so the admin will know about any
+        # conflicts with recycling or bulk pickup
         if not self.waste_area_ids and self.detail_type == 'schedule':
             self.waste_area_ids = self.find_waste_areas(self.normal_day)
+            recycling_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.RECYCLING)
+            bulk_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.BULK)
+
+            self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
 
     @staticmethod
-    def find_waste_areas(date):
+    def find_waste_areas(date, service_type = TRASH):
 
-        # build url to get all waste areas for this day of week
         weekday_str = ScheduleDetail.DAYS[date.weekday()]
-        url = ScheduleDetail.GIS_URL.format(weekday_str)
+
+        # get the gis id of the service
+        service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
+
+        # build url to get all waste areas for service and this day of week
+        url = ScheduleDetail.GIS_URL.format(service_id, weekday_str)
 
         # request the data and parse it
         r = requests.get(url)
         id_list = [ str(id) +',' for id in r.json()['objectIds'] or [] ]
-        ids = ''.join(id_list)
-        return ids
-
-# 
-# from waste_schedule.models import ScheduleDetail
-# ch = ScheduleDetail(detail_type='schedule', description='test', normal_day='2017-7-4', new_day='2017-7-4')
-#
-# Change pickup in certain areas due to holiday
-# ch = ScheduleDetail(detail_type='schedule', normal_day='2017-07-04', new_day='2017-07-05', description='Due to 4th of July holiday, pickup postponed by one day', waste_area_ids='1,4,6')
-#
-# Display information telling all customers about an upcoming wayne county drop-off day
-# ch = ScheduleDetail(detail_type='info', normal_day='2017-07-16', description='Wayne County drop-off day')
-#
-# Reschedule service for specific area(s) due to an emergency 
-# ch = ScheduleDetail(detail_type='schedule', normal_day='2017-03-21', new_day='2017-03-22', description='Customers affected by flooding from the recent water main break on Jefferso Avenue will have waste pickup delayed by one day', waste_area_ids='2,3')
-#
+        return ''.join(id_list)

@@ -22,7 +22,8 @@ urlpatterns = [
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
 
     # apis
-    url(r'^waste_schedule/details/([0-9]*)/$', waste_schedule.views.get_schedule_details),
+    url(r'^waste_schedule/details/(?P<waste_area_ids>[0-9,]*)/$', waste_schedule.views.get_schedule_details),
+    url(r'^waste_schedule/details/(?P<waste_area_ids>[0-9,]*)/month/(?P<month>[0-9]+)/$', waste_schedule.views.get_schedule_details),
     url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/$', assessments.views.get_sales_property_address),
     url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/recent/$', assessments.views.get_sales_property_address_recent),
     url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/recent/years/(?P<years_back>[0-9]+)/$', assessments.views.get_sales_property_address),
