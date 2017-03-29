@@ -79,10 +79,12 @@ class ScheduleDetail(models.Model):
         TRASH: 2,
     }
 
+    SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
+
     GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
 
     detail_type = models.CharField('Type of information', max_length = 128, choices=CHANGE_CHOICES)
-    service_type = models.CharField('Service', max_length=32, default=SERVICE_TYPE_CHOICES[0][0])
+    service_type = models.CharField('Service', max_length=32, default=SERVICE_TYPE_CHOICES[0][0], help_text="(comma-delimited combination of any of the following: " + SERVICES_LIST + ')')
     description = models.CharField('Description of change', max_length = 256)
     normal_day = models.DateField('Normal day of service', db_index=True, null=True, blank=True)
     new_day = models.DateField('Rescheduled day of service', db_index=True, null=True, blank=True)
@@ -104,9 +106,9 @@ class ScheduleDetail(models.Model):
         }
 
     def clean(self):
-        # either waste_area_ids or normal_day must be provided
-        if not self.waste_area_ids and not self.normal_day:
-            raise ValidationError({'normal_day': "If waste area(s) are not set then normal day must be set"})
+        # if schedule change, then either waste_area_ids or normal_day must be provided
+        if self.detail_type == 'schedule' and not self.waste_area_ids and not self.normal_day:
+            raise ValidationError({'normal_day': "For schedule change, if waste area(s) are not set then normal day must be set"})
 
         # perform validations related to detail_type
         if not self.detail_type:
