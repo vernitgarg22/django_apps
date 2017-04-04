@@ -30,18 +30,18 @@ def subscribe_notifications(request):
         # TODO replace this with error 403 or something like that
         return Response({"error": "phone_number and waste_area_ids are required"})
 
-    phone_number = request.data['phone_number']
+    phone_number = data['phone_number']
 
     subscriber = Subscriber.objects.none()
     previous = Subscriber.objects.filter(phone_number__exact=phone_number)
     if previous.exists():
         subscriber = previous[0]
         subscriber.phone_number=phone_number
-        subscriber.waste_area_ids=request.data['waste_area_ids']
+        subscriber.waste_area_ids=data['waste_area_ids']
         subscriber.status=Subscriber.DEFAULT_STATUS
     else:
         # try to create a subscriber with the posted data
-        subscriber = Subscriber(phone_number=phone_number, waste_area_ids=request.data['waste_area_ids'])
+        subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
     subscriber.save()
 
     # create a twilio client and text the subscriber to ask them to confirm
@@ -66,8 +66,19 @@ def confirm_notifications(request):
     """
     Parse subscription confirmation and send a simple response
     """
-    raise Http404("Method not YET supported")
-    # return Response({ "confirmed": request.data })
+    return Response({ "confirmed": request.data })
+
+    phone_number = request.data['phone_number']
+    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
+    if not subscribers.exists():
+        raise Http404("Subscriber not found")
+
+    subscriber = subscribers[0]
+    subscriber.activate()
+
+    return Response({ "confirmed": str(subscriber) })
+
+
 
 @api_view(['GET'])
 def send_notifications(request, date=datetime.today(), format=None):

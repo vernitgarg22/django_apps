@@ -13,6 +13,7 @@ class Subscriber(models.Model):
         ('inactive', 'Inactive'),
     )
     DEFAULT_STATUS=STATUS_CHOICES[1][0]
+    ACTIVE_STATUS=STATUS_CHOICES[0][0]
     VALID_CHOICE_VALUES = [ t[0] for t in STATUS_CHOICES ]
 
     phone_number = models.CharField('Subscriber phone number', unique = True, max_length = 32)
@@ -41,3 +42,7 @@ class Subscriber(models.Model):
         # only certain values are allowed for status
         if not self.VALID_CHOICE_VALUES.count(self.status):
             raise ValidationError({'status': "Status must be one of " + str(self.VALID_CHOICE_VALUES)})
+
+    def activate(self):
+        self.status = Subscriber.ACTIVE_STATUS
+        self.save()
