@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.http import Http404
 
@@ -51,9 +52,22 @@ def confirm_notifications(request):
     """
     Parse subscription confirmation and send a simple response
     """
-    return Response({ "confirmed": request.data })
 
-    phone_number = request.data['phone_number']
+    # Verify required fields are present
+    if not request.data.get('From') or not request.data.get('Body'):
+        raise ValidationError('From and body values are required')
+
+    # Clean up phone number
+    phone_number = request.data['From'].replace('+', '')
+    if phone_number.startswith('1'):
+        phone_number = phone_number[1:]
+
+    # Did user confirm they want to receive notifications?
+    body = request.data['Body']
+    if body.find("YES") < 0:
+        return Response({})
+
+    # Find subscriber and activate them
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
     if not subscribers.exists():
         raise Http404("Subscriber not found")
@@ -61,7 +75,7 @@ def confirm_notifications(request):
     subscriber = subscribers[0]
     subscriber.activate()
 
-    return Response({ "confirmed": str(subscriber) })
+    return Response({ "subscriber": str(subscriber) })
 
 
 
