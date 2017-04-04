@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.conf import settings
+from django.http import Http404
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -17,40 +18,10 @@ AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
 PHONE_SENDER = "+13132283402"
 
 
-@api_view(['GET'])
-def send_notifications(request, date=datetime.today(), format=None):
-    """
-    Send out any necessary notifications (e.g., regular schedule or schedule changes)
-    """
-
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-
-    # Find out which waste areas are about to get pickups
-    routes = ScheduleDetail.find_waste_areas_extra(date, ScheduleDetail.TRASH)
-    content = {}
-
-    # get a list of route ids
-    route_ids = [ int(id) for id in list(routes.keys()) if id ]
-    for route_id in route_ids:
-
-        # send text reminder to subscribers for this route
-        subscribers = Subscriber.objects.using('default').filter(waste_area_ids__contains=str(route_id) + ',')
-        content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
-
-        for subscriber in subscribers:
-            client.messages.create(
-                to = "+1" + subscriber.phone_number,
-                from_ = PHONE_SENDER,
-                body = "Your next upcoming trash pickup is " + date.strftime("%b %d, %Y"),
-            )
-
-    return Response(content)
-
-
 @api_view(['POST'])
-def confirm_notifications(request):
+def subscribe_notifications(request):
     """
-    Parse subscription confirmation and send a simple response
+    Parse subscription request and text user request for confirmation
     """
 
     data = request.data
@@ -81,9 +52,48 @@ def confirm_notifications(request):
         body = "City of Detroit Public Works:  reply with YES to confirm that you want to receive trash & recycling pickup reminders",
     )
 
+    # TODO return better response?
     return Response({ "received": str(subscriber) })
 
     # resp = twilio.twiml.Response()
     # with resp.message("Hello, Mobile Monkey") as m:
     #   m.media("https://demo.twilio.com/owl.png")
     # return str(resp)
+
+
+@api_view(['POST'])
+def confirm_notifications(request):
+    """
+    Parse subscription confirmation and send a simple response
+    """
+    raise Http404("Method not YET supported")
+    # return Response({ "confirmed": request.data })
+
+@api_view(['GET'])
+def send_notifications(request, date=datetime.today(), format=None):
+    """
+    Send out any necessary notifications (e.g., regular schedule or schedule changes)
+    """
+
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+
+    # Find out which waste areas are about to get pickups
+    routes = ScheduleDetail.find_waste_areas_extra(date, ScheduleDetail.TRASH)
+    content = {}
+
+    # get a list of route ids
+    route_ids = [ int(id) for id in list(routes.keys()) if id ]
+    for route_id in route_ids:
+
+        # send text reminder to subscribers for this route
+        subscribers = Subscriber.objects.using('default').filter(waste_area_ids__contains=str(route_id) + ',')
+        content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
+
+        for subscriber in subscribers:
+            client.messages.create(
+                to = "+1" + subscriber.phone_number,
+                from_ = PHONE_SENDER,
+                body = "Your next upcoming trash pickup is " + date.strftime("%b %d, %Y"),
+            )
+
+    return Response(content)
