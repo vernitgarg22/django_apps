@@ -12,6 +12,7 @@ from waste_schedule.models import ScheduleDetail
 
 from twilio.rest import TwilioRestClient
 import twilio.twiml
+# from twilio.util import RequestValidator
 
 
 ACCOUNT_SID = "AC8b444a6aeeb1afdba3c064f2d105057d"
@@ -41,11 +42,6 @@ def subscribe_notifications(request):
     # TODO return better response?
     return Response({ "received": str(subscriber) })
 
-    # resp = twilio.twiml.Response()
-    # with resp.message("Hello, Mobile Monkey") as m:
-    #   m.media("https://demo.twilio.com/owl.png")
-    # return str(resp)
-
 
 @api_view(['POST'])
 def confirm_notifications(request):
@@ -53,9 +49,16 @@ def confirm_notifications(request):
     Parse subscription confirmation and send a simple response
     """
 
+    # validator = RequestValidator(AUTH_TOKEN)
+
+    # resp = twilio.twiml.Response()
+    # resp.message("The Robots are coming! Head for the hills!")
+    # return Response(resp)
+
+
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
-        raise ValidationError('From and body values are required')
+        return Response({"error": "From and body values are required"})
 
     # Clean up phone number
     phone_number = request.data['From'].replace('+', '')
@@ -67,7 +70,7 @@ def confirm_notifications(request):
     if body.find("YES") < 0:
         return Response({})
 
-    # Find subscriber and activate them
+    # Find the subscriber and activate them
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
     if not subscribers.exists():
         raise Http404("Subscriber not found")
@@ -75,8 +78,15 @@ def confirm_notifications(request):
     subscriber = subscribers[0]
     subscriber.activate()
 
-    return Response({ "subscriber": str(subscriber) })
+    # create a twilio client and send the subscriber a confirmation message
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+    client.messages.create(
+        to = "+1" + subscriber.phone_number,
+        from_ = PHONE_SENDER,
+        body = "City of Detroit Public Works:  your trash & recycling pickup reminders have been confirmed\n(reply STOP to any of the reminders to stop receiving them)",
+    )
 
+    return Response({ "subscriber": str(subscriber) })
 
 
 @api_view(['GET'])
