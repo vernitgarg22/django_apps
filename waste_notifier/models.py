@@ -45,4 +45,30 @@ class Subscriber(models.Model):
 
     def activate(self):
         self.status = Subscriber.ACTIVE_STATUS
+        self.clean()
         self.save()
+
+    @staticmethod
+    def update_or_create_from_dict(data):
+
+        if not data.get('phone_number') or not data.get('waste_area_ids'):
+            # TODO replace this with error 403 or something like that
+            return None, {"error": "phone_number and waste_area_ids are required"}
+
+        phone_number = data['phone_number']
+
+        subscriber = Subscriber.objects.none()
+        previous = Subscriber.objects.filter(phone_number__exact=phone_number)
+        if previous.exists():
+            subscriber = previous[0]
+            subscriber.phone_number=phone_number
+            subscriber.waste_area_ids=data['waste_area_ids']
+            subscriber.status=Subscriber.DEFAULT_STATUS
+        else:
+            # try to create a subscriber with the posted data
+            subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
+
+        subscriber.clean()
+        subscriber.save()
+
+        return subscriber, None

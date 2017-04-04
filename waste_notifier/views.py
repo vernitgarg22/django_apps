@@ -24,25 +24,10 @@ def subscribe_notifications(request):
     Parse subscription request and text user request for confirmation
     """
 
-    data = request.data
-
-    if not data.get('phone_number') or not data.get('waste_area_ids'):
-        # TODO replace this with error 403 or something like that
-        return Response({"error": "phone_number and waste_area_ids are required"})
-
-    phone_number = data['phone_number']
-
-    subscriber = Subscriber.objects.none()
-    previous = Subscriber.objects.filter(phone_number__exact=phone_number)
-    if previous.exists():
-        subscriber = previous[0]
-        subscriber.phone_number=phone_number
-        subscriber.waste_area_ids=data['waste_area_ids']
-        subscriber.status=Subscriber.DEFAULT_STATUS
-    else:
-        # try to create a subscriber with the posted data
-        subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
-    subscriber.save()
+    # update existing subscriber or create new one from data
+    subscriber, error = Subscriber.update_or_create_from_dict(request.data)
+    if error:
+        return Response(error)
 
     # create a twilio client and text the subscriber to ask them to confirm
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
