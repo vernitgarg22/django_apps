@@ -71,6 +71,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'assessments',
     'waste_schedule',
+    'waste_notifier',
     'waste_wizard',
     'lobbyist_data',
     'corsheaders',
