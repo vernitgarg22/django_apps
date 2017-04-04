@@ -12,11 +12,12 @@ class Subscriber(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     )
+    DEFAULT_STATUS=STATUS_CHOICES[1][0]
     VALID_CHOICE_VALUES = [ t[0] for t in STATUS_CHOICES ]
 
-    phone_number = models.CharField('Subscriber phone number', max_length = 32)
+    phone_number = models.CharField('Subscriber phone number', unique = True, max_length = 32)
     waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64, validators=[validate_comma_separated_integer_list])
-    status = models.CharField('Subscriber status (for soft deletes)', max_length = 32, choices=STATUS_CHOICES, default=STATUS_CHOICES[1][0])
+    status = models.CharField('Subscriber status (for soft deletes)', max_length = 32, choices=STATUS_CHOICES, default=DEFAULT_STATUS)
 
     def __str__(self):
         return self.phone_number + ' - ' + self.waste_area_ids + ' - ' + self.status

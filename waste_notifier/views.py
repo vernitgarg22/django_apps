@@ -57,10 +57,20 @@ def confirm_notifications(request):
 
     if not data.get('phone_number') or not data.get('waste_area_ids'):
         # TODO replace this with error 403 or something like that
-        return Response({})
+        return Response({"error": "phone_number and waste_area_ids are required"})
 
-    # try to create a subscriber with the posted data
-    subscriber = Subscriber(phone_number=request.data['phone_number'], waste_area_ids=request.data['waste_area_ids'])
+    phone_number = request.data['phone_number']
+
+    subscriber = Subscriber.objects.none()
+    previous = Subscriber.objects.filter(phone_number__exact=phone_number)
+    if previous.exists():
+        subscriber = previous[0]
+        subscriber.phone_number=phone_number
+        subscriber.waste_area_ids=request.data['waste_area_ids']
+        subscriber.status=Subscriber.DEFAULT_STATUS
+    else:
+        # try to create a subscriber with the posted data
+        subscriber = Subscriber(phone_number=phone_number, waste_area_ids=request.data['waste_area_ids'])
     subscriber.save()
 
     # create a twilio client and text the subscriber to ask them to confirm
