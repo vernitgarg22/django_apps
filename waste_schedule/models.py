@@ -9,46 +9,6 @@ from django.core import validators
 from django.core.validators import validate_comma_separated_integer_list
 
 
-class WasteArea(models.Model):
-
-    ALL_WASTE_AREAS_ID = 1000
-
-    description = models.CharField('Waste area description', max_length=128, unique=True, db_index=True)
-    order_val = models.IntegerField('Waste area ordering value', null=True)
-    def __str__(self):
-        "Returns waste area's full description, including waste area id"
-        if self.id == self.ALL_WASTE_AREAS_ID:
-            return str(self.description)
-        else:
-            return str(self.id) + ' - ' + self.description
-
-    class Meta:
-        ordering = ['order_val']
-
-
-class ScheduleChange(models.Model):
-    app_label = 'waste_schedule'
-
-    SERVICE_TYPE_CHOICES = (('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES
-
-    service_type = models.CharField('Service', max_length=32, choices=SERVICE_TYPE_CHOICES, default=SERVICE_TYPE_CHOICES[0][0])
-    waste_area = models.ForeignKey('waste_schedule.WasteArea', on_delete=models.DO_NOTHING)
-    normal_day = models.DateField('Normal day of service', db_index=True)
-    rescheduled_day = models.DateField('New day of service', db_index=True)
-    reason = models.CharField('Reason for change', max_length=300, blank=True)
-    note = models.CharField('Special note for residents', max_length=300, blank=True)
-    def __str__(self):
-        return self.service_type + \
-            ' changed from ' + str(self.normal_day) + \
-            ' to ' + str(self.rescheduled_day) + \
-            ' because ' + self.reason + \
-            ' - ' + self.note
-
-    def clean(self):
-        if self.rescheduled_day <= self.normal_day:
-            raise ValidationError({'rescheduled_day': 'Rescheduled day must be after normally scheduled day'})
-
-
 class ScheduleDetail(models.Model):
 
     SERVICE_TYPE_CHOICES = (('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES
@@ -87,6 +47,7 @@ class ScheduleDetail(models.Model):
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
     GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
+    GIS_URL_EXTRA = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=FID%2Cday%2C+week&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=json"
 
     detail_type = models.CharField('Type of information', max_length = 128, choices=CHANGE_CHOICES)
     service_type = models.CharField('Service', max_length=32, default=SERVICE_TYPE_CHOICES[0][0], help_text="(comma-delimited combination of any of the following: " + SERVICES_LIST + ')')
@@ -189,3 +150,26 @@ class ScheduleDetail(models.Model):
         r = requests.get(url)
         id_list = [ str(id) +',' for id in r.json()['objectIds'] or [] ]
         return ''.join(id_list)
+
+    @staticmethod
+    def find_waste_areas_extra(date, service_type = TRASH):
+
+        weekday_str = ScheduleDetail.DAYS[date.weekday()]
+
+        # get the gis id of the service
+        service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
+
+        # build url to get all waste areas for service and this day of week
+        url = ScheduleDetail.GIS_URL_EXTRA.format(service_id, weekday_str)
+
+        # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
+        r = requests.get(url)
+        routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
+
+        return routes
+
+
+    @staticmethod
+    def find_trash_areas(date):
+
+        return ScheduleDetail.find_waste_areas(date)

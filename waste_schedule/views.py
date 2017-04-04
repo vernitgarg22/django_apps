@@ -10,9 +10,6 @@ from django.http import Http404
 from .models import ScheduleDetail
 
 
-import pdb
-
-
 def check_month_val(year, month, day):
     if not day:
         return False
@@ -25,8 +22,6 @@ def check_month_val(year, month, day):
     return True
 
 def check_month(year, month, detail):
-    # TODO add filter on year here
-    # pdb.set_trace()
     if detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
         return True
     return check_month_val(year, month, detail.normal_day) or check_month_val(year, month, detail.new_day)

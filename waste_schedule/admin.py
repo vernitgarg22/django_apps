@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ScheduleChange, ScheduleDetail
+from .models import ScheduleDetail
 
 
 class ScheduleDetailAdmin(admin.ModelAdmin):
