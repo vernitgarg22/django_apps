@@ -152,6 +152,10 @@ class ScheduleDetail(models.Model):
 
     @staticmethod
     def get_waste_routes(date, service_type = TRASH):
+        """
+        Returns dictionary mapping route ids to week type ('a' or 'b')
+        pertaining to routes getting serviced on the particular date
+        """
 
         weekday_str = ScheduleDetail.DAYS[date.weekday()]
 
@@ -163,16 +167,21 @@ class ScheduleDetail(models.Model):
 
         # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
         r = requests.get(url)
-        return { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
-
-    @staticmethod
-    def get_waste_route_ids(date, service_type = TRASH):
-
-        routes = get_waste_routes(date, service_type)
+        routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
 
         # only return routes that are affected by current week
         # (Note: trash is every week)
-        if service_type == ScheduleDetail.TRASH:
-            return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
-        else:
-            return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) if ScheduleDetail.check_date_service(date, BiWeekType.from_str(routes[route_id])) ] ) 
+        if service_type != ScheduleDetail.TRASH:
+            routes = { route_id: routes[route_id] for route_id in list(routes.keys()) if ScheduleDetail.check_date_service(date, BiWeekType.from_str(routes[route_id])) }
+
+        return routes
+
+    @staticmethod
+    def get_waste_route_ids(date, service_type = TRASH):
+        """
+        Returns comma-delimited list of route ids
+        pertaining to routes getting serviced on the particular date
+        """
+
+        routes = get_waste_routes(date, service_type)
+        return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
