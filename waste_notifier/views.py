@@ -11,13 +11,39 @@ from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
 from twilio.rest import TwilioRestClient
-import twilio.twiml
-# from twilio.util import RequestValidator
+
+
+import pdb
 
 
 ACCOUNT_SID = "AC8b444a6aeeb1afdba3c064f2d105057d"
 AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
 PHONE_SENDER = "+13132283402"
+
+
+def get_services_desc(services):
+    """
+    Returns comma-delimited list of services, with last comma replaced by 'and'
+    """
+
+    # build comma-delimited list of services
+    desc = ''.join([ service + ', ' for service in list(set(services)) ])
+
+    # remove trailing comma
+    desc = desc[:-2]
+
+    # if more than 1 service, replace last comma with 'and'
+    if len(services) > 1:
+        index = desc.rfind(',')
+        desc = desc[0: index] + " and" + desc[index + 1: ]
+
+    return desc
+
+def get_service_message(services, date):
+    """
+    Returns message to be sent to subscriber, including correct list of services and date
+    """
+    return "Your next upcoming pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
 
 
 @api_view(['POST'])
@@ -50,11 +76,6 @@ def confirm_notifications(request):
     """
 
     # validator = RequestValidator(AUTH_TOKEN)
-
-    # resp = twilio.twiml.Response()
-    # resp.message("The Robots are coming! Head for the hills!")
-    # return Response(resp)
-
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
@@ -96,24 +117,49 @@ def send_notifications(request, date=datetime.today(), format=None):
     """
 
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-
-    # Find out which waste areas are about to get pickups
-    routes = ScheduleDetail.find_waste_areas(date, ScheduleDetail.TRASH)
     content = {}
 
-    # get a list of route ids
-    route_ids = [ int(id) for id in list(routes.keys()) if id ]
-    for route_id in route_ids:
+    subscribers_map = {}
+    notifications = {}
 
-        # send text reminder to subscribers for this route
-        subscribers = Subscriber.objects.using('default').filter(waste_area_ids__contains=str(route_id) + ',')
-        content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
+    for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
 
-        for subscriber in subscribers:
-            client.messages.create(
-                to = "+1" + subscriber.phone_number,
-                from_ = PHONE_SENDER,
-                body = "Your next upcoming trash pickup is " + date.strftime("%b %d, %Y"),
-            )
+        # Find out which waste areas are about to get pickups for this service
+        routes = ScheduleDetail.get_waste_routes(date, service_type)
+
+
+        # pdb.set_trace()
+
+
+        # get a list of route ids
+        route_ids = [ int(id) for id in list(routes.keys()) if id ]
+        for route_id in route_ids:
+
+            # get all active subscribers to this service ...
+            subscribers = Subscriber.objects.using('default').filter(status__exact='active')
+            subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
+
+            # also filter subscribers by route
+            subscribers = subscribers.filter(waste_area_ids__contains=str(route_id) + ',')
+            content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
+
+            # keep track of what services each subscriber needs notifications for
+            for subscriber in subscribers:
+                subscribers_map[subscriber.phone_number] = subscriber
+                services = notifications.get(subscriber.phone_number) or []
+                services.extend([service_type])
+                notifications[subscriber.phone_number] = services
+
+            # TODO: factor in schedule changes
+            # TODO: factor in notifications
+
+    # send text reminder to each subscriber needing a reminder
+    for phone_number in list(notifications.keys()):
+        subscriber = subscribers_map[phone_number]
+        client.messages.create(
+            to = "+1" + subscriber.phone_number,
+            from_ = PHONE_SENDER,
+            body = get_service_message(notifications[phone_number], date),
+        )
 
     return Response(content)

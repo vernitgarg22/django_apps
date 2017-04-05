@@ -122,10 +122,10 @@ class ScheduleDetail(models.Model):
         # and add in recycling & bulk to the detail note so the admin will know about any
         # conflicts with recycling or bulk pickup
         if not self.waste_area_ids and self.detail_type == 'schedule':
-            self.waste_area_ids = self.find_waste_areas(self.normal_day)
+            self.waste_area_ids = self.get_waste_route_ids(self.normal_day)
 
-            recycling_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.RECYCLING)
-            bulk_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.BULK)
+            recycling_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.RECYCLING)
+            bulk_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.BULK)
 
             self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
@@ -151,7 +151,7 @@ class ScheduleDetail(models.Model):
             return date.year % 2 == date.isocalendar()[1] % 2
 
     @staticmethod
-    def find_waste_areas(date, service_type = TRASH):
+    def get_waste_routes(date, service_type = TRASH):
 
         weekday_str = ScheduleDetail.DAYS[date.weekday()]
 
@@ -163,7 +163,12 @@ class ScheduleDetail(models.Model):
 
         # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
         r = requests.get(url)
-        routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
+        return { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
+
+    @staticmethod
+    def get_waste_route_ids(date, service_type = TRASH):
+
+        routes = get_waste_routes(date, service_type)
 
         # only return routes that are affected by current week
         # (Note: trash is every week)
@@ -171,8 +176,3 @@ class ScheduleDetail(models.Model):
             return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
         else:
             return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) if ScheduleDetail.check_date_service(date, BiWeekType.from_str(routes[route_id])) ] ) 
-
-    @staticmethod
-    def find_trash_areas(date):
-
-        return ScheduleDetail.find_waste_areas(date)
