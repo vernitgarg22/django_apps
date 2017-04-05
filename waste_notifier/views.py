@@ -98,7 +98,7 @@ def send_notifications(request, date=datetime.today(), format=None):
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
     # Find out which waste areas are about to get pickups
-    routes = ScheduleDetail.find_waste_areas_extra(date, ScheduleDetail.TRASH)
+    routes = ScheduleDetail.find_waste_areas(date, ScheduleDetail.TRASH)
     content = {}
 
     # get a list of route ids

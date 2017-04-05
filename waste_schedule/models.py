@@ -9,6 +9,18 @@ from django.core import validators
 from django.core.validators import validate_comma_separated_integer_list
 
 
+class BiWeekType(Enum):
+    A = 'a'
+    B = 'b'
+
+    @staticmethod
+    def from_str(ch):
+        for week_type in BiWeekType:
+            if ch == week_type.value:
+                return week_type
+        raise Exception('invalid week type value')
+
+
 class ScheduleDetail(models.Model):
 
     SERVICE_TYPE_CHOICES = (('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES
@@ -39,10 +51,6 @@ class ScheduleDetail(models.Model):
         BULK: 1,
         TRASH: 2,
     }
-
-    class BiWeekType(Enum):
-        A = 1
-        B = 2
 
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
@@ -116,12 +124,8 @@ class ScheduleDetail(models.Model):
         if not self.waste_area_ids and self.detail_type == 'schedule':
             self.waste_area_ids = self.find_waste_areas(self.normal_day)
 
-            bulk_ids=recycling_ids=''
-
-            # TODO find out if waste area is A or B and pass that to check_date_service()
-            if self.check_date_service(self.normal_day, self.BiWeekType.A):
-                recycling_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.RECYCLING)
-                bulk_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.BULK)
+            recycling_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.RECYCLING)
+            bulk_ids = self.find_waste_areas(self.normal_day, ScheduleDetail.BULK)
 
             self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
@@ -130,7 +134,7 @@ class ScheduleDetail(models.Model):
 
     @staticmethod
     def check_date_service(date, week_type):
-        if week_type == ScheduleDetail.BiWeekType.A:
+        if week_type == BiWeekType.A:
             return date.year % 2 != date.isocalendar()[1] % 2
         else:
             return date.year % 2 == date.isocalendar()[1] % 2
@@ -144,30 +148,18 @@ class ScheduleDetail(models.Model):
         service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
 
         # build url to get all waste areas for service and this day of week
-        url = ScheduleDetail.GIS_URL.format(service_id, weekday_str)
-
-        # request the data and parse it
-        r = requests.get(url)
-        id_list = [ str(id) +',' for id in r.json()['objectIds'] or [] ]
-        return ''.join(id_list)
-
-    @staticmethod
-    def find_waste_areas_extra(date, service_type = TRASH):
-
-        weekday_str = ScheduleDetail.DAYS[date.weekday()]
-
-        # get the gis id of the service
-        service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
-
-        # build url to get all waste areas for service and this day of week
         url = ScheduleDetail.GIS_URL_EXTRA.format(service_id, weekday_str)
 
         # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
         r = requests.get(url)
         routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
 
-        return routes
-
+        # only return routes that are affected by current week
+        # (Note: trash is every week)
+        if service_type == ScheduleDetail.TRASH:
+            return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
+        else:
+            return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) if ScheduleDetail.check_date_service(date, BiWeekType.from_str(routes[route_id])) ] ) 
 
     @staticmethod
     def find_trash_areas(date):
