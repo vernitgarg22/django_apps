@@ -5,23 +5,27 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_comma_separated_integer_list
 
+from waste_schedule.models import ScheduleDetail
+
 
 class Subscriber(models.Model):
 
+    ACTIVE_STATUS = 'active'
+    INACTIVE_STATUS = 'inactive'
     STATUS_CHOICES = (
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
+        (ACTIVE_STATUS, 'Active'),
+        (INACTIVE_STATUS, 'Inactive'),
     )
-    DEFAULT_STATUS=STATUS_CHOICES[1][0]
-    ACTIVE_STATUS=STATUS_CHOICES[0][0]
+    DEFAULT_STATUS=INACTIVE_STATUS
     VALID_CHOICE_VALUES = [ t[0] for t in STATUS_CHOICES ]
 
     phone_number = models.CharField('Subscriber phone number', unique = True, max_length = 32)
     waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64, validators=[validate_comma_separated_integer_list])
     status = models.CharField('Subscriber status (for soft deletes)', max_length = 32, choices=STATUS_CHOICES, default=DEFAULT_STATUS)
+    service_type = models.CharField('Service', max_length=32, default=ScheduleDetail.DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + ScheduleDetail.SERVICES_LIST + ')')
 
     def __str__(self):
-        return self.phone_number + ' - ' + self.waste_area_ids + ' - ' + self.status
+        return self.phone_number + ' - routes: ' + self.waste_area_ids + ' - status: ' + self.status + ' - services: ' + self.service_type
 
     def clean(self):
 
@@ -43,12 +47,23 @@ class Subscriber(models.Model):
         if not self.VALID_CHOICE_VALUES.count(self.status):
             raise ValidationError({'status': "Status must be one of " + str(self.VALID_CHOICE_VALUES)})
 
+        # validate each comma-delimited value in service_type
+        if not ScheduleDetail.is_valid_service_type(self.service_type):
+            raise ValidationError({'service_type': "Invalid service type: " + self.service_type})
+
     def activate(self):
         """
         Marks subscriber active, then validates and saves
         """
         self.status = Subscriber.ACTIVE_STATUS
         self.clean()
+        self.save()
+
+    def delete(self, using=None, keep_parents=False):
+        """
+        Do a soft-delete (i.e., set status to 'inactive')
+        """
+        self.status = Subscriber.INACTIVE_STATUS
         self.save()
 
     @staticmethod
@@ -74,6 +89,9 @@ class Subscriber(models.Model):
         else:
             # try to create a subscriber with the posted data
             subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
+
+        if data.get("service_type"):
+            subscriber.service_type = data['service_type']
 
         # validate and save subscriber
         subscriber.clean()

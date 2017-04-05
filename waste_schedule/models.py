@@ -52,6 +52,7 @@ class ScheduleDetail(models.Model):
         TRASH: 2,
     }
 
+    DEFAULT_SERVICE_TYPE = SERVICE_TYPE_CHOICES[0][0]
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
     GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
@@ -59,7 +60,7 @@ class ScheduleDetail(models.Model):
 
     app_label = 'waste_schedule'
     detail_type = models.CharField('Type of information', max_length = 128, choices=TYPE_CHOICES)
-    service_type = models.CharField('Service', max_length=32, default=SERVICE_TYPE_CHOICES[0][0], help_text="(comma-delimited combination of any of the following: " + SERVICES_LIST + ')')
+    service_type = models.CharField('Service', max_length=32, default=DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + SERVICES_LIST + ')')
     description = models.CharField('Description of change', max_length = 256)
     normal_day = models.DateField('Normal day of service', db_index=True, null=True, blank=True)
     new_day = models.DateField('Rescheduled day of service', db_index=True, null=True, blank=True)
@@ -112,10 +113,8 @@ class ScheduleDetail(models.Model):
             raise ValidationError({'detail_type': "Invalid detail type: " + self.detail_type})
 
         # validate the different comma-separated values in the service_type string
-        service_map = { val[0]: val[1] for val in self.SERVICE_TYPE_CHOICES }
-        for type_val in self.service_type.split(','):
-            if not service_map.get(type_val):
-                raise ValidationError({'service_type': "Invalid service type: " + type_val})
+        if not ScheduleDetail.is_valid_service_type(self.service_type):
+            raise ValidationError({'service_type': "Invalid service type: " + self.service_type})
 
     def save(self, *args, **kwargs):
 
@@ -132,6 +131,17 @@ class ScheduleDetail(models.Model):
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def is_valid_service_type(service_type):
+        """
+        Returns true if each comma-separated value in the service_type string is valid
+        """
+        service_map = { val[0]: val[1] for val in ScheduleDetail.SERVICE_TYPE_CHOICES }
+        for type_val in service_type.split(','):
+            if type_val and not service_map.get(type_val):
+                return False
+        return True
 
     @staticmethod
     def check_date_service(date, week_type):
