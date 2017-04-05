@@ -9,7 +9,7 @@ class ScheduleDetailAdmin(admin.ModelAdmin):
     ]
     list_display = ('detail_type', 'service_type', 'description', 'normal_day', 'new_day', 'note', 'waste_area_ids')
     list_filter = ['detail_type', 'service_type']
-    list_editable = ['detail_type', 'service_type', 'description', 'normal_day', 'new_day', 'note', 'waste_area_ids']
+    list_editable = ['service_type', 'description', 'normal_day', 'new_day', 'note', 'waste_area_ids']
     search_fields = ['reason', 'note']
     ordering = ['normal_day', 'new_day', 'service_type']
 

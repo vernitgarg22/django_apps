@@ -25,7 +25,7 @@ class ScheduleDetail(models.Model):
 
     SERVICE_TYPE_CHOICES = (('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES
 
-    CHANGE_CHOICES = (
+    TYPE_CHOICES = (
         ('schedule', 'Schedule Change'),
         ('start-date', 'Service Start Date'),
         ('end-date', 'Service End Date'),
@@ -57,7 +57,8 @@ class ScheduleDetail(models.Model):
     GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
     GIS_URL_EXTRA = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=FID%2Cday%2C+week&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=json"
 
-    detail_type = models.CharField('Type of information', max_length = 128, choices=CHANGE_CHOICES)
+    app_label = 'waste_schedule'
+    detail_type = models.CharField('Type of information', max_length = 128, choices=TYPE_CHOICES)
     service_type = models.CharField('Service', max_length=32, default=SERVICE_TYPE_CHOICES[0][0], help_text="(comma-delimited combination of any of the following: " + SERVICES_LIST + ')')
     description = models.CharField('Description of change', max_length = 256)
     normal_day = models.DateField('Normal day of service', db_index=True, null=True, blank=True)
