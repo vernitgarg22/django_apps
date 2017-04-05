@@ -44,12 +44,18 @@ class Subscriber(models.Model):
             raise ValidationError({'status': "Status must be one of " + str(self.VALID_CHOICE_VALUES)})
 
     def activate(self):
+        """
+        Marks subscriber active, then validates and saves
+        """
         self.status = Subscriber.ACTIVE_STATUS
         self.clean()
         self.save()
 
     @staticmethod
     def update_or_create_from_dict(data):
+        """
+        Using dictionary of form data, update existing subscriber or create new one
+        """
 
         if not data.get('phone_number') or not data.get('waste_area_ids'):
             # TODO replace this with error 403 or something like that
@@ -57,6 +63,7 @@ class Subscriber(models.Model):
 
         phone_number = data['phone_number']
 
+        # update existing subscriber or create new one
         subscriber = Subscriber.objects.none()
         previous = Subscriber.objects.filter(phone_number__exact=phone_number)
         if previous.exists():
@@ -68,6 +75,7 @@ class Subscriber(models.Model):
             # try to create a subscriber with the posted data
             subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
 
+        # validate and save subscriber
         subscriber.clean()
         subscriber.save()
 
