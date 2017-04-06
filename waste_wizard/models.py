@@ -22,7 +22,8 @@ class WasteItem(models.Model):
     )
 
     DESTINATION_NOTES = {
-        "recycle here": "Recycle Here Recycling Center"
+        "recycle here": "Recycle Here Recycling Center",
+        "recycling": "Curbside Recycling"
     }
 
     app_label = 'waste_wizard'
