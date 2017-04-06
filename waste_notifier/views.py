@@ -177,7 +177,7 @@ def list_route_info(request, format=None):
 
             url = ScheduleDetail.GIS_URL.format(service_id, day)
             r = requests.get(url)
-            routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
+            routes = { feature['attributes']['FID']: { 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] }
 
             service_info.append( { day: routes } )
 

@@ -55,7 +55,7 @@ class ScheduleDetail(models.Model):
     DEFAULT_SERVICE_TYPE = SERVICE_TYPE_CHOICES[0][0]
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
-    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&spatialRel=esriSpatialRelIntersects&outFields=FID,week&returnDistinctValues=false&f=json"
+    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&spatialRel=esriSpatialRelIntersects&outFields=FID,week,contractor&returnDistinctValues=false&f=json"
 
     app_label = 'waste_schedule'
     detail_type = models.CharField('Type of information', max_length = 128, choices=TYPE_CHOICES)
