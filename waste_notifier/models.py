@@ -36,9 +36,6 @@ class Subscriber(models.Model):
         if not len(self.waste_area_ids):
             raise ValidationError({'waste_area_ids': "Waste area ids value is required"})
 
-        if not self.waste_area_ids.endswith(','):
-            self.waste_area_ids = self.waste_area_ids + ','
-
         # validate waste area ids is comma-delimited list of integer, ending in a comma
         if not (re.search(r'^[\d,]+,$', self.waste_area_ids)):
             raise ValidationError({'waste_area_ids': "Waste area ids must be comma-delimited list of integers, ending in a comma"})
@@ -50,6 +47,19 @@ class Subscriber(models.Model):
         # validate each comma-delimited value in service_type
         if not ScheduleDetail.is_valid_service_type(self.service_type):
             raise ValidationError({'service_type': "Invalid service type: " + self.service_type})
+
+    def save(self, *args, **kwargs):
+
+        # force waste_area_ids to start and end with ','
+        if not self.waste_area_ids.startswith(','):
+            self.waste_area_ids = ',' + self.waste_area_ids
+
+        if not self.waste_area_ids.endswith(','):
+            self.waste_area_ids = self.waste_area_ids + ','
+
+        # Call the "real" save() method in base class
+        super().save(*args, **kwargs)
+
 
     def activate(self):
         """

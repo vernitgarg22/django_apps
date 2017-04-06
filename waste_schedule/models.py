@@ -55,8 +55,7 @@ class ScheduleDetail(models.Model):
     DEFAULT_SERVICE_TYPE = SERVICE_TYPE_CHOICES[0][0]
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
-    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&returnIdsOnly=true&f=json"
-    GIS_URL_EXTRA = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=FID%2Cday%2C+week&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=json"
+    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&spatialRel=esriSpatialRelIntersects&outFields=FID,week&returnDistinctValues=false&f=json"
 
     app_label = 'waste_schedule'
     detail_type = models.CharField('Type of information', max_length = 128, choices=TYPE_CHOICES)
@@ -163,7 +162,7 @@ class ScheduleDetail(models.Model):
         service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
 
         # build url to get all waste areas for service and this day of week
-        url = ScheduleDetail.GIS_URL_EXTRA.format(service_id, weekday_str)
+        url = ScheduleDetail.GIS_URL.format(service_id, weekday_str)
 
         # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
         r = requests.get(url)
