@@ -1,3 +1,4 @@
+import requests
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
@@ -11,9 +12,6 @@ from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
 from twilio.rest import TwilioRestClient
-
-
-import pdb
 
 
 ACCOUNT_SID = "AC8b444a6aeeb1afdba3c064f2d105057d"
@@ -116,6 +114,9 @@ def send_notifications(request, date=datetime.today(), format=None):
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
 
+    if type(date) is str:
+        date = datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]))
+
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     content = {}
 
@@ -127,10 +128,6 @@ def send_notifications(request, date=datetime.today(), format=None):
         # Find out which waste areas are about to get pickups for this service
         routes = ScheduleDetail.get_waste_routes(date, service_type)
 
-
-        # pdb.set_trace()
-
-
         # get a list of route ids
         route_ids = [ int(id) for id in list(routes.keys()) if id ]
         for route_id in route_ids:
@@ -140,7 +137,7 @@ def send_notifications(request, date=datetime.today(), format=None):
             subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
 
             # also filter subscribers by route
-            subscribers = subscribers.filter(waste_area_ids__contains=str(route_id) + ',')
+            subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
             content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
 
             # keep track of what services each subscriber needs notifications for
@@ -161,5 +158,29 @@ def send_notifications(request, date=datetime.today(), format=None):
             from_ = PHONE_SENDER,
             body = get_service_message(notifications[phone_number], date),
         )
+
+    return Response(content)
+
+
+@api_view(['GET'])
+def list_route_info(request, format=None):
+    """
+    Output information about each waste collection route
+    """
+
+    content = {}
+    for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
+
+        service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
+        service_info = []
+        for day in ScheduleDetail.DAYS:
+
+            url = ScheduleDetail.GIS_URL.format(service_id, day)
+            r = requests.get(url)
+            routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
+
+            service_info.append( { day: routes } )
+
+        content[service_type] = service_info
 
     return Response(content)
