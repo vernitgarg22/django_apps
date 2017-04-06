@@ -168,19 +168,24 @@ def list_route_info(request, format=None):
     Output information about each waste collection route
     """
 
-    content = {}
+    routes_by_day = [ { day: {} } for day in ScheduleDetail.DAYS[:-2] ]
     for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
 
         service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
-        service_info = []
-        for day in ScheduleDetail.DAYS:
+        for day in ScheduleDetail.DAYS[:-2]:
 
             url = ScheduleDetail.GIS_URL.format(service_id, day)
             r = requests.get(url)
-            routes = { feature['attributes']['FID']: { 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] }
 
-            service_info.append( { day: routes } )
+            routes = [ { "route": feature['attributes']['FID'], 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] ]
+            index = ScheduleDetail.DAYS.index(day)
 
-        content[service_type] = service_info
+            for route in routes:
+                route_id = route["route"]
+                services_desc = service_type
+                if routes_by_day[index][day].get(route_id):
+                    services_desc = services_desc + ", " + routes_by_day[index][day][route_id]["services"]
+                route["services"] = services_desc
+                routes_by_day[index][day][route_id] = route
 
-    return Response(content)
+    return Response(routes_by_day)
