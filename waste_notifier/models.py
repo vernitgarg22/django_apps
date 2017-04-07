@@ -8,6 +8,15 @@ from django.core.validators import validate_comma_separated_integer_list
 from waste_schedule.models import ScheduleDetail
 
 
+def clean_comma_delimited_string(string):
+    """
+    Takes a comma-delimited string and makes sure it contains
+    only unique values and begins and ends with commas
+    """
+    tmp = [ str(val) + ',' for val in sorted(set(string.split(','))) if val ]
+    return ',' + ''.join(tmp)
+
+
 class Subscriber(models.Model):
 
     ACTIVE_STATUS = 'active'
@@ -50,12 +59,8 @@ class Subscriber(models.Model):
 
     def save(self, *args, **kwargs):
 
-        # force waste_area_ids to start and end with ','
-        if not self.waste_area_ids.startswith(','):
-            self.waste_area_ids = ',' + self.waste_area_ids
-
-        if not self.waste_area_ids.endswith(','):
-            self.waste_area_ids = self.waste_area_ids + ','
+        # clean up waste_area_ids
+        self.waste_area_ids = clean_comma_delimited_string(self.waste_area_ids)
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)

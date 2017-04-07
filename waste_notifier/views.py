@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+import datetime
 
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -41,8 +41,30 @@ def get_service_message(services, date):
     """
     Returns message to be sent to subscriber, including correct list of services and date
     """
-    return "Your next upcoming pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    return "City of Detroit Public Works:  Your next upcoming pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
 
+
+def get_service_detail_message(services, detail):
+    """
+    Returns message to be sent to subscriber, including correct list of services and informtion about service detail
+    (e.g., schedule change)
+    """
+
+    message = 'City of Detroit Public Works:  '
+    detail_desc = ''
+    if detail.detail_type == 'schedule':
+        detail_desc = "Your pickup for {0} for {1} is postponed to {2} due to {3}".format(get_services_desc(services), 
+            detail.normal_day.strftime("%b %d, %Y"), detail.new_day.strftime("%b %d, %Y"), detail.description)
+    elif detail.detail_type == 'info':
+        detail_desc = detail.description
+    elif detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
+        detail_desc = detail.description + ' ' + detail.new_day.strftime("%b %d, %Y")
+
+    message = message + detail_desc
+    if detail.note:
+        message = message + " - " + detail.note
+
+    return message
 
 @api_view(['POST'])
 def subscribe_notifications(request):
@@ -108,20 +130,57 @@ def confirm_notifications(request):
     return Response({ "subscriber": str(subscriber) })
 
 
+class SubscriberServices:
+    """
+    Keeps track of what subscribes are supposed to receive a notification
+    """
+
+    def __init__(self):
+        self.subscribers = {}
+        self.services = {}
+
+    def add(self, subscribers, service):
+        for subscriber in subscribers:
+            self.subscribers[subscriber.phone_number] = subscriber
+            services_list = self.services.get(subscriber.phone_number) or []
+            services_list.extend([service])
+            self.services[subscriber.phone_number] = services_list
+
+    def get_subscribers(self):
+        return self.subscribers.values()
+
+    def get_service(self, subscriber):
+        return self.services[subscriber.phone_number]
+
+
+class SubscriberServicesDetail(SubscriberServices):
+    """
+    Keeps track of what subscribes are supposed to receive a notification
+    about a schedule change
+    """
+
+    def __init__(self, schedule_detail, subscribers, service):
+        super().__init__()
+        self.schedule_detail = schedule_detail
+        for subscriber in subscribers:
+            self.add(subscribers, service)
+
+
 @api_view(['GET'])
-def send_notifications(request, date=datetime.today(), format=None):
+def send_notifications(request, date_val=datetime.date.today(), format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
 
+    date = date_val
     if type(date) is str:
-        date = datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]))
+        date = datetime.date(int(date_val[0:4]), int(date_val[4:6]), int(date_val[6:8]))
 
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     content = {}
 
-    subscribers_map = {}
-    notifications = {}
+    subscribers_services = SubscriberServices()
+    subscribers_services_details = []
 
     for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
 
@@ -140,24 +199,32 @@ def send_notifications(request, date=datetime.today(), format=None):
             subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
             content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
 
-            # keep track of what services each subscriber needs notifications for
-            for subscriber in subscribers:
-                subscribers_map[subscriber.phone_number] = subscriber
-                services = notifications.get(subscriber.phone_number) or []
-                services.extend([service_type])
-                notifications[subscriber.phone_number] = services
-
-            # TODO: factor in schedule changes
-            # TODO: factor in notifications
+            # does this route have any schedule changes for this date?
+            schedule_changes = ScheduleDetail.get_schedule_changes(route_id, date)
+            if schedule_changes:
+                subscribers_services_details.append(SubscriberServicesDetail(schedule_changes[0], subscribers, service_type))
+            else:
+                # keep track of what services each subscriber needs notifications for
+                subscribers_services.add(subscribers, service_type)
 
     # send text reminder to each subscriber needing a reminder
-    for phone_number in list(notifications.keys()):
-        subscriber = subscribers_map[phone_number]
+    for subscriber in subscribers_services.get_subscribers():
         client.messages.create(
             to = "+1" + subscriber.phone_number,
             from_ = PHONE_SENDER,
-            body = get_service_message(notifications[phone_number], date),
+            body = get_service_message(subscribers_services.get_service(subscriber), date),
         )
+
+    # send out notifications about any schedule changes
+    for subscribers_services_detail in subscribers_services_details:
+        for subscriber in subscribers_services_detail.get_subscribers():
+
+            message = get_service_detail_message(subscribers_services_detail.get_service(subscriber), subscribers_services_detail.schedule_detail)
+            client.messages.create(
+                to = "+1" + subscriber.phone_number,
+                from_ = PHONE_SENDER,
+                body = message,
+            )
 
     return Response(content)
 

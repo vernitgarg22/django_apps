@@ -71,7 +71,7 @@ class ScheduleDetail(models.Model):
         return (self.normal_day if self.normal_day else self.new_day)
 
     def __str__(self):
-        return self.detail_type + " - " + self.description
+        return 'type: ' + self.detail_type + " - description: " + self.description + ' - routes: ' + self.waste_area_ids
 
     def json(self):
         return {
@@ -128,6 +128,13 @@ class ScheduleDetail(models.Model):
 
             self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
+        # force waste_area_ids to start and end with ','
+        if not self.waste_area_ids.startswith(','):
+            self.waste_area_ids = ',' + self.waste_area_ids
+
+        if not self.waste_area_ids.endswith(','):
+            self.waste_area_ids = self.waste_area_ids + ','
+
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
 
@@ -182,5 +189,9 @@ class ScheduleDetail(models.Model):
         pertaining to routes getting serviced on the particular date
         """
 
-        routes = get_waste_routes(date, service_type)
-        return ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
+        routes = ScheduleDetail.get_waste_routes(date, service_type)
+        return ',' + ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
+
+    @staticmethod
+    def get_schedule_changes(route_id, date):
+        return ScheduleDetail.objects.using('default').filter(waste_area_ids__contains=',8,').filter(normal_day__exact=date)
