@@ -45,8 +45,12 @@ class SubscriberTests(TestCase):
             # Throw an assertion if we ever get here
             assert(false)
 
-    def test_subscribe_call(self):
+    def test_subscribe_and_confirm(self):
 
         c = Client()
+
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        self.assertEqual(response.status_code == 200, True)
+
+        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
         self.assertEqual(response.status_code == 200, True)
