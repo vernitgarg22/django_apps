@@ -1,4 +1,6 @@
+from django.test import Client
 from django.test import TestCase
+
 from django.core.exceptions import ValidationError
 
 from waste_notifier.models import Subscriber
@@ -42,3 +44,9 @@ class SubscriberTests(TestCase):
 
             # Throw an assertion if we ever get here
             assert(false)
+
+    def test_subscribe_call(self):
+
+        c = Client()
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        self.assertEqual(response.status_code == 200, True)

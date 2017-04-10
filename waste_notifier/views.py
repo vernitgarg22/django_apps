@@ -14,9 +14,9 @@ from waste_schedule.models import ScheduleDetail
 from twilio.rest import TwilioRestClient
 
 
-ACCOUNT_SID = "AC8b444a6aeeb1afdba3c064f2d105057d"
+ACCOUNT_SID = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
 AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
-PHONE_SENDER = "+13132283402"
+PHONE_SENDER = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDER']
 
 
 def tomorrow():
@@ -68,6 +68,7 @@ def get_service_detail_message(services, detail):
         message = message + " - " + detail.note
 
     return message
+
 
 @api_view(['POST'])
 def subscribe_notifications(request):

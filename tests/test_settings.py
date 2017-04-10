@@ -19,24 +19,8 @@ from django.core.exceptions import ImproperlyConfigured
 DJANGO_HOME = os.environ['DJANGO_HOME']
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-secrets = {
-    "SECRET_KEY": "test_secret",
-    "DATABASES": {
-        "default": {
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-            'ENGINE': 'django.db.backends.sqlite3',
-        },
-        "eql": {
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-            'ENGINE': 'django.db.backends.sqlite3',
-        }
-    },
-    "DEBUG": True,
-    "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "0.0.0.0" ],
-    "AUTO_LOADED_DATA_NAMES": [ "TWILIO_AUTH_TOKEN" ],
-    "TWILIO_AUTH_TOKEN": "test_token"
-}
-
+with open(DJANGO_HOME + "/tests/test_secrets.json") as f:
+    secrets = json.loads(f.read())
 
 def get_secret(setting, secrets=secrets, default=None):
     try:
