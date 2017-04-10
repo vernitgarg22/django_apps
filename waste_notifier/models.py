@@ -74,6 +74,14 @@ class Subscriber(models.Model):
         self.clean()
         self.save()
 
+    def deactivate(self):
+        """
+        Marks subscriber active, then validates and saves
+        """
+        self.status = Subscriber.INACTIVE_STATUS
+        self.clean()
+        self.save()
+
     def delete(self, using=None, keep_parents=False):
         """
         Do a soft-delete (i.e., set status to 'inactive')

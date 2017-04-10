@@ -24,7 +24,8 @@ def tomorrow():
 
 def get_services_desc(services):
     """
-    Returns comma-delimited list of services, with last comma replaced by 'and'
+    Returns comma-delimited list of services, with last comma replaced by 'and'.
+    Input should be a list of services
     """
 
     # build comma-delimited list of services
@@ -90,12 +91,47 @@ def subscribe_notifications(request):
     return Response({ "received": str(subscriber) })
 
 
+def update_subscription(phone_number, activate):
+    """
+    Find the subscriber and activate / deactivate them
+    """
+
+    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
+    if not subscribers.exists():
+        raise Http404("Subscriber not found")
+
+    subscriber = subscribers[0]
+    subscriber.activate() if activate else subscriber.deactivate()
+
+    # Get proper response
+    body = ''
+    if activate:
+        body = "City of Detroit Public Works:  your {0} pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)"
+    else:
+        body = "City of Detroit Public Works:  your {0} pickup reminders have been cancelled (reply to this message at any time with ADD ME to start receiving reminders again)"
+
+    # add description of desired list of services to response
+    services_desc = get_services_desc(subscriber.service_type.split(','))
+    body = body.format(services_desc)
+
+    # create a twilio client and send the subscriber a confirmation message
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
+    client.messages.create(
+        to = "+1" + subscriber.phone_number,
+        from_ = PHONE_SENDER,
+        body = body,
+    )
+
+    return Response({ "subscriber": str(subscriber) })
+
+
 @api_view(['POST'])
 def confirm_notifications(request):
     """
     Parse subscription confirmation and send a simple response
     """
 
+    # TODO add twilio validation
     # validator = RequestValidator(AUTH_TOKEN)
 
     # Verify required fields are present
@@ -109,26 +145,14 @@ def confirm_notifications(request):
 
     # Did user confirm they want to receive notifications?
     body = request.data['Body']
-    if body.find("YES") < 0:
+    body = body.strip()
+
+    if body == "ADD ME":
+        update_subscription(phone_number, True)
+    elif body == "REMOVE ME":
+        update_subscription(phone_number, False)
+    else:
         return Response({})
-
-    # Find the subscriber and activate them
-    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
-    if not subscribers.exists():
-        raise Http404("Subscriber not found")
-
-    subscriber = subscribers[0]
-    subscriber.activate()
-
-    # create a twilio client and send the subscriber a confirmation message
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    client.messages.create(
-        to = "+1" + subscriber.phone_number,
-        from_ = PHONE_SENDER,
-        body = "City of Detroit Public Works:  your trash & recycling pickup reminders have been confirmed\n(reply STOP to any of the reminders to stop receiving them)",
-    )
-
-    return Response({ "subscriber": str(subscriber) })
 
 
 class SubscriberServices:
