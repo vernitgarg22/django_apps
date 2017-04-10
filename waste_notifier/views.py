@@ -149,9 +149,9 @@ def confirm_notifications(request):
     body = body.strip()
 
     if body == "ADD ME":
-        update_subscription(phone_number, True)
+        return update_subscription(phone_number, True)
     elif body == "REMOVE ME":
-        update_subscription(phone_number, False)
+        return update_subscription(phone_number, False)
     else:
         return Response({})
 
