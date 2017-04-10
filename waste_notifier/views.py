@@ -19,6 +19,9 @@ AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
 PHONE_SENDER = "+13132283402"
 
 
+def tomorrow():
+    return datetime.date.today() + datetime.timedelta(days=1)
+
 def get_services_desc(services):
     """
     Returns comma-delimited list of services, with last comma replaced by 'and'
@@ -42,7 +45,6 @@ def get_service_message(services, date):
     Returns message to be sent to subscriber, including correct list of services and date
     """
     return "City of Detroit Public Works:  Your next upcoming pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
-
 
 def get_service_detail_message(services, detail):
     """
@@ -85,7 +87,6 @@ def subscribe_notifications(request):
         body = "City of Detroit Public Works:  reply with YES to confirm that you want to receive trash & recycling pickup reminders",
     )
 
-    # TODO return better response?
     return Response({ "received": str(subscriber) })
 
 
@@ -167,7 +168,7 @@ class SubscriberServicesDetail(SubscriberServices):
 
 
 @api_view(['GET'])
-def send_notifications(request, date_val=datetime.date.today(), format=None):
+def send_notifications(request, date_val=tomorrow(), format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
@@ -200,12 +201,30 @@ def send_notifications(request, date_val=datetime.date.today(), format=None):
             content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
 
             # does this route have any schedule changes for this date?
-            schedule_changes = ScheduleDetail.get_schedule_changes(route_id, date)
-            if schedule_changes:
-                subscribers_services_details.append(SubscriberServicesDetail(schedule_changes[0], subscribers, service_type))
+            schedule_details = ScheduleDetail.get_schedule_changes(route_id, date)
+            if schedule_details:
+                subscribers_services_details.append(SubscriberServicesDetail(schedule_details[0], subscribers, service_type))
             else:
                 # keep track of what services each subscriber needs notifications for
                 subscribers_services.add(subscribers, service_type)
+
+    # check for schedule details that are city-wide (i.e., not tied to a specific route)
+    schedule_details = ScheduleDetail.get_citywide_schedule_changes(date)
+    for detail in schedule_details:
+
+        subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type)
+
+        # Find anyone subscribed to any of the services for this schedule detail
+        if detail.service_type == 'all':
+            subscribers = Subscriber.objects.filter(status__exact='active')
+
+            subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST)
+        else:
+            for service in detail.service_type.split(','):
+                subscribers = Subscriber.objects.filter(status__exact='active').filter(service_type__contains=service)
+                subscribers_services_detail.add(subscribers, service)
+
+        subscribers_services_details.append(subscribers_services_detail)
 
     # send text reminder to each subscriber needing a reminder
     for subscriber in subscribers_services.get_subscribers():

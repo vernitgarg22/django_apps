@@ -193,5 +193,15 @@ class ScheduleDetail(models.Model):
         return ',' + ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
 
     @staticmethod
+    def get_citywide_schedule_changes(date):
+        """
+        Returns schedule details that are city-wide (i.e., not tied to a specific route) and match given date
+        """
+        return ScheduleDetail.objects.filter(waste_area_ids__isnull=True) | ScheduleDetail.objects.filter(waste_area_ids__exact='')
+
+    @staticmethod
     def get_schedule_changes(route_id, date):
+        """
+        Returns schedule details pertaining to the given route and date
+        """
         return ScheduleDetail.objects.using('default').filter(waste_area_ids__contains=',8,').filter(normal_day__exact=date)
