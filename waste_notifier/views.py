@@ -86,7 +86,7 @@ def subscribe_notifications(request):
     client.messages.create(
         to = "+1" + subscriber.phone_number,
         from_ = PHONE_SENDER,
-        body = "City of Detroit Public Works:  reply with YES to confirm that you want to receive trash & recycling pickup reminders",
+        body = "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash & recycling pickup reminders",
     )
 
     return Response({ "received": str(subscriber) })
