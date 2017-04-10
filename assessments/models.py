@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import sqlserver_ado
+from sqlserver_ado.fields import BigAutoField
 
 from django.db import models
 
