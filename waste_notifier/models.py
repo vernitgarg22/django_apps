@@ -18,7 +18,7 @@ class Subscriber(models.Model):
         (INACTIVE_STATUS, 'Inactive'),
     )
     DEFAULT_STATUS=INACTIVE_STATUS
-    VALID_CHOICE_VALUES = [ t[0] for t in STATUS_CHOICES ]
+    VALID_STATUS_VALUES = [ ACTIVE_STATUS, INACTIVE_STATUS ]
 
     phone_number = models.CharField('Subscriber phone number', unique = True, max_length = 32)
     waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64, validators=[validate_comma_separated_integer_list])
@@ -41,8 +41,8 @@ class Subscriber(models.Model):
         validators.validate_comma_separated_integer_list(self.waste_area_ids)
 
         # only certain values are allowed for status
-        if not self.VALID_CHOICE_VALUES.count(self.status):
-            raise ValidationError({'status': "Status must be one of " + str(self.VALID_CHOICE_VALUES)})
+        if not self.VALID_STATUS_VALUES.count(self.status):
+            raise ValidationError({'status': "Status must be one of " + str(self.VALID_STATUS_VALUES)})
 
         # validate each comma-delimited value in service_type
         if not ScheduleDetail.is_valid_service_type(self.service_type):

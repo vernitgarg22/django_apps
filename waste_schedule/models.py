@@ -132,6 +132,9 @@ class ScheduleDetail(models.Model):
             recycling_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.RECYCLING)
             bulk_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.BULK)
 
+            if not self.note:
+                self.note = ''
+
             self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
         # clean up waste_area_ids
@@ -145,6 +148,11 @@ class ScheduleDetail(models.Model):
         """
         Returns true if each comma-separated value in the service_type string is valid
         """
+
+        service_type = service_type.strip()
+        if not service_type:
+            return False
+
         service_map = { val[0]: val[1] for val in ScheduleDetail.SERVICE_TYPE_CHOICES }
         for type_val in service_type.split(','):
             if type_val and not service_map.get(type_val):
