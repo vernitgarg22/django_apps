@@ -6,15 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_comma_separated_integer_list
 
 from waste_schedule.models import ScheduleDetail
-
-
-def clean_comma_delimited_string(string):
-    """
-    Takes a comma-delimited string and makes sure it contains
-    only unique values and begins and ends with commas
-    """
-    tmp = [ str(val) + ',' for val in sorted(set(string.split(','))) if val ]
-    return ',' + ''.join(tmp)
+from cod_utils import util
 
 
 class Subscriber(models.Model):
@@ -45,9 +37,8 @@ class Subscriber(models.Model):
         if not len(self.waste_area_ids):
             raise ValidationError({'waste_area_ids': "Waste area ids value is required"})
 
-        # validate waste area ids is comma-delimited list of integer, ending in a comma
-        if not (re.search(r'^[\d,]+,$', self.waste_area_ids)):
-            raise ValidationError({'waste_area_ids': "Waste area ids must be comma-delimited list of integers, ending in a comma"})
+        # validate the waste area ids
+        validators.validate_comma_separated_integer_list(self.waste_area_ids)
 
         # only certain values are allowed for status
         if not self.VALID_CHOICE_VALUES.count(self.status):
@@ -60,7 +51,7 @@ class Subscriber(models.Model):
     def save(self, *args, **kwargs):
 
         # clean up waste_area_ids
-        self.waste_area_ids = clean_comma_delimited_string(self.waste_area_ids)
+        self.waste_area_ids = util.clean_comma_delimited_string(self.waste_area_ids)
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)

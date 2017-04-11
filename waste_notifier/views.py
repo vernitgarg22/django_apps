@@ -8,10 +8,10 @@ from django.http import Http404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from twilio.rest import TwilioRestClient
+
 from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
-
-from twilio.rest import TwilioRestClient
 
 
 ACCOUNT_SID = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
@@ -27,6 +27,9 @@ def get_services_desc(services):
     Returns comma-delimited list of services, with last comma replaced by 'and'.
     Input should be a list of services
     """
+
+    if services[0] == "all":
+        return "waste collection"
 
     # build comma-delimited list of services
     desc = ''.join([ service + ', ' for service in list(set(services)) ])
@@ -203,7 +206,8 @@ def send_notifications(request, date_val=tomorrow(), format=None):
         date = datetime.date(int(date_val[0:4]), int(date_val[4:6]), int(date_val[6:8]))
 
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    content = {}
+
+    content = { "citywide": {} }
 
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
@@ -223,7 +227,11 @@ def send_notifications(request, date_val=tomorrow(), format=None):
 
             # also filter subscribers by route
             subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
-            content[route_id] = [ subscriber.phone_number for subscriber in subscribers ]
+
+            # track, by route, which phone numbers we have texted
+            if not content.get(service_type):
+                content[service_type] = {}
+            content[service_type].update( { route_id: { subscriber.phone_number: 1 for subscriber in subscribers } } )
 
             # does this route have any schedule changes for this date?
             schedule_details = ScheduleDetail.get_schedule_changes(route_id, date)
@@ -245,9 +253,13 @@ def send_notifications(request, date_val=tomorrow(), format=None):
 
             subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST)
         else:
-            for service in detail.service_type.split(','):
-                subscribers = Subscriber.objects.filter(status__exact='active').filter(service_type__contains=service)
-                subscribers_services_detail.add(subscribers, service)
+            for service_type in detail.service_type.split(','):
+                subscribers = Subscriber.objects.filter(status__exact='active')
+                subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
+                subscribers_services_detail.add(subscribers, service_type)
+
+                # track which phone numbers we have texted citywide alerts
+                content["citywide"].update( { subscriber.phone_number: 1 for subscriber in subscribers } )
 
         subscribers_services_details.append(subscribers_services_detail)
 

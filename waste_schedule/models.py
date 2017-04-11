@@ -3,10 +3,12 @@ from datetime import date
 from enum import Enum
 
 from django.db import models
-from waste_wizard.models import WasteItem
 from django.core.exceptions import ValidationError
 from django.core import validators
 from django.core.validators import validate_comma_separated_integer_list
+
+from waste_wizard.models import WasteItem
+from cod_utils import util
 
 
 class BiWeekType(Enum):
@@ -86,6 +88,10 @@ class ScheduleDetail(models.Model):
 
     def clean(self):
 
+        # validate the waste area ids (but allow empty string)
+        if self.waste_area_ids:
+            validators.validate_comma_separated_integer_list(self.waste_area_ids)
+
         # every detail must have either a normal date or a new date (required for sorting)
         if not self.normal_day and not self.new_day:
             raise ValidationError({'normal_day': "Must have either a normal date or a new date"})
@@ -128,12 +134,8 @@ class ScheduleDetail(models.Model):
 
             self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
-        # force waste_area_ids to start and end with ','
-        if not self.waste_area_ids.startswith(','):
-            self.waste_area_ids = ',' + self.waste_area_ids
-
-        if not self.waste_area_ids.endswith(','):
-            self.waste_area_ids = self.waste_area_ids + ','
+        # clean up waste_area_ids
+        self.waste_area_ids = util.clean_comma_delimited_string(self.waste_area_ids)
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
@@ -197,7 +199,9 @@ class ScheduleDetail(models.Model):
         """
         Returns schedule details that are city-wide (i.e., not tied to a specific route) and match given date
         """
-        return ScheduleDetail.objects.filter(waste_area_ids__isnull=True) | ScheduleDetail.objects.filter(waste_area_ids__exact='')
+
+        details = ScheduleDetail.objects.filter(waste_area_ids__isnull=True) | ScheduleDetail.objects.filter(waste_area_ids__exact='')
+        return details.filter(normal_day__exact=date)
 
     @staticmethod
     def get_schedule_changes(route_id, date):
@@ -205,3 +209,7 @@ class ScheduleDetail(models.Model):
         Returns schedule details pertaining to the given route and date
         """
         return ScheduleDetail.objects.using('default').filter(waste_area_ids__contains=',8,').filter(normal_day__exact=date)
+
+
+from waste_schedule.models import ScheduleDetail
+ScheduleDetail.objects.filter(detail_type__exact='info')
