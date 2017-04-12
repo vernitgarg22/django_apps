@@ -209,15 +209,13 @@ class ScheduleDetail(models.Model):
         """
 
         details = ScheduleDetail.objects.filter(waste_area_ids__isnull=True) | ScheduleDetail.objects.filter(waste_area_ids__exact='')
-        return details.filter(normal_day__exact=date)
+        return details.filter(normal_day__exact=date) | details.filter(new_day__exact=date)
 
     @staticmethod
     def get_schedule_changes(route_id, date):
         """
         Returns schedule details pertaining to the given route and date
         """
-        return ScheduleDetail.objects.using('default').filter(waste_area_ids__contains=',8,').filter(normal_day__exact=date)
 
-
-from waste_schedule.models import ScheduleDetail
-ScheduleDetail.objects.filter(detail_type__exact='info')
+        details = ScheduleDetail.objects.using('default').filter(waste_area_ids__contains="," + str(route_id) + ",").filter(normal_day__exact=date)
+        return details.filter(normal_day__exact=date) | details.filter(new_day__exact=date)
