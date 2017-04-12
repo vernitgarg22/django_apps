@@ -29,7 +29,10 @@ class Subscriber(models.Model):
     comment = models.CharField('Internal use only', max_length = 128, blank=True, null=True)
 
     def __str__(self):
-        return self.phone_number + ' - routes: ' + self.waste_area_ids + ' - status: ' + self.status + ' - services: ' + self.service_type
+        string = self.phone_number + ' - routes: ' + self.waste_area_ids + ' - status: ' + self.status + ' - services: ' + self.service_type
+        if self.comment:
+            string = string + " (" + self.comment + ")"
+        return string
 
     def clean(self):
 
