@@ -207,18 +207,25 @@ def send_notifications(request, date_val=tomorrow(), format=None):
 
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
+    # TODO output what type of reminder was sent out:
+    # - normal weekly reminder
+    # - schedule change
+    # - info only notice
+    # - start or end date
     content = { "citywide": {} }
 
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
 
+    # loop through the different types of service and check for subscribers
+    # to each route servicing a service type on the given date
     for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
 
         # Find out which waste areas are about to get pickups for this service
         routes = ScheduleDetail.get_waste_routes(date, service_type)
 
         # get a list of route ids
-        route_ids = [ int(id) for id in list(routes.keys()) if id ]
+        route_ids = [ int(id) for id in list(routes.keys()) ]
         for route_id in route_ids:
 
             # get all active subscribers to this service ...
