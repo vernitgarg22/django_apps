@@ -1,3 +1,4 @@
+import datetime
 import re
 
 from django.db import models
@@ -24,6 +25,8 @@ class Subscriber(models.Model):
     waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64, validators=[validate_comma_separated_integer_list])
     status = models.CharField('Subscriber status (for soft deletes)', max_length = 32, choices=STATUS_CHOICES, default=DEFAULT_STATUS)
     service_type = models.CharField('Service', max_length=32, default=ScheduleDetail.DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + ScheduleDetail.SERVICES_LIST + ')')
+    last_status_update = models.DateTimeField('Time of last status change', blank=True, null=True)
+    comment = models.CharField('Internal use only', max_length = 128, blank=True, null=True)
 
     def __str__(self):
         return self.phone_number + ' - routes: ' + self.waste_area_ids + ' - status: ' + self.status + ' - services: ' + self.service_type
@@ -34,14 +37,14 @@ class Subscriber(models.Model):
         if not (re.search(r'^\d{10}$', self.phone_number)):
             raise ValidationError({'phone_number': "Phone number must be 10 digits"})
 
-        if not len(self.waste_area_ids):
+        if not self.waste_area_ids:
             raise ValidationError({'waste_area_ids': "Waste area ids value is required"})
 
         # validate the waste area ids
         validators.validate_comma_separated_integer_list(self.waste_area_ids)
 
         # only certain values are allowed for status
-        if not self.VALID_STATUS_VALUES.count(self.status):
+        if self.status not in self.VALID_STATUS_VALUES:
             raise ValidationError({'status': "Status must be one of " + str(self.VALID_STATUS_VALUES)})
 
         # validate each comma-delimited value in service_type
@@ -57,21 +60,27 @@ class Subscriber(models.Model):
         super().save(*args, **kwargs)
 
 
+    def flip_status(self):
+        """
+        Internal use only:  'flips' status from active to inactive or vice versa, and
+        updates last_status_update to current time.
+        """
+        self.status = Subscriber.ACTIVE_STATUS if self.status != Subscriber.ACTIVE_STATUS else Subscriber.INACTIVE_STATUS
+        self.last_status_update = datetime.datetime.now()
+        self.clean()
+        self.save()
+
     def activate(self):
         """
         Marks subscriber active, then validates and saves
         """
-        self.status = Subscriber.ACTIVE_STATUS
-        self.clean()
-        self.save()
+        self.flip_status()
 
     def deactivate(self):
         """
-        Marks subscriber active, then validates and saves
+        Marks subscriber inactive, then validates and saves
         """
-        self.status = Subscriber.INACTIVE_STATUS
-        self.clean()
-        self.save()
+        self.flip_status()
 
     def delete(self, using=None, keep_parents=False):
         """

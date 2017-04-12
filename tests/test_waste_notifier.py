@@ -39,6 +39,11 @@ class WasteNotifierTests(TestCase):
             { "phone_number": "2345678912",   "waste_area_ids": "1,2,3", "service_type": "" },
             { "phone_number": "234-567-8912", "waste_area_ids": "1,2,3", "service_type": "" },
             { "phone_number": "",             "waste_area_ids": "1,2,3", "service_type": "" },
+            { "phone_number": "234567891",   "waste_area_ids": "1,2,3", "service_type": "all", "status": "active" },
+            { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": "" },
+            { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": None },
+            { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": "on" },
+            { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": "off" },
         ]
 
         for data in INVALID_DATA:
