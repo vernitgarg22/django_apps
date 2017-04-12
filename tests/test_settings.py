@@ -92,7 +92,6 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'django_apps.urls'
 
-# TODO is this safe?
 CORS_ORIGIN_ALLOW_ALL = True 
 
 TEMPLATES = [
