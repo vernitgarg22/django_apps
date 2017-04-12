@@ -79,6 +79,24 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
         self.assertEqual(response.status_code == 200, True)
 
+        subscriber = Subscriber.objects.first()
+        self.assertEqual(subscriber.status == 'active', True)
+        self.assertEqual(subscriber.last_status_update != None and subscriber.last_status_update != '', True)
+
+    def test_subscribe_and_decline(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        self.assertEqual(response.status_code == 200, True)
+
+        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
+        self.assertEqual(response.status_code == 200, True)
+
+        subscriber = Subscriber.objects.first()
+        self.assertEqual(subscriber.status == 'inactive', True)
+        self.assertEqual(subscriber.last_status_update != None and subscriber.last_status_update != '', True)
+
     def test_send_reminder(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", service_type="all")
         subscriber.activate()

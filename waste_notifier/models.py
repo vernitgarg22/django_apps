@@ -60,12 +60,12 @@ class Subscriber(models.Model):
         super().save(*args, **kwargs)
 
 
-    def flip_status(self):
+    def change_status(self, activate):
         """
-        Internal use only:  'flips' status from active to inactive or vice versa, and
+        Internal use only:  changes status to active or inactive and
         updates last_status_update to current time.
         """
-        self.status = Subscriber.ACTIVE_STATUS if self.status != Subscriber.ACTIVE_STATUS else Subscriber.INACTIVE_STATUS
+        self.status = Subscriber.ACTIVE_STATUS if activate else Subscriber.INACTIVE_STATUS
         self.last_status_update = datetime.datetime.now()
         self.clean()
         self.save()
@@ -74,13 +74,13 @@ class Subscriber(models.Model):
         """
         Marks subscriber active, then validates and saves
         """
-        self.flip_status()
+        self.change_status(True)
 
     def deactivate(self):
         """
         Marks subscriber inactive, then validates and saves
         """
-        self.flip_status()
+        self.change_status(False)
 
     def delete(self, using=None, keep_parents=False):
         """
