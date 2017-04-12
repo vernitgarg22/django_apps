@@ -74,16 +74,15 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
         self.assertEqual(response.status_code == 200, True)
 
-    def test_subscribe_and_confirm(self):
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+    def test_send_reminder(self):
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", service_type="all")
         subscriber.activate()
-        detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='Unit Test Holiday', normal_day=datetime.date(2017, 4, 7), new_day=datetime.date(2017, 4, 8), note='')
-        detail.clean()
-        detail.save()
 
         c = Client()
-        response = c.get('/waste_notifier/send/')
-        self.assertEqual(response.status_code == 200, True)
+        response = c.get('/waste_notifier/send/20170417/')
+        self.assertTrue(response.status_code == 200)
+        expected = {'trash': {0: {'5005550006': 1}, 1: {}, 14: {}}, 'recycling': {1: {}, 22: {}}, 'bulk': {1: {}, 10: {}}, 'citywide': {}}
+        self.assertDictEqual(expected, response.data, "Phone number did not get reminder")
 
     def test_send_info(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
@@ -95,8 +94,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.get('/waste_notifier/send/20180101/')
         self.assertTrue(response.status_code == 200)
-        expected = {'recycling': {1: {}, 22: {}}, 'bulk': {1: {}, 10: {}}, 'citywide': {'5005550006': 1}, 'trash': {1: {}, 14: {}}}
-        self.assertDictEqual(expected, response.data, "Phone number did not get alert")
+        expected = {'recycling': {1: {}, 22: {}}, 'bulk': {1: {}, 10: {}}, 'citywide': {'5005550006': 1}, 'trash': {0: {}, 1: {}, 14: {}}}
+        self.assertDictEqual(expected, response.data, "Phone number did not get info")
 
     def test_send_no_info(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
@@ -109,7 +108,7 @@ class WasteNotifierTests(TestCase):
         response = c.get('/waste_notifier/send/20180102/')
         self.assertTrue(response.status_code == 200)
         expected = {'trash': {2: {}, 3: {}, 13: {}}, 'bulk': {2: {}, 12: {}}, 'recycling': {2: {}, 19: {}, 20: {}}, 'citywide': {}}
-        self.assertDictEqual(expected, response.data, "Phone number should not have gotten alert")
+        self.assertDictEqual(expected, response.data, "Phone number should not have gotten info")
 
     def test_send_schedule_change(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
@@ -145,7 +144,7 @@ class WasteNotifierTests(TestCase):
         response = c.get('/waste_notifier/send/20170407/')
         self.assertTrue(response.status_code == 200)
         expected = {'recycling': {8: {'5005550006': 1}, 11: {}}, 'citywide': {}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'bulk': {8: {'5005550006': 1}, 19: {}}}
-        self.assertDictEqual(expected, response.data, "Alerts for a/b onweek did not work right")
+        self.assertDictEqual(expected, response.data, "Alerts for a/b onweek failed")
 
     def test_send_ab_offweek(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
@@ -155,7 +154,7 @@ class WasteNotifierTests(TestCase):
         response = c.get('/waste_notifier/send/20170414/')
         self.assertTrue(response.status_code == 200)
         expected = {'recycling': {9: {}, 10: {}}, 'bulk': {9: {}, 18: {}}, 'citywide': {}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}}
-        self.assertDictEqual(expected, response.data, "Alerts for a/b offweek did not work right")
+        self.assertDictEqual(expected, response.data, "Alerts for a/b offweek failed")
 
     def test_send_mix_days(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="12,14,22", service_type="all")
@@ -163,7 +162,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
         date_results = {
-            '20170417': {'recycling': {1: {}, 22: {'5005550006': 1}}, 'citywide': {}, 'trash': {1: {}, 14: {'5005550006': 1}}, 'bulk': {1: {}, 10: {}}},
+            '20170417': {'recycling': {1: {}, 22: {'5005550006': 1}}, 'citywide': {}, 'trash': {0: {}, 1: {}, 14: {'5005550006': 1}}, 'bulk': {1: {}, 10: {}}},
             '20170418': {'trash': {2: {}, 3: {}, 13: {}}, 'citywide': {}, 'recycling': {2: {}, 19: {}, 20: {}}, 'bulk': {2: {}, 12: {'5005550006': 1}}},
             '20170419': {'bulk': {4: {}, 15: {}}, 'recycling': {16: {}, 17: {}, 4: {}}, 'trash': {11: {}, 4: {}, 5: {}}, 'citywide': {}}
         }
@@ -171,7 +170,7 @@ class WasteNotifierTests(TestCase):
         for date, expected in date_results.items():
             response = c.get("/waste_notifier/send/{}/".format(date))
             self.assertTrue(response.status_code == 200)
-            self.assertDictEqual(expected, response.data, "Alerts for a/b offweek did not work right")
+            self.assertDictEqual(expected, response.data, "Alerts for subscriber with mix of pickup days failed")
 
     def test_send_start_date(self):
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
@@ -183,7 +182,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.get('/waste_notifier/send/20170417/')
         self.assertTrue(response.status_code == 200)
-        expected = {'trash': {1: {}, 14: {}}, 'citywide': {'5005550006': 1}, 'recycling': {1: {}, 22: {}}, 'bulk': {1: {}, 10: {}}}
+        expected = {'trash': {0: {}, 1: {}, 14: {}}, 'citywide': {'5005550006': 1}, 'recycling': {1: {}, 22: {}}, 'bulk': {1: {}, 10: {}}}
         self.assertDictEqual(expected, response.data, "Yard waste start date alert should have been sent")
 
     def test_send_end_date(self):
@@ -197,4 +196,4 @@ class WasteNotifierTests(TestCase):
         response = c.get('/waste_notifier/send/20171215/')
         self.assertTrue(response.status_code == 200)
         expected = {'recycling': {8: {'5005550006': 1}, 11: {}}, 'bulk': {8: {'5005550006': 1}, 19: {}}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'citywide': {'5005550006': 1}}
-        self.assertDictEqual(expected, response.data, "Yard waste start date alert should have been sent")
+        self.assertDictEqual(expected, response.data, "Yard waste end date alert should have been sent")
