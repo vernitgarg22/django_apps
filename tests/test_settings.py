@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     'waste_schedule',
     'waste_notifier',
     'waste_wizard',
+    'weather_info',
     'corsheaders',
 )
 

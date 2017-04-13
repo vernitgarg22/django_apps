@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/$', assessments.views.get_sales_property),
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/$', assessments.views.get_sales_property_recent),
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/years/(?P<years_back>[0-9]+)/$', assessments.views.get_sales_property),
+    url(r'^weather_info/', include('weather_info.urls', namespace="weather_info")),
     
     # waste sorter
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
