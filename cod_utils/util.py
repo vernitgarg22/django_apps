@@ -3,9 +3,6 @@ from django.core.exceptions import PermissionDenied
 
 from twilio.util import RequestValidator
 
-# { "From": "9178428901", "Body": "ADD ME" }
-
-
 
 def clean_comma_delimited_string(string):
     """
@@ -39,9 +36,9 @@ class MsgValidator():
         # Validate the request using its URL, POST data,
         # and X-TWILIO-SIGNATURE header
         request_valid = validator.validate(
-                request.path_info,
+                request.build_absolute_uri(),
                 request.data,
-                request.META.get('X-TWILIO-SIGNATURE', ''))
+                request.META.get('HTTP_X_TWILIO_SIGNATURE', ''))
 
         if not request_valid:
             raise PermissionDenied('Request failed twilio validation check')
