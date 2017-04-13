@@ -5,7 +5,6 @@ from rest_framework import routers
 import waste_notifier.views
 import waste_schedule.views
 import assessments.views
-import lobbyist_data.views
 
 
 # To change this see 
@@ -38,9 +37,6 @@ urlpatterns = [
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/$', assessments.views.get_sales_property_recent),
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/years/(?P<years_back>[0-9]+)/$', assessments.views.get_sales_property),
     
-    url(r'^api/lobbyist_data$', lobbyist_data.views.lookup),
-    url(r'^api/lobbyist_data/files/([0-9]*)/$', lobbyist_data.views.file),
-
     # waste sorter
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),
 ]
