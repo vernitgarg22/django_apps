@@ -13,6 +13,8 @@ from twilio.rest import TwilioRestClient
 from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
+import cod_utils.util
+
 
 ACCOUNT_SID = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
 AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
@@ -25,7 +27,7 @@ def tomorrow():
 def get_services_desc(services):
     """
     Returns comma-delimited list of services, with last comma replaced by 'and'.
-    Input should be a list of services
+    Input should be a list of services.
     """
 
     if services[0] == "all":
@@ -78,6 +80,8 @@ def subscribe_notifications(request):
     """
     Parse subscription request and text user request for confirmation
     """
+
+    # TODO REVIEW make it impossible to call this from outside our network?
 
     # update existing subscriber or create new one from data
     subscriber, error = Subscriber.update_or_create_from_dict(request.data)
@@ -135,8 +139,8 @@ def confirm_notifications(request):
     Parse subscription confirmation and send a simple response
     """
 
-    # TODO add twilio validation
-    # validator = RequestValidator(AUTH_TOKEN)
+    # # Make sure the call came from twilio and is valid
+    cod_utils.util.MsgValidator().validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
@@ -200,6 +204,8 @@ def send_notifications(request, date_val=tomorrow(), format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
+
+    # TODO REVIEW make it impossible to call this from outside our network?
 
     date = date_val
     if type(date) is str:
