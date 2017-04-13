@@ -199,7 +199,7 @@ class SubscriberServicesDetail(SubscriberServices):
             self.add(subscribers, service)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def send_notifications(request, date_val=tomorrow(), format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
