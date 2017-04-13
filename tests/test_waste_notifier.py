@@ -6,7 +6,10 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 from waste_notifier.models import Subscriber
+
 from waste_schedule.models import ScheduleDetail
+
+import tests.disabled
 
 
 class WasteNotifierTests(TestCase):

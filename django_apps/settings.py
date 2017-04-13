@@ -58,6 +58,10 @@ load_auto_loaded_data()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
+# Monkey-patch stuff that we want disabled locally
+if DEBUG:
+    import tests.disabled
+
 
 # Application definition
 
