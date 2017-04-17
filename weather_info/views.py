@@ -21,7 +21,7 @@ def remover(x):
 
 
 @api_view(['GET'])
-def get_latest(request, lat="42.3587", lon="-82.9934"):
+def get_latest(request, lat="42.331427", lon="-83.045754"):
     """
     Get latest weather data
     """
