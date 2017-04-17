@@ -21,9 +21,6 @@ AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
 PHONE_SENDER = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDER']
 
 
-def tomorrow():
-    return datetime.date.today() + datetime.timedelta(days=1)
-
 def get_services_desc(services):
     """
     Returns comma-delimited list of services, with last comma replaced by 'and'.
@@ -200,7 +197,7 @@ class SubscriberServicesDetail(SubscriberServices):
 
 
 @api_view(['POST'])
-def send_notifications(request, date_val=tomorrow(), format=None):
+def send_notifications(request, date_val=cod_utils.util.tomorrow(), format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
@@ -218,7 +215,7 @@ def send_notifications(request, date_val=tomorrow(), format=None):
     # - schedule change
     # - info only notice
     # - start or end date
-    content = { "citywide": {} }
+    content = { "meta": { "date_applicable": str(date) }, "citywide": {} }
 
     subscribers_services = SubscriberServices()
     subscribers_services_details = []

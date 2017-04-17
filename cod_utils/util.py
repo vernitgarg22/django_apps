@@ -1,7 +1,16 @@
+import datetime
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
 from twilio.util import RequestValidator
+
+
+def tomorrow():
+    """
+    Return tomorrow as a datetime object
+    """
+    return datetime.date.today() + datetime.timedelta(days=1)
 
 
 def clean_comma_delimited_string(string):
