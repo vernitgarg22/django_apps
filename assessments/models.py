@@ -175,5 +175,5 @@ class Sales(models.Model):
 
 
 # from assessments.models import Sales
-# Sales.objects.using('eql').get(id=3845977)
-# Sales.objects.using("eql").filter(addresscombined__contains='7840 van dyke pl')
+# Sales.objects.get(id=3845977)
+# Sales.objects.filter(addresscombined__contains='7840 van dyke pl')

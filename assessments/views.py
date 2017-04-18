@@ -53,7 +53,7 @@ def get_sales_property(request, pnum=None, years_back=None, format=None):
 
     # Search for parcels with the given parcel num
     # pnum = request.path_info.split('/')[2]
-    results = Sales.objects.using('eql').filter(pnum__iexact=pnum)
+    results = Sales.objects.filter(pnum__iexact=pnum)
 
     # filter recent-years only?
     if years_back != None:
@@ -92,7 +92,7 @@ def get_sales_property_address(request, address=None, years_back=None, format=No
 
     # Search for parcels with the given parcel num
     # pnum = request.path_info.split('/')[2]
-    results = Sales.objects.using('eql').filter(addresscombined__contains=address)
+    results = Sales.objects.filter(addresscombined__contains=address)
 
     # filter recent-years only?
     if years_back != None:
@@ -120,18 +120,18 @@ def get_sales_property_address_recent(request, address=None, format=None):
 # from datetime import datetime, timedelta
 # from django.db.models import Q
 # pnum='22084716.'
-# results = Sales.objects.using('eql').filter(pnum__iexact=pnum)
+# results = Sales.objects.filter(pnum__iexact=pnum)
 # date_min = datetime.now() - timedelta(days=5 * 365)
 # date_min = datetime.today() - timedelta(days=5 * 365)
 # results = results.filter(saledate__gte=date_min)
 
-# results = Sales.objects.using('eql').filter(id__iexact=3769164).filter(saledate__gte=date_min)
-# results = Sales.objects.using('eql').filter(id__iexact=3769164).filter(saledate__gte=today)
-# results = Sales.objects.using('eql').filter(id__iexact=3769164).filter(datetime.combine(date_min, time.min))
+# results = Sales.objects.filter(id__iexact=3769164).filter(saledate__gte=date_min)
+# results = Sales.objects.filter(id__iexact=3769164).filter(saledate__gte=today)
+# results = Sales.objects.filter(id__iexact=3769164).filter(datetime.combine(date_min, time.min))
 
 
 # Events = Event.objects.filter(Q(date=now.date(),time__gte=now.time())|Q(date__gt=now.date())).order_by('-date')
-# results = Sales.objects.using('eql').filter(id__iexact=3769164).filter(Q(saledate__gte=date_min)
+# results = Sales.objects.filter(id__iexact=3769164).filter(Q(saledate__gte=date_min)
 
-# results = Sales.objects.using('eql').filter(pnum__iexact=pnum).filter(saledate__year=2007)
-# results = Sales.objects.using('eql').filter(saledate__year=2017)
+# results = Sales.objects.filter(pnum__iexact=pnum).filter(saledate__year=2007)
+# results = Sales.objects.filter(saledate__year=2017)

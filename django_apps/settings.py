@@ -161,6 +161,7 @@ class DjangoAppsRouter(object):
         "Subscriber": "waste_collection",
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
+        "Sales": "eql",
     }
 
     @staticmethod
