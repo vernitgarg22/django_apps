@@ -11,6 +11,9 @@ import tests.disabled
 from waste_notifier.models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
+import waste_notifier.views
+
+
 def cleanup_model(model):
     model.objects.all().delete()
 
@@ -28,6 +31,13 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
 
 
 class WasteNotifierTests(TestCase):
+
+    def test_multiple_phone_numbers(self):
+        """
+        Verify our system can handle multiple phone numbers
+        """
+        phone_number = waste_notifier.views.get_phone_sender()
+        self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
     def test_waste_area_ids(self):
         """

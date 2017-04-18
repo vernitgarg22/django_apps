@@ -1,5 +1,6 @@
 import requests
 import datetime
+import random
 
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -18,7 +19,16 @@ import cod_utils.util
 
 ACCOUNT_SID = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
 AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
-PHONE_SENDER = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDER']
+
+
+def get_phone_sender():
+    """
+    Return one of the available phone numbers, randomly selected
+    """
+    PHONE_SENDERS = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
+    random.seed()
+    index = random.randrange(len(PHONE_SENDERS))
+    return PHONE_SENDERS[index]
 
 
 def get_services_desc(services):
@@ -89,7 +99,7 @@ def subscribe_notifications(request):
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     client.messages.create(
         to = "+1" + subscriber.phone_number,
-        from_ = PHONE_SENDER,
+        from_ = get_phone_sender(),
         body = "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash & recycling pickup reminders",
     )
 
@@ -123,7 +133,7 @@ def update_subscription(phone_number, activate):
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
     client.messages.create(
         to = "+1" + subscriber.phone_number,
-        from_ = PHONE_SENDER,
+        from_ = get_phone_sender(),
         body = body,
     )
 
@@ -277,7 +287,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), format=None)
     for subscriber in subscribers_services.get_subscribers():
         client.messages.create(
             to = "+1" + subscriber.phone_number,
-            from_ = PHONE_SENDER,
+            from_ = get_phone_sender(),
             body = get_service_message(subscribers_services.get_service(subscriber), date),
         )
 
@@ -288,7 +298,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), format=None)
             message = get_service_detail_message(subscribers_services_detail.get_service(subscriber), subscribers_services_detail.schedule_detail)
             client.messages.create(
                 to = "+1" + subscriber.phone_number,
-                from_ = PHONE_SENDER,
+                from_ = get_phone_sender(),
                 body = message,
             )
 
