@@ -232,7 +232,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), format=None)
         for route_id in route_ids:
 
             # get all active subscribers to this service ...
-            subscribers = Subscriber.objects.using('default').filter(status__exact='active')
+            subscribers = Subscriber.objects.filter(status__exact='active')
             subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
 
             # also filter subscribers by route

@@ -217,5 +217,5 @@ class ScheduleDetail(models.Model):
         Returns schedule details pertaining to the given route and date
         """
 
-        details = ScheduleDetail.objects.using('default').filter(waste_area_ids__contains="," + str(route_id) + ",").filter(normal_day__exact=date)
+        details = ScheduleDetail.objects.filter(waste_area_ids__contains="," + str(route_id) + ",").filter(normal_day__exact=date)
         return details.filter(normal_day__exact=date) | details.filter(new_day__exact=date)

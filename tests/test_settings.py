@@ -16,6 +16,10 @@ import json
 
 from django.core.exceptions import ImproperlyConfigured
 
+
+# TODO move stuff that is shared between django_apps.settings and tests.test_settings into a shared location
+
+
 DJANGO_HOME = os.environ['DJANGO_HOME']
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -141,3 +145,32 @@ APPEND_SLASH = True
 
 STATIC_ROOT = DJANGO_HOME + "/static"
 STATIC_URL = '/static/'
+
+DATABASE_ROUTERS = [ 'tests.test_settings.DjangoAppsRouter', ]
+
+class DjangoAppsRouter(object):
+    """A router to control all database operations on models in
+    the myapp2 application"""
+
+    ModelDBMap = {
+        "Subscriber": "waste_collection",
+        "ScheduleDetail": "waste_collection",
+        "WasteItem": "waste_collection",
+    }
+
+    @staticmethod
+    def get_db(model):
+        name = model.__name__
+        return DjangoAppsRouter.ModelDBMap[name] if DjangoAppsRouter.ModelDBMap.get(name) else None
+
+    def db_for_read(self, model, **hints):
+        return DjangoAppsRouter.get_db(model)
+
+    def db_for_write(self, model, **hints):
+        return DjangoAppsRouter.get_db(model)
+
+    def allow_relation(self, obj1, obj2, **hints):
+        return DjangoAppsRouter.get_db(model)
+
+    def allow_syncdb(self, db, model):
+        return DjangoAppsRouter.get_db(model)
