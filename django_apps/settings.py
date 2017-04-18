@@ -177,5 +177,5 @@ class DjangoAppsRouter(object):
     def allow_relation(self, obj1, obj2, **hints):
         return DjangoAppsRouter.get_db(model)
 
-    def allow_syncdb(self, db, model):
+    def allow_migrate(self, db, model):
         return DjangoAppsRouter.get_db(model)
