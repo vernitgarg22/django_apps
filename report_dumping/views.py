@@ -6,9 +6,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 
-import pdb
-
-
 @api_view(['GET'])
 def list_services(request):
 
@@ -33,8 +30,6 @@ def report(request):
     # if not settings.DEBUG:
     #     SERVER = "seeclickfix.com"
 
-    # pdb.set_trace()
-
     API_KEY="24624f71bee008cfbf70a92b3e4ff18d2ebaa614"
 
     lat="42.331427"
@@ -48,8 +43,6 @@ def report(request):
 
     url = "https://{0}/dev/v2/requests.json".format(SERVER)
     params = "api_key={0}&service_code={1}&lat={2}&long={3}&description=sofa".format(API_KEY, SERVICE_CODE, lat, lon)
-
-    # pdb.set_trace()
 
     response = requests.post(url, data=params)
 
