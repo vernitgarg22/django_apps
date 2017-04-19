@@ -164,10 +164,22 @@ class DjangoAppsRouter(object):
         "Sales": "eql",
     }
 
+    ModelDBMapDev = {
+        "Subscriber": "waste_collection_dev",
+        "ScheduleDetail": "waste_collection_dev",
+        "WasteItem": "waste_collection_dev",
+    }
+
+
     @staticmethod
     def get_db(model):
-        name = model.__name__
-        return DjangoAppsRouter.ModelDBMap[name] if DjangoAppsRouter.ModelDBMap.get(name) else None
+        name_dev = name = model.__name__
+        database = None
+        if DEBUG:
+            database = DjangoAppsRouter.ModelDBMapDev.get(name)
+        if not database:
+            database = DjangoAppsRouter.ModelDBMap.get(name)
+        return database
 
     def db_for_read(self, model, **hints):
         return DjangoAppsRouter.get_db(model)
