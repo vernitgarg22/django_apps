@@ -57,7 +57,8 @@ class ScheduleDetail(models.Model):
     DEFAULT_SERVICE_TYPE = SERVICE_TYPE_CHOICES[0][0]
     SERVICES_LIST = ''.join([ val[0] + ', ' for val in SERVICE_TYPE_CHOICES ])[:-2]
 
-    GIS_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/DPW_Services/MapServer/{0}/query?where=day+%3D%27{1}%27&spatialRel=esriSpatialRelIntersects&outFields=FID,week,contractor&returnDistinctValues=false&f=json"
+    GIS_URL_ALL = "http://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=1%3D1&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=false&outSR=4326&f=json"
+    GIS_URL_DAY = "http://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=day+%3D%27{0}%27&1%3D1&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=false&outSR=4326&f=json"
 
     app_label = 'waste_schedule'
     detail_type = models.CharField('Type of information', max_length = 128, choices=TYPE_CHOICES)
@@ -167,23 +168,32 @@ class ScheduleDetail(models.Model):
             return date.year % 2 == date.isocalendar()[1] % 2
 
     @staticmethod
+    def check_service_type(ours, theirs):
+        if theirs == 'all':
+            return True
+        if ours == ScheduleDetail.RECYCLING:
+            return theirs == 'recycle'
+        else:
+            return ours == theirs
+
+    @staticmethod
     def get_waste_routes(date, service_type = TRASH):
         """
         Returns dictionary mapping route ids to week type ('a' or 'b')
         pertaining to routes getting serviced on the particular date
         """
-
         weekday_str = ScheduleDetail.DAYS[date.weekday()]
 
-        # get the gis id of the service
-        service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
-
-        # build url to get all waste areas for service and this day of week
-        url = ScheduleDetail.GIS_URL.format(service_id, weekday_str)
+        # build url to get all waste areas for this day of week
+        url = ScheduleDetail.GIS_URL_DAY.format(weekday_str)
 
         # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
         r = requests.get(url)
-        routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in r.json()['features'] }
+
+        # features = [ feature for feature in r.json()['features'] ]
+        features = [ feature for feature in r.json()['features'] if ScheduleDetail.check_service_type(service_type, feature['attributes']['services']) ]
+
+        routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in features }
 
         # only return routes that are affected by current week
         # (Note: trash is every week)
