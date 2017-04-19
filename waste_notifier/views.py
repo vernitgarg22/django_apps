@@ -306,29 +306,24 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), format=None)
 
 
 @api_view(['GET'])
-def list_route_info(request, format=None):
+def get_route_info(request, format=None):
     """
-    Output information about each waste collection route
+    Output information about each waste collection route, grouped by day
     """
 
-    routes_by_day = [ { day: {} } for day in ScheduleDetail.DAYS[:-2] ]
-    for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
+    # Build list of days -- each day will have a list of routes
+    routes_by_day = [ { day: [] } for day in ScheduleDetail.DAYS[:-2] ]
 
-        service_id = ScheduleDetail.SERVICE_ID_MAP[service_type]
-        for day in ScheduleDetail.DAYS[:-2]:
+    # Build a list route info objects for all routes
+    r = requests.get(ScheduleDetail.GIS_URL_ALL)
+    routes = [ { "route": feature['attributes']['FID'], 'services': feature['attributes']['services'], 'day': feature['attributes']['day'], 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] ]
 
-            url = ScheduleDetail.GIS_URL.format(service_id, day)
-            r = requests.get(url)
-
-            routes = [ { "route": feature['attributes']['FID'], 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] ]
-            index = ScheduleDetail.DAYS.index(day)
-
-            for route in routes:
-                route_id = route["route"]
-                services_desc = service_type
-                if routes_by_day[index][day].get(route_id):
-                    services_desc = services_desc + ", " + routes_by_day[index][day][route_id]["services"]
-                route["services"] = services_desc
-                routes_by_day[index][day][route_id] = route
+    # Loop through the routes, adding each one to the correct day
+    for route in routes:
+        day = route.pop('day')
+        if route['services'] == 'trash':
+            del route['week']
+        index = ScheduleDetail.DAYS.index(day)
+        routes_by_day[index][day].append(route)
 
     return Response(routes_by_day)
