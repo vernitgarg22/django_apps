@@ -26,7 +26,7 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
     """
     Add meta data for the /send endpoint (e.g., date)
     """
-    content.update({'meta': {'date_applicable': date.strftime("%Y-%m-%d")}})
+    content.update({ 'meta': { 'date_applicable': date.strftime("%Y-%m-%d"), 'dry_run': True } })
     return content
 
 
@@ -100,7 +100,7 @@ class WasteNotifierTests(TestCase):
         """
         Verify our system can handle multiple phone numbers
         """
-        phone_number = waste_notifier.views.get_phone_sender()
+        phone_number = cod_utils.util.MsgHandler.get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
     def test_get_waste_routes(self):

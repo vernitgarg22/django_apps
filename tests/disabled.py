@@ -1,9 +1,9 @@
-import cod_utils.util
+from cod_utils.util import MsgHandler
 
-# monkey-patch our twilio validator so that it
-# doesn't kill our tests
-class TestMsgValidator():
-    def validate(self, request):
-        pass
+from twilio.rest import TwilioRestClient
 
-cod_utils.util.MsgValidator = TestMsgValidator
+
+def no_validate(self, request):
+    pass
+
+MsgHandler.validate = no_validate

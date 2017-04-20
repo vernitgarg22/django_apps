@@ -47,6 +47,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_secret("SECRET_KEY")
 DATABASES = get_databases()
 DEBUG = get_secret('DEBUG', default=False)
+DRY_RUN = get_secret('DRY_RUN', default=False)
 ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS', default=[])
 
 AUTO_LOADED_DATA = {}

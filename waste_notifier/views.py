@@ -1,6 +1,5 @@
 import requests
 import datetime
-import random
 
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -9,26 +8,11 @@ from django.http import Http404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from twilio.rest import TwilioRestClient
-
 from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
 import cod_utils.util
-
-
-ACCOUNT_SID = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
-AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
-
-
-def get_phone_sender():
-    """
-    Return one of the available phone numbers, randomly selected
-    """
-    PHONE_SENDERS = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
-    random.seed()
-    index = random.randrange(len(PHONE_SENDERS))
-    return PHONE_SENDERS[index]
+from cod_utils.util import MsgHandler
 
 
 def get_services_desc(services):
@@ -95,13 +79,8 @@ def subscribe_notifications(request):
     if error:
         return Response(error)
 
-    # create a twilio client and text the subscriber to ask them to confirm
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    client.messages.create(
-        to = "+1" + subscriber.phone_number,
-        from_ = get_phone_sender(),
-        body = "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash & recycling pickup reminders",
-    )
+    # text the subscriber to ask them to confirm
+    MsgHandler().send_text(subscriber.phone_number, "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash & recycling pickup reminders")
 
     return Response({ "received": str(subscriber) })
 
@@ -129,13 +108,8 @@ def update_subscription(phone_number, activate):
     services_desc = get_services_desc(subscriber.service_type.split(','))
     body = body.format(services_desc)
 
-    # create a twilio client and send the subscriber a confirmation message
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-    client.messages.create(
-        to = "+1" + subscriber.phone_number,
-        from_ = get_phone_sender(),
-        body = body,
-    )
+    # send the subscriber a confirmation message
+    MsgHandler().send_text(subscriber.phone_number, body)
 
     return Response({ "subscriber": str(subscriber) })
 
@@ -147,7 +121,7 @@ def confirm_notifications(request):
     """
 
     # # Make sure the call came from twilio and is valid
-    cod_utils.util.MsgValidator().validate(request)
+    MsgHandler().validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
@@ -221,14 +195,12 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     if type(date) is str:
         date = datetime.date(int(date_val[0:4]), int(date_val[4:6]), int(date_val[6:8]))
 
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
-
     # TODO output what type of reminder was sent out:
     # - normal weekly reminder
     # - schedule change
     # - info only notice
     # - start or end date
-    content = { "meta": { "date_applicable": str(date) }, "citywide": {} }
+    content = { "meta": { "date_applicable": str(date), "dry_run": settings.DRY_RUN }, "citywide": {} }
 
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
@@ -288,22 +260,16 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
     # send text reminder to each subscriber needing a reminder
     for subscriber in subscribers_services.get_subscribers():
-        client.messages.create(
-            to = "+1" + subscriber.phone_number,
-            from_ = get_phone_sender(),
-            body = get_service_message(subscribers_services.get_service(subscriber), date),
-        )
+
+        message = get_service_message(subscribers_services.get_service(subscriber), date)
+        MsgHandler().send_text(subscriber.phone_number, message)
 
     # send out notifications about any schedule changes
     for subscribers_services_detail in subscribers_services_details:
         for subscriber in subscribers_services_detail.get_subscribers():
 
             message = get_service_detail_message(subscribers_services_detail.get_service(subscriber), subscribers_services_detail.schedule_detail)
-            client.messages.create(
-                to = "+1" + subscriber.phone_number,
-                from_ = get_phone_sender(),
-                body = message,
-            )
+            MsgHandler().send_text(subscriber.phone_number, message)
 
     return Response(content)
 
