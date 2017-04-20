@@ -174,7 +174,7 @@ class DjangoAppsRouter(object):
 
     @staticmethod
     def get_db(model):
-        name_dev = name = model.__name__
+        name = model.__name__
         database = None
         if DEBUG:
             database = DjangoAppsRouter.ModelDBMapDev.get(name)
