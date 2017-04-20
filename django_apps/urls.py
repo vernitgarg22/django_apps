@@ -24,11 +24,7 @@ urlpatterns = [
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
 
     # apis
-    url(r'^waste_notifier/subscribe/$', waste_notifier.views.subscribe_notifications),
-    url(r'^waste_notifier/confirm/$', waste_notifier.views.confirm_notifications),
-    url(r'^waste_notifier/send/(?P<date_val>[0-9]{8})/$', waste_notifier.views.send_notifications),
-    url(r'^waste_notifier/send/$', waste_notifier.views.send_notifications),
-    url(r'^waste_notifier/route_info/$', waste_notifier.views.get_route_info),
+    url(r'^waste_notifier/', include('waste_notifier.urls', namespace="waste_notifier")),
     url(r'^waste_schedule/details/(?P<waste_area_ids>[0-9,]*)/$', waste_schedule.views.get_schedule_details),
     url(r'^waste_schedule/details/(?P<waste_area_ids>[0-9,]*)/year/(?P<year>[0-9]{4})/$', waste_schedule.views.get_schedule_details),
     url(r'^waste_schedule/details/(?P<waste_area_ids>[0-9,]*)/year/(?P<year>[0-9]{4})/month/(?P<month>[0-9]+)/$', waste_schedule.views.get_schedule_details),
