@@ -207,12 +207,15 @@ class SubscriberServicesDetail(SubscriberServices):
 
 
 @api_view(['POST'])
-def send_notifications(request, date_val=cod_utils.util.tomorrow(), format=None):
+def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
 
     # TODO REVIEW make it impossible to call this from outside our network?
+
+    if date_name == 'tomorrow':
+       date_val = cod_utils.util.tomorrow()
 
     date = date_val
     if type(date) is str:

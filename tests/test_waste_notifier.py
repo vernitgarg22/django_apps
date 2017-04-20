@@ -370,3 +370,17 @@ class WasteNotifierTests(TestCase):
         tomorrow = cod_utils.util.tomorrow()
         date_applicable = response.data['meta']['date_applicable']
         self.assertTrue(date_applicable == tomorrow.strftime("%Y-%m-%d"), "Auto-triggered alerts should run for tomorrow")
+
+    def test_send_date_name_tomorrow(self):
+
+        cleanup_db()
+
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber.activate()
+
+        c = Client()
+        response = c.post('/waste_notifier/send/tomorrow/')
+        self.assertTrue(response.status_code == 200)
+        tomorrow = cod_utils.util.tomorrow()
+        date_applicable = response.data['meta']['date_applicable']
+        self.assertTrue(date_applicable == tomorrow.strftime("%Y-%m-%d"), "Alerts run with date name 'tomorrow' should run for tomorrow")
