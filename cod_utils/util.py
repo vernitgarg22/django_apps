@@ -68,12 +68,12 @@ class MsgHandler():
         if not request_valid:
             raise PermissionDenied('Request failed twilio validation check')
 
-    def send_text(self, phone_number, text):
+    def send_text(self, phone_number, text, dry_run_param = False):
         """
         Send a text message via twilio rest client
         """
         client = TwilioRestClient(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if not MsgHandler.DRY_RUN:
+        if not MsgHandler.DRY_RUN and not dry_run_param:
             client.messages.create(
                 to = "+1" + phone_number,
                 from_ = MsgHandler.get_phone_sender(),

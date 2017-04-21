@@ -188,6 +188,8 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
     # TODO REVIEW make it impossible to call this from outside our network?
 
+    dry_run_param = request.query_params.get('dry_run') == 'true'
+
     if date_name == 'tomorrow':
        date_val = cod_utils.util.tomorrow()
 
@@ -262,14 +264,14 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     for subscriber in subscribers_services.get_subscribers():
 
         message = get_service_message(subscribers_services.get_service(subscriber), date)
-        MsgHandler().send_text(subscriber.phone_number, message)
+        MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     # send out notifications about any schedule changes
     for subscribers_services_detail in subscribers_services_details:
         for subscriber in subscribers_services_detail.get_subscribers():
 
             message = get_service_detail_message(subscribers_services_detail.get_service(subscriber), subscribers_services_detail.schedule_detail)
-            MsgHandler().send_text(subscriber.phone_number, message)
+            MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     return Response(content)
 
