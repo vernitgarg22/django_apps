@@ -7,6 +7,7 @@ from django.http import Http404
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
@@ -190,7 +191,13 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
     dry_run_param = request.query_params.get('dry_run') == 'true'
 
-    if date_name == 'tomorrow':
+    today = request.query_params.get('today')
+    if today and date_name:
+        return Response("Do not supply both today and date name", status=status.HTTP_400_BAD_REQUEST)
+
+    if today:
+        date_val = cod_utils.util.tomorrow(today)
+    elif date_name == 'tomorrow':
        date_val = cod_utils.util.tomorrow()
 
     date = date_val
@@ -202,7 +209,13 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     # - schedule change
     # - info only notice
     # - start or end date
-    content = { "meta": { "date_applicable": str(date), "dry_run": settings.DRY_RUN }, "citywide": {} }
+    content = {
+        "meta": {
+            "date_applicable": str(date),
+            "current_time": datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
+            "dry_run": settings.DRY_RUN,
+        }, 
+        "citywide": {} }
 
     subscribers_services = SubscriberServices()
     subscribers_services_details = []

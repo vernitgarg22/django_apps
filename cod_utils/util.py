@@ -8,11 +8,16 @@ from twilio.util import RequestValidator
 from twilio.rest import TwilioRestClient
 
 
-def tomorrow():
+def tomorrow(today = datetime.date.today()):
     """
-    Return tomorrow as a datetime object
+    Return tomorrow as a datetime object.  If today is passed
+    in (as 'YYYYMMDD') the value returned will be a day
+    later than the date represented by today
     """
-    return datetime.date.today() + datetime.timedelta(days=1)
+    if type(today) == str:
+        today = datetime.datetime.strptime(today, "%Y%m%d")
+
+    return today + datetime.timedelta(days=1)
 
 
 def clean_comma_delimited_string(string):

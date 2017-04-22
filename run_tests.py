@@ -12,5 +12,6 @@ if __name__ == "__main__":
     TestRunner = get_runner(settings)
     test_runner = TestRunner()
     failures = test_runner.run_tests(["tests"])
-    # failures = test_runner.run_tests(["tests.test_waste_notifier.WasteNotifierTests.test_send_start_date"])
+    # failures = test_runner.run_tests(["tests.test_report_dumping.ReportDumpingTests.test_report"])
+    # failures = test_runner.run_tests(["tests.test_waste_notifier.WasteNotifierTests.test_send_today_query_param"])
     sys.exit(bool(failures))

@@ -26,7 +26,14 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
     """
     Add meta data for the /send endpoint (e.g., date)
     """
-    content.update({ 'meta': { 'date_applicable': date.strftime("%Y-%m-%d"), 'dry_run': True } })
+    meta = {
+        'meta': {
+            'current_time': datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
+            'date_applicable': date.strftime("%Y-%m-%d"),
+            'dry_run': True
+        }
+    }
+    content.update(meta)
     return content
 
 
@@ -384,3 +391,16 @@ class WasteNotifierTests(TestCase):
         tomorrow = cod_utils.util.tomorrow()
         date_applicable = response.data['meta']['date_applicable']
         self.assertTrue(date_applicable == tomorrow.strftime("%Y-%m-%d"), "Alerts run with date name 'tomorrow' should run for tomorrow")
+
+    def test_send_today_query_param(self):
+
+        cleanup_db()
+
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber.activate()
+
+        c = Client()
+        response = c.post('/waste_notifier/send/?today=20170420')
+        self.assertTrue(response.status_code == 200)
+        date_applicable = response.data['meta']['date_applicable']
+        self.assertTrue(date_applicable == '2017-04-21 00:00:00', "Alerts run with 'today' passed in should run a day later")
