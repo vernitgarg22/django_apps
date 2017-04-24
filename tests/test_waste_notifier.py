@@ -149,6 +149,24 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(subscriber.status == 'active', True)
         self.assertEqual(subscriber.last_status_update != None and subscriber.last_status_update != '', True)
 
+    def test_invalid_confirm(self):
+
+        cleanup_db()
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        self.assertEqual(response.status_code == 200, True)
+
+        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
+        self.assertEqual(response.status_code == 200, True)
+
+        subscriber = Subscriber.objects.first()
+
+        self.assertEqual(subscriber.status == 'inactive', True, "User's status should be inactive")
+        self.assertTrue(subscriber.comment == "User's response to confirmation was: oops", "User's comment should contain their invalid response")
+
+
     def test_subscribe_and_decline(self):
 
         cleanup_db()
@@ -225,7 +243,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertTrue(response.status_code == 200)
-        expected = {'bulk': {8: {'5005550006': 1}, 38: {}}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'citywide': {}, 'recycling': {8: {'5005550006': 1}, 16: {}}}
+        expected = {'bulk': {38: {}}, 'citywide': {}, 'recycling': {16: {}}}
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Phone number should have gotten recycling reschedule alert")
 

@@ -12,59 +12,9 @@ from rest_framework import status
 from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
+from waste_notifier.util import *
 import cod_utils.util
 from cod_utils.util import MsgHandler
-
-
-def get_services_desc(services):
-    """
-    Returns comma-delimited list of services, with last comma replaced by 'and'.
-    Input should be a list of services.
-    """
-
-    if services[0] == "all":
-        return "waste collection"
-
-    # build comma-delimited list of services
-    desc = ''.join([ service + ', ' for service in list(set(services)) ])
-
-    # remove trailing comma
-    desc = desc[:-2]
-
-    # if more than 1 service, replace last comma with 'and'
-    if len(services) > 1:
-        index = desc.rfind(',')
-        desc = desc[0: index] + " and" + desc[index + 1: ]
-
-    return desc
-
-def get_service_message(services, date):
-    """
-    Returns message to be sent to subscriber, including correct list of services and date
-    """
-    return "City of Detroit Public Works:  Your next upcoming pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
-
-def get_service_detail_message(services, detail):
-    """
-    Returns message to be sent to subscriber, including correct list of services and informtion about service detail
-    (e.g., schedule change)
-    """
-
-    message = 'City of Detroit Public Works:  '
-    detail_desc = ''
-    if detail.detail_type == 'schedule':
-        detail_desc = "Your pickup for {0} for {1} is postponed to {2} due to {3}".format(get_services_desc(services), 
-            detail.normal_day.strftime("%b %d, %Y"), detail.new_day.strftime("%b %d, %Y"), detail.description)
-    elif detail.detail_type == 'info':
-        detail_desc = detail.description
-    elif detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
-        detail_desc = detail.description + ' ' + detail.new_day.strftime("%b %d, %Y")
-
-    message = message + detail_desc
-    if detail.note:
-        message = message + " - " + detail.note
-
-    return message
 
 
 @api_view(['POST'])
@@ -114,6 +64,19 @@ def update_subscription(phone_number, activate):
 
     return Response({ "subscriber": str(subscriber) })
 
+def add_subscriber_comment(phone_number, comment):
+    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
+    if not subscribers.exists():
+        return
+
+    subscriber = subscribers[0]
+    if subscriber.comment:
+        comment = subscriber.comment + ' - ' + comment
+
+    subscriber.comment = comment
+    subscriber.clean()
+    subscriber.save()
+
 
 @api_view(['POST'])
 def confirm_notifications(request):
@@ -142,43 +105,8 @@ def confirm_notifications(request):
     elif body == "REMOVE ME":
         return update_subscription(phone_number, False)
     else:
+        add_subscriber_comment(phone_number, "User's response to confirmation was: {}".format(body))
         return Response({})
-
-
-class SubscriberServices:
-    """
-    Keeps track of what subscribes are supposed to receive a notification
-    """
-
-    def __init__(self):
-        self.subscribers = {}
-        self.services = {}
-
-    def add(self, subscribers, service):
-        for subscriber in subscribers:
-            self.subscribers[subscriber.phone_number] = subscriber
-            services_list = self.services.get(subscriber.phone_number) or []
-            services_list.extend([service])
-            self.services[subscriber.phone_number] = services_list
-
-    def get_subscribers(self):
-        return self.subscribers.values()
-
-    def get_service(self, subscriber):
-        return self.services[subscriber.phone_number]
-
-
-class SubscriberServicesDetail(SubscriberServices):
-    """
-    Keeps track of what subscribes are supposed to receive a notification
-    about a schedule change
-    """
-
-    def __init__(self, schedule_detail, subscribers, service):
-        super().__init__()
-        self.schedule_detail = schedule_detail
-        for subscriber in subscribers:
-            self.add(subscribers, service)
 
 
 @api_view(['POST'])
@@ -204,19 +132,6 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     if type(date) is str:
         date = datetime.date(int(date_val[0:4]), int(date_val[4:6]), int(date_val[6:8]))
 
-    # TODO output what type of reminder was sent out:
-    # - normal weekly reminder
-    # - schedule change
-    # - info only notice
-    # - start or end date
-    content = {
-        "meta": {
-            "date_applicable": str(date),
-            "current_time": datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
-            "dry_run": settings.DRY_RUN,
-        }, 
-        "citywide": {} }
-
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
 
@@ -238,55 +153,48 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
             # also filter subscribers by route
             subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
 
-            # track, by route, which phone numbers we have texted
-            if not content.get(service_type):
-                content[service_type] = {}
-            content[service_type].update( { route_id: { subscriber.phone_number: 1 for subscriber in subscribers } } )
-
             # does this route have any schedule changes for this date?
             schedule_details = ScheduleDetail.get_schedule_changes(route_id, date)
             if schedule_details:
-                subscribers_services_details.append(SubscriberServicesDetail(schedule_details[0], subscribers, service_type))
+                subscribers_services_details.append(SubscriberServicesDetail(schedule_details[0], subscribers, service_type, [route_id]))
             else:
                 # keep track of what services each subscriber needs notifications for
-                subscribers_services.add(subscribers, service_type)
+                subscribers_services.add(subscribers, service_type, [route_id])
 
     # check for schedule details that are city-wide (i.e., not tied to a specific route)
     schedule_details = ScheduleDetail.get_citywide_schedule_changes(date)
     for detail in schedule_details:
 
-        subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type)
+        subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
 
         # Find anyone subscribed to any of the services for this schedule detail
         if detail.service_type == 'all':
             subscribers = Subscriber.objects.filter(status__exact='active')
 
-            subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST)
+            subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST, detail.waste_area_ids)
         else:
             for service_type in detail.service_type.split(','):
                 subscribers = Subscriber.objects.filter(status__exact='active')
                 subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
-                subscribers_services_detail.add(subscribers, service_type)
-
-                # track which phone numbers we have texted citywide alerts
-                content["citywide"].update( { subscriber.phone_number: 1 for subscriber in subscribers } )
+                subscribers_services_detail.add(subscribers, service_type, detail.waste_area_ids)
 
         subscribers_services_details.append(subscribers_services_detail)
 
     # send text reminder to each subscriber needing a reminder
     for subscriber in subscribers_services.get_subscribers():
 
-        message = get_service_message(subscribers_services.get_service(subscriber), date)
+        message = get_service_message(subscribers_services.get_services(subscriber), date)
         MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     # send out notifications about any schedule changes
     for subscribers_services_detail in subscribers_services_details:
         for subscriber in subscribers_services_detail.get_subscribers():
 
-            message = get_service_detail_message(subscribers_services_detail.get_service(subscriber), subscribers_services_detail.schedule_detail)
+            message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
             MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
-    return Response(content)
+    content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
+    return Response(content.get_content())
 
 
 @api_view(['GET'])
