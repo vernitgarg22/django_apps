@@ -26,7 +26,7 @@ def subscribe_notifications(request):
 
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):
-        return Response("Invalid caller ip or host name", status=status.HTTP_403_FORBIDDEN)
+        return Response("Invalid caller ip or host name: " + request.META.get('REMOTE_ADDR'), status=status.HTTP_403_FORBIDDEN)
 
     # update existing subscriber or create new one from data
     subscriber, error = Subscriber.update_or_create_from_dict(request.data)
@@ -103,9 +103,9 @@ def confirm_notifications(request):
     body = request.data['Body']
     body = body.strip()
 
-    if body == "ADD ME":
+    if "add me" in body.lower():
         return update_subscription(phone_number, True)
-    elif body == "REMOVE ME":
+    elif "remove me" in body.lower():
         return update_subscription(phone_number, False)
     else:
         add_subscriber_comment(phone_number, "User's response to confirmation was: {}".format(body))
@@ -120,7 +120,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):
-        return Response("Invalid caller ip or host name", status=status.HTTP_403_FORBIDDEN)
+        return Response("Invalid caller ip or host name: " + request.META.get('REMOTE_ADDR'), status=status.HTTP_403_FORBIDDEN)
 
     # Throw error if there is an unrecognized query param
     for param in request.query_params.keys():
