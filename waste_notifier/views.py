@@ -18,7 +18,7 @@ import cod_utils.security
 from cod_utils.util import MsgHandler
 
 
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 def subscribe_notifications(request):
     """
     Parse subscription request and text user request for confirmation
