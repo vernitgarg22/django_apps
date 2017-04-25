@@ -14,16 +14,19 @@ from waste_schedule.models import ScheduleDetail
 
 from waste_notifier.util import *
 import cod_utils.util
+import cod_utils.security
 from cod_utils.util import MsgHandler
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def subscribe_notifications(request):
     """
     Parse subscription request and text user request for confirmation
     """
 
-    # TODO REVIEW make it impossible to call this from outside our network?
+    # Only allow certain servers to call this endpoint
+    if cod_utils.security.block_client(request):
+        return Response("Invalid caller ip or host name", status=status.HTTP_403_FORBIDDEN)
 
     # update existing subscriber or create new one from data
     subscriber, error = Subscriber.update_or_create_from_dict(request.data)
@@ -115,10 +118,19 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
 
-    # TODO REVIEW make it impossible to call this from outside our network?
+    # Only allow certain servers to call this endpoint
+    if cod_utils.security.block_client(request):
+        return Response("Invalid caller ip or host name", status=status.HTTP_403_FORBIDDEN)
 
+    # Throw error if there is an unrecognized query param
+    for param in request.query_params.keys():
+        if param not in ['dry_run', 'today']:
+            return Response("Invalid param: " + param, status=status.HTTP_400_BAD_REQUEST)
+
+    # Allow caller to pass in dry_run flag
     dry_run_param = request.query_params.get('dry_run') == 'true'
 
+    # Allow caller to specify what 'today' is
     today = request.query_params.get('today')
     if today and date_name:
         return Response("Do not supply both today and date name", status=status.HTTP_400_BAD_REQUEST)
