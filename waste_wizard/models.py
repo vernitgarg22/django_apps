@@ -18,7 +18,7 @@ class WasteItem(models.Model):
         ('recycle_here.jpg', 'Recycle Here'),
         ('recycling.png', 'Recycling'),
         ('trash.png', 'Trash'),
-        ('yard_waste.png', 'Yard Waste'),
+        ('yard_waste.jpg', 'Yard Waste'),
     )
 
     DESTINATION_NOTES = {
