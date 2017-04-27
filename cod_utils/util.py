@@ -42,7 +42,7 @@ def clean_comma_delimited_string(string):
     is None return empty string
     """
 
-    if string == None:
+    if string == None or string == '':
         return ''
 
     tmp = [ str(val) + ',' for val in sorted(set(string.split(','))) if val ]
