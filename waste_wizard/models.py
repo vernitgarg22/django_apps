@@ -8,6 +8,7 @@ class WasteItem(models.Model):
         ('hazardous', 'Hazardous Waste'),
         ('recycling', 'Recycling'),
         ('recycle here', 'Recycle Here'),
+        ('street sweeper', 'Street Sweeper'),
         ('trash', 'Trash'),
         ('transfer station', 'Transfer Station'),
         ('yard waste', 'Yard Waste'),
