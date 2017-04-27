@@ -1,9 +1,28 @@
+import os
 import requests
 
 from django.conf import settings
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
+# from oauth2client.client import flow_from_clientsecrets
+# from oauth2client.contrib.django_orm import Storage
+
+# from .models import CredentialsModel
+
+
+# CLIENT_SECRETS, name of a file containing the OAuth 2.0 information for this
+# application, including client_id and client_secret, which are found
+# on the API Access tab on the Google APIs
+# Console <http://code.google.com/apis/console>
+CLIENT_SECRETS = os.environ['DJANGO_HOME'] + '/client_secrets.json'
+
+# TODO get this working
+# FLOW = flow_from_clientsecrets(
+#     CLIENT_SECRETS,
+#     scope = 'https://seeclickfix.com/detroit',
+#     redirect_uri = 'https://apis.detroitmi.gov/reportdumping')
 
 
 @api_view(['GET'])
@@ -23,6 +42,28 @@ def report(request):
     """
     Post a suspected illegal dumping
     """
+
+    storage = Storage(CredentialsModel, 'id', request.user, 'credential')
+    credential = storage.get()
+    if credential is None or credential.invalid == True:
+        FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
+        authorize_url = FLOW.step1_get_authorize_url()
+        return HttpResponseRedirect(authorize_url)
+    else:
+        http = httplib2.Http()
+        http = credential.authorize(http)
+        service = build("plus", "v1", http=http)
+        activities = service.activities()
+        activitylist = activities.list(collection='public',
+                                       userId='me').execute()
+        logging.info(activitylist)
+
+        return render(request, 'plus/welcome.html', { 'activitylist': activitylist, })
+
+
+
+
+
 
     SERVER = "test.seeclickfix.com"
 
