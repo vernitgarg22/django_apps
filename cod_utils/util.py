@@ -1,4 +1,5 @@
 import datetime
+import json
 import random
 
 from django.conf import settings
@@ -7,6 +8,20 @@ from django.core.exceptions import PermissionDenied
 from twilio.util import RequestValidator
 from twilio.rest import TwilioRestClient
 
+
+# TODO write unit tests for all the utilities
+
+
+def date_json(date):
+    """
+    Convert a datetime or datetime.date object to json string format
+    """
+
+    dt = date
+    if type(date) is datetime.date:
+        dt = datetime.datetime(date.year, date.month, date.day)
+
+    return dt.strftime("%Y-%m-%dT%H:%M:%S")
 
 def tomorrow(today = datetime.date.today()):
     """
@@ -78,7 +93,7 @@ class MsgHandler():
         Send a text message via twilio rest client
         """
         client = TwilioRestClient(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if not MsgHandler.DRY_RUN and not dry_run_param:
+        if not MsgHandler.DRY_RUN and not dry_run_param or True:
             client.messages.create(
                 to = "+1" + phone_number,
                 from_ = MsgHandler.get_phone_sender(),

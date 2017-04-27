@@ -162,10 +162,17 @@ class ScheduleDetail(models.Model):
 
     @staticmethod
     def check_date_service(date, week_type):
+        """
+        Returns true if a service with the given week_type will happen 
+        on the same week as 'date'
+        """
+
+        year_is_odd = (date.year % 2 == 0)
+        week_is_odd = (date.isocalendar()[1] % 2 == 0)
         if week_type == BiWeekType.A:
-            return date.year % 2 != date.isocalendar()[1] % 2
+            return year_is_odd != week_is_odd
         else:
-            return date.year % 2 == date.isocalendar()[1] % 2
+            return year_is_odd == week_is_odd
 
     @staticmethod
     def check_service_type(ours, theirs):
