@@ -9,9 +9,6 @@ from twilio.util import RequestValidator
 from twilio.rest import TwilioRestClient
 
 
-# TODO write unit tests for all the utilities
-
-
 def date_json(date):
     """
     Convert a datetime or datetime.date object to json string format
@@ -39,7 +36,7 @@ def clean_comma_delimited_string(string):
     """
     Takes a comma-delimited string and makes sure it contains
     only unique values and begins and ends with commas.  If string
-    is None return empty string
+    is None or '' an empty string is returned
     """
 
     if string == None or string == '':
