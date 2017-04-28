@@ -39,11 +39,16 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
 
 class WasteNotifierTests(TestCase):
 
+    def setUp(self):
+        """
+        Set up each unit test, including making sure database is properly cleaned up before each test
+        """
+        cleanup_db()
+
     def test_waste_area_ids(self):
         """
         Test subscriber with one waste area id
         """
-        cleanup_db()
         s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
         s.save()
 
@@ -53,15 +58,12 @@ class WasteNotifierTests(TestCase):
         """
         Test subscriber with one waste area id
         """
-        cleanup_db()
         s = Subscriber(phone_number="2345678910", waste_area_ids="1,2,3", service_type="all")
         s.save()
 
         self.assertEqual(s.waste_area_ids == ",1,2,3,", True)
 
     def test_invalid_subscriber_data(self):
-
-        cleanup_db()
 
         INVALID_DATA = [
             { "phone_number": "234567891",    "waste_area_ids": "1,2,3", "service_type": "all" },
@@ -84,8 +86,6 @@ class WasteNotifierTests(TestCase):
                 subscriber.clean()
 
     def test_invalid_schedule_detail_data(self):
-
-        cleanup_db()
 
         INVALID_DATA = [
             { "detail_type": "infox",      "service_type": "all", "description": "test description", "normal_day": datetime.date(2017, 1, 1), "new_day": datetime.date(2017, 1, 2), "note": "test note", "waste_area_ids": "1" },
@@ -135,8 +135,6 @@ class WasteNotifierTests(TestCase):
 
     def test_subscribe_and_confirm(self):
 
-        cleanup_db()
-
         c = Client()
 
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
@@ -150,8 +148,6 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(subscriber.last_status_update != None and subscriber.last_status_update != '', True)
 
     def test_invalid_confirm(self):
-
-        cleanup_db()
 
         c = Client()
 
@@ -169,8 +165,6 @@ class WasteNotifierTests(TestCase):
 
     def test_subscribe_and_decline(self):
 
-        cleanup_db()
-
         c = Client()
 
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
@@ -185,8 +179,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_reminder(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", service_type="all")
         subscriber.activate()
 
@@ -197,8 +189,6 @@ class WasteNotifierTests(TestCase):
         self.assertDictEqual(expected, response.data, "Phone number did not get reminder")
 
     def test_send_info(self):
-
-        cleanup_db()
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
@@ -215,8 +205,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_no_info(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='recycling', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
@@ -231,8 +219,6 @@ class WasteNotifierTests(TestCase):
         self.assertDictEqual(expected, response.data, "Phone number should not have gotten info")
 
     def test_send_schedule_change(self):
-
-        cleanup_db()
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
@@ -249,8 +235,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_no_schedule_change(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='test holiday', normal_day=datetime.date(2017, 4, 7), new_day=datetime.date(2017, 4, 8))
@@ -265,8 +249,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_ab_onweek(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
 
@@ -278,8 +260,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_ab_offweek(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
 
@@ -290,8 +270,6 @@ class WasteNotifierTests(TestCase):
         self.assertDictEqual(expected, response.data, "Alerts for a/b offweek failed")
 
     def test_send_mix_days(self):
-
-        cleanup_db()
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="12,14,22", service_type="all")
         subscriber.activate()
@@ -311,8 +289,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_eastside_wednesday_trash(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", service_type="all")
         subscriber.activate()
 
@@ -323,8 +299,6 @@ class WasteNotifierTests(TestCase):
         self.assertDictEqual(expected, response.data, "Eastside wednesday trash residents should have gotten alerts")
 
     def test_send_eastside_thursday_bulk_a(self):
-
-        cleanup_db()
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", service_type="all")
         subscriber.activate()
@@ -337,8 +311,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_eastside_thursday_recycling_b(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", service_type="all")
         subscriber.activate()
 
@@ -349,8 +321,6 @@ class WasteNotifierTests(TestCase):
         self.assertDictEqual(expected, response.data, "Eastside thursday recycling B residents should have gotten alerts")
 
     def test_send_start_date(self):
-
-        cleanup_db()
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
@@ -367,8 +337,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_end_date(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends friday, December 15, 2017', new_day=datetime.date(2017, 12, 15))
@@ -384,8 +352,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_auto(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
 
@@ -398,8 +364,6 @@ class WasteNotifierTests(TestCase):
 
     def test_send_date_name_tomorrow(self):
 
-        cleanup_db()
-
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
 
@@ -411,8 +375,6 @@ class WasteNotifierTests(TestCase):
         self.assertTrue(date_applicable == tomorrow.strftime("%Y-%m-%d"), "Alerts run with date name 'tomorrow' should run for tomorrow")
 
     def test_send_today_query_param(self):
-
-        cleanup_db()
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()

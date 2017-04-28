@@ -23,11 +23,17 @@ def cleanup_db():
 
 class WasteScheduleTests(TestCase):
 
+    def setUp(self):
+        """
+        Set up each unit test, including making sure database is properly cleaned up before each test
+        """
+        cleanup_db()
+
     def util_test_get_next_pickups(self, today, route_ids, expected):
         """
         Utility function to run test pickups
         """
-        cleanup_db()
+        
         c = Client()
         response = c.get("/waste_schedule/details/{0}/?today={1}".format(route_ids, today))
 
