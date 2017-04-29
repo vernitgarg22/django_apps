@@ -174,8 +174,23 @@ class ScheduleDetail(models.Model):
         else:
             return year_is_odd == week_is_odd
 
+    # TODO might want to move some of these static methods to a util file
+
     @staticmethod
-    def check_service_type(ours, theirs):
+    def map_service_type(service):
+        """
+        Maps gis server service names to the names in use here:
+        In particular 'recycle' becomes 'recycling'.
+        """
+        return ScheduleDetail.RECYCLING if service == 'recycle' else service
+
+    @staticmethod
+    def is_same_service_type(ours, theirs):
+        """
+        Returns True if the 2 service types are the same.  In particular:
+        - if theirs is 'all', returns True
+        - if theirs is 'recycle' and ours is 'recycling' returns True
+        """
         if theirs == 'all':
             return True
         if ours == ScheduleDetail.RECYCLING:
@@ -198,7 +213,7 @@ class ScheduleDetail(models.Model):
         r = requests.get(url)
 
         # features = [ feature for feature in r.json()['features'] ]
-        features = [ feature for feature in r.json()['features'] if ScheduleDetail.check_service_type(service_type, feature['attributes']['services']) ]
+        features = [ feature for feature in r.json()['features'] if ScheduleDetail.is_same_service_type(service_type, feature['attributes']['services']) ]
 
         routes = { feature['attributes']['FID']: feature['attributes']['week'] for feature in features }
 

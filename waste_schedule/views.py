@@ -6,46 +6,15 @@ import requests
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from django.http import Http404
 
-from .models import BiWeekType, ScheduleDetail
+from .models import ScheduleDetail
+from waste_schedule import util
+from waste_schedule.util import BiWeekType
 import cod_utils.util
 
-
-def check_month_val(year, month, day):
-    if not day:
-        return False
-    if year:
-        if day.year != int(year):
-            return False
-    if month:
-        if day.month != int(month):
-            return False
-    return True
-
-def check_month(year, month, detail):
-    if detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
-        return True
-    return check_month_val(year, month, detail.normal_day) or check_month_val(year, month, detail.new_day)
-
-def filter_month(year, month, details):
-    return [ detail for detail in details if check_month(year, month, detail) ]
-
-def get_day_of_week_diff(today, next_day):
-    """
-    Return number of days between 'today', where today is a datetime.date object,
-    and the next instance of 'next_day', where next_day is the name of a day 
-    of the week (e.g., 'monday')
-    """
-
-    today_val = today.weekday()
-    next_day_val = ScheduleDetail.DAYS.index(next_day)
-
-    diff = next_day_val - today_val
-    if next_day_val < today_val:
-        diff = diff + 7
-    return diff
 
 def get_next_pickup(today, next_day, week):
     """
@@ -53,7 +22,7 @@ def get_next_pickup(today, next_day, week):
     particular alternating biweekly schedule designated by 'week'
     """
 
-    diff  = get_day_of_week_diff(today, next_day)
+    diff  = util.get_day_of_week_diff(today, next_day)
 
     possible_date = today + datetime.timedelta(days = diff)
 
@@ -87,9 +56,8 @@ def get_next_pickups(route_ids, schedule_details, today=datetime.date.today()):
             content[ScheduleDetail.RECYCLING] = add_route_pickup_info(route, ScheduleDetail.RECYCLING, today)
             content[ScheduleDetail.BULK] = add_route_pickup_info(route, ScheduleDetail.BULK, today)
         else:
-            next_pickup = get_next_pickup(today=today, next_day=route['day'], week=route['week'])
-            route['next_pickup'] = cod_utils.util.date_json(next_pickup)
-            content[service] = route
+            service = ScheduleDetail.map_service_type(service)
+            content[service] = add_route_pickup_info(route, service, today)
 
     return content
 
@@ -125,8 +93,8 @@ def get_schedule_details(request, waste_area_ids=None, year=None, month=None, fo
         wa_details = wa_details | ScheduleDetail.objects.filter(waste_area_ids__contains=wa_id)
 
     if month or year:
-        citywide_details = filter_month(year, month, citywide_details)
-        wa_details = filter_month(year, month, wa_details)
+        citywide_details = util.filter_month(year, month, citywide_details)
+        wa_details = util.filter_month(year, month, wa_details)
 
     # sort the different sets of results by 'normal_day'
     details = sorted(chain(citywide_details, wa_details), key=attrgetter('sort_value'))

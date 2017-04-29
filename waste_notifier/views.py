@@ -118,6 +118,9 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
 
+    # todo: mention yard waste pickup
+    
+
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):
         return Response("Invalid caller ip or host name: " + request.META.get('REMOTE_ADDR'), status=status.HTTP_403_FORBIDDEN)
