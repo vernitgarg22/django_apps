@@ -37,9 +37,6 @@ class IndexView(generic.ListView):
         return render(request, 'waste_wizard/index.html', 
             { 'form': WasteItemSearchForm(), 'keywords': keywords })
 
-    def get_queryset(self):
-        return WasteItem.objects.order_by('description')[:128]
-
 
 class ItemsView(generic.ListView):
     template_name = 'waste_wizard/items.html'

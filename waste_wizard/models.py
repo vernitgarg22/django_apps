@@ -36,5 +36,5 @@ class WasteItem(models.Model):
     def __str__(self):
         return self.description + ' (' + self.destination + ')'
 
-    def  get_destination(self):
+    def get_destination(self):
         return self.DESTINATION_NOTES.get(self.destination, self.destination.title())
