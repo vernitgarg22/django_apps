@@ -146,7 +146,7 @@ class WasteScheduleTests(TestCase):
     def util_get_schedule_details(self, route_ids, expected):
 
         c = Client()
-        response = c.get("/waste_schedule/details/{}/".format(route_ids))
+        response = c.get("/waste_schedule/details/{}/?today=20170428".format(route_ids))
         self.assertTrue(response.status_code == 200)
         self.assertDictEqual(expected, response.data, "Routes {} should receive proper data".format(route_ids))
 
