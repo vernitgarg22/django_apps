@@ -2,4 +2,5 @@
 secrets.json
 *.sqlite3
 test_secrets.json
+.coverage
 
