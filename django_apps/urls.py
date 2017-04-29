@@ -3,7 +3,6 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework import routers
 import assessments.views
-import report_dumping.views
 import waste_notifier.views
 import waste_schedule.views
 
@@ -32,7 +31,6 @@ urlpatterns = [
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/$', assessments.views.get_sales_property),
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/$', assessments.views.get_sales_property_recent),
     url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/years/(?P<years_back>[0-9]+)/$', assessments.views.get_sales_property),
-    url(r'^report_dumping/', include('report_dumping.urls', namespace="report_dumping")),
     url(r'^weather_info/', include('weather_info.urls', namespace="weather_info")),
     
     # waste sorter
