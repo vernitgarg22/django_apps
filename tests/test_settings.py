@@ -29,7 +29,7 @@ with open(DJANGO_HOME + "/tests/test_secrets.json") as f:
 def get_secret(setting, secrets=secrets, default=None):
     try:
         return secrets[setting]
-    except KeyError:
+    except KeyError:              # pragma: no cover
         if default != None:
             secrets[setting] = default
             return secrets[setting]
@@ -39,7 +39,7 @@ def get_secret(setting, secrets=secrets, default=None):
 
 def get_databases():
     tmp = get_secret('DATABASES')
-    if tmp['default']['NAME'] == 'db.sqlite3':
+    if tmp['default']['NAME'] == 'db.sqlite3':       # pragma: no cover
         tmp['default']['NAME'] = os.path.join(BASE_DIR, 'db.sqlite3')
     return tmp
 
@@ -52,7 +52,7 @@ ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS', default=[])
 
 AUTO_LOADED_DATA = {}
 def load_auto_loaded_data():
-    if AUTO_LOADED_DATA:
+    if AUTO_LOADED_DATA:    # pragma: no cover
         return
     auto_names = get_secret('AUTO_LOADED_DATA_NAMES', default=[])
     for auto_name in auto_names:
@@ -170,7 +170,7 @@ class DjangoAppsRouter(object):
     def get_db(model):
         name_dev = name = model.__name__
         database = None
-        if DEBUG:
+        if DEBUG:               # pragma: no cover
             database = DjangoAppsRouter.ModelDBMapDev.get(name)
         if not database:
             database = DjangoAppsRouter.ModelDBMap.get(name)
@@ -183,7 +183,7 @@ class DjangoAppsRouter(object):
         return DjangoAppsRouter.get_db(model)
 
     def allow_relation(self, obj1, obj2, **hints):
-        return DjangoAppsRouter.get_db(model)
+        return DjangoAppsRouter.get_db(model)    # pragma: no cover
 
     def allow_migrate(self, db, model):
         return DjangoAppsRouter.get_db(model)
