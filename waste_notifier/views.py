@@ -31,7 +31,7 @@ def subscribe_notifications(request):
     # update existing subscriber or create new one from data
     subscriber, error = Subscriber.update_or_create_from_dict(request.data)
     if error:
-        return Response(error)
+        return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     # text the subscriber to ask them to confirm
     MsgHandler().send_text(subscriber.phone_number, "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash & recycling pickup reminders")
@@ -70,7 +70,7 @@ def update_subscription(phone_number, activate):
 def add_subscriber_comment(phone_number, comment):
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
     if not subscribers.exists():
-        return
+        return     # pragma: no cover (should never get here)
 
     subscriber = subscribers[0]
     if subscriber.comment:
@@ -92,7 +92,7 @@ def confirm_notifications(request):
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
-        return Response({"error": "From and body values are required"})
+        return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Clean up phone number
     phone_number = request.data['From'].replace('+', '')
