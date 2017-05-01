@@ -74,15 +74,15 @@ class ScheduleDetail(models.Model):
         return (self.normal_day if self.normal_day else self.new_day)
 
     def __str__(self):
-        return 'type: ' + self.detail_type + " - description: " + self.description + ' - routes: ' + self.waste_area_ids
+        return 'type: ' + self.detail_type + " - " + self.service_type + " - description: " + self.description + ' - routes: ' + self.waste_area_ids
 
     def json(self):
         return {
             "type": self.detail_type,
             "service": self.service_type,
             "description": self.description,
-            "normalDay": self.normal_day,
-            "newDay": self.new_day,
+            "normalDay": util.date_json(self.normal_day),
+            "newDay": util.date_json(self.new_day),
             "note": self.note,
             "wasteAreaIds": self.waste_area_ids,
         }

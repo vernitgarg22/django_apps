@@ -33,9 +33,16 @@ def get_next_pickup(today, next_day, week):
 
 def add_route_pickup_info(route, service, today):
 
+    route_dest = copy.copy(route)
+
     week = '' if service == 'trash' else route['week']
     next_pickup = get_next_pickup(today=today, next_day=route['day'], week=week)
-    route_dest = copy.copy(route)
+
+    # check for any schedule changes
+    schedule_changes = ScheduleDetail.get_schedule_changes(route['route'], next_pickup)
+    if schedule_changes:
+        next_pickup = schedule_changes[0].new_day
+
     route_dest['next_pickup'] = cod_utils.util.date_json(next_pickup)
     return route_dest
 
