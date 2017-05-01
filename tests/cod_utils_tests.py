@@ -17,6 +17,10 @@ class CODUtilsTests(TestCase):
         str = cod_utils.util.date_json(datetime.datetime(2017, 5, 1, 00, 00, 00))
         self.assertTrue(str == '2017-05-01T00:00:00', "date_json() converts datetime object to json")
 
+    def test_date_json_none(self):
+        str = cod_utils.util.date_json(None)
+        self.assertTrue(str == '', "date_json() converts null objects to empty string")
+
     def test_tomorrow(self):
         dt = cod_utils.util.tomorrow()
         self.assertTrue(datetime.date.today() - dt == datetime.timedelta(-1), "tomorrow() returns tomorrow")

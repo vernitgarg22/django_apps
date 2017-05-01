@@ -14,6 +14,9 @@ def date_json(date):
     Convert a datetime or datetime.date object to json string format
     """
 
+    if not date:
+        return ""
+
     dt = date
     if type(date) is datetime.date:
         dt = datetime.datetime(date.year, date.month, date.day)
