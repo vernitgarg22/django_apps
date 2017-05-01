@@ -35,6 +35,42 @@ def tomorrow(today = datetime.date.today()):
     return today + datetime.timedelta(days=1)
 
 
+def clean_list(values):
+    """
+    Returns a cleaned-up version of values which has
+    any empty strings or strings with only white-space removed.
+    Values with leading or trailing white-space will also have
+    that white space removed.
+    """
+
+    dest = []
+    while values:
+        val = values.pop(0)
+        if type(val) is str:
+            val = val.strip()
+        if val != '':
+            dest.append(val)
+    return dest
+
+
+def split_csv(str):
+    """
+    Split comma-delimited value into list.
+    Note:
+    - Empty string or None results in empty list.
+    - Individual empty strings do not add empty elements.
+        e.g., 
+            ',' -> []
+            ',foo,bar' -> ['foo', 'bar']
+    """
+
+    if not str or str == ',':
+        return []
+
+    values = str.split(',')
+    return clean_list(values)
+
+
 def clean_comma_delimited_string(string):
     """
     Takes a comma-delimited string and makes sure it contains
@@ -68,7 +104,7 @@ class MsgHandler():
         index = random.randrange(len(PHONE_SENDERS))
         return PHONE_SENDERS[index]
 
-    def validate(self, request):
+    def validate(self, request):   # pragma: no cover
         """
         Make sure the call came from twilio and is valid.
         Raise an exception if it is not.

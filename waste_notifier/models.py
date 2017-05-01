@@ -89,8 +89,7 @@ class Subscriber(models.Model):
         """
         Do a soft-delete (i.e., set status to 'inactive')
         """
-        self.status = Subscriber.INACTIVE_STATUS
-        self.save()
+        self.deactivate()
 
     @staticmethod
     def update_or_create_from_dict(data):

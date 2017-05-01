@@ -1,6 +1,7 @@
 import datetime
 
 from waste_schedule.models import ScheduleDetail
+from cod_utils import util
 
 
 def get_services_desc(services):
@@ -78,7 +79,7 @@ class SubscriberServices:
         """
 
         if type(route_ids) == str:
-            route_ids = route_ids.split(',')
+            route_ids = util.split_csv(route_ids)
 
         for subscriber in subscribers:
             self.subscribers[subscriber.phone_number] = subscriber
