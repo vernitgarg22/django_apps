@@ -33,10 +33,16 @@ def subscribe_notifications(request):
     if error:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-    # text the subscriber to ask them to confirm
-    MsgHandler().send_text(subscriber.phone_number, "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash & recycling pickup reminders")
+    # add description of desired list of services to response
+    services = add_additional_services(util.split_csv(subscriber.service_type), date=None, add_yard_waste_year_round=True)
+    services_desc = get_services_desc(services)
+    body = "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive {} pickup reminders"
+    body = body.format(services_desc)
 
-    return Response({ "received": str(subscriber) })
+    # text the subscriber to ask them to confirm
+    MsgHandler().send_text(subscriber.phone_number, body)
+
+    return Response({ "received": str(subscriber), "message": body })
 
 
 def update_subscription(phone_number, activate):

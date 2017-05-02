@@ -156,7 +156,24 @@ class WasteNotifierTests(TestCase):
         phone_number = cod_utils.util.MsgHandler.get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
-    def test_update_subscription_msg(self):
+    def test_subscribe_msg(self):
+
+        c = Client()
+
+        values = [
+            ("all", {'received': '5005550006 - routes: ,0, - status: inactive - services: all', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling, trash and yard waste pickup reminders'}),
+            ("trash", {'received': '5005550006 - routes: ,0, - status: inactive - services: trash', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash pickup reminders'}),
+            ("recycling", {'received': '5005550006 - routes: ,0, - status: inactive - services: recycling', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive recycling pickup reminders'}),
+        ]
+
+        for service, expected in values:
+            cleanup_db()
+            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "0", "service_type": service } )
+            self.assertEqual(response.status_code, 200)
+            self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
+
+
+    def test_confirm_subscription_msg(self):
 
         c = Client()
 
