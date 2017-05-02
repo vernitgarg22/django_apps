@@ -40,6 +40,8 @@ class ScheduleDetailMgr():
         is not year-round, and does not have start-date and end-dates set up, then
         return False.  If the service is year-round, then return True.
         """
+        if type(date) is datetime.datetime:
+            date = date.date()
         if service in ScheduleDetail.YEAR_ROUND_SERVICES:
             return True
         start, end = self.get_service_start_and_end(service)

@@ -163,7 +163,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
             # get all active subscribers to this service ...
             subscribers = Subscriber.objects.filter(status__exact='active')
-            subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
+            subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
 
             # also filter subscribers by route
             subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
@@ -183,14 +183,14 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
         subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
 
         # Find anyone subscribed to any of the services for this schedule detail
-        if detail.service_type == 'all':
+        if detail.service_type == ScheduleDetail.ALL:
             subscribers = Subscriber.objects.filter(status__exact='active')
 
             subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST, detail.waste_area_ids)
         else:
             for service_type in detail.service_type.split(','):
                 subscribers = Subscriber.objects.filter(status__exact='active')
-                subscribers = subscribers.filter(service_type__contains='all') | subscribers.filter(service_type__contains=service_type)
+                subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
                 subscribers_services_detail.add(subscribers, service_type, detail.waste_area_ids)
 
         subscribers_services_details.append(subscribers_services_detail)
