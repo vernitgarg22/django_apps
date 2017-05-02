@@ -11,6 +11,7 @@ from rest_framework import status
 from django.http import Http404
 
 from .models import ScheduleDetail
+from .schedule_detail_mgr import ScheduleDetailMgr
 from waste_schedule import util
 from waste_schedule.util import BiWeekType
 import cod_utils.util
@@ -48,6 +49,7 @@ def add_route_pickup_info(route, service, today):
 
 def get_next_pickups(route_ids, schedule_details, today=datetime.date.today()):
     """
+    Get a dict object listing info about the next pickup for each service
     """
 
     r = requests.get(ScheduleDetail.GIS_URL_ALL)
@@ -58,13 +60,21 @@ def get_next_pickups(route_ids, schedule_details, today=datetime.date.today()):
     # add next pickups for each route
     for route in routes:
         service = route.pop('services')
-        if service == 'all':
+        if service == ScheduleDetail.ALL:
             content[ScheduleDetail.TRASH] = add_route_pickup_info(route, ScheduleDetail.TRASH, today)
             content[ScheduleDetail.RECYCLING] = add_route_pickup_info(route, ScheduleDetail.RECYCLING, today)
-            content[ScheduleDetail.BULK] = add_route_pickup_info(route, ScheduleDetail.BULK, today)
+
+            # bulk and yard waste are on same schedule (when yard waste pickup is active)
+            route_info = add_route_pickup_info(route, ScheduleDetail.BULK, today)
+            content[ScheduleDetail.BULK] = route_info
+            if ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, today):
+                content[ScheduleDetail.YARD_WASTE] = route_info
         else:
             service = ScheduleDetail.map_service_type(service)
-            content[service] = add_route_pickup_info(route, service, today)
+            route_info = add_route_pickup_info(route, service, today)
+            content[service] = route_info
+            if ScheduleDetail.BULK == service and ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, today):
+                content[ScheduleDetail.YARD_WASTE] = route_info
 
     return content
 

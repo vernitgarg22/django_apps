@@ -25,7 +25,15 @@ class BiWeekType(Enum):
 
 class ScheduleDetail(models.Model):
 
-    SERVICE_TYPE_CHOICES = (('all', 'All Services'),) + WasteItem.DESTINATION_CHOICES
+    ALL = 'all'
+    RECYCLING = WasteItem.DESTINATION_CHOICES[2][0]
+    BULK = WasteItem.DESTINATION_CHOICES[0][0]
+    TRASH = WasteItem.DESTINATION_CHOICES[5][0]
+    YARD_WASTE = WasteItem.DESTINATION_CHOICES[7][0]
+
+    YEAR_ROUND_SERVICES = [ TRASH, RECYCLING, BULK ]
+
+    SERVICE_TYPE_CHOICES = ((ALL, 'All Services'),) + WasteItem.DESTINATION_CHOICES
 
     TYPE_CHOICES = (
         ('schedule', 'Schedule Change'),
@@ -43,10 +51,6 @@ class ScheduleDetail(models.Model):
         "saturday",
         "sunday"
     ]
-
-    RECYCLING = WasteItem.DESTINATION_CHOICES[2][0]
-    BULK = WasteItem.DESTINATION_CHOICES[0][0]
-    TRASH = WasteItem.DESTINATION_CHOICES[5][0]
 
     SERVICE_ID_MAP = {
         RECYCLING: 0,
@@ -191,7 +195,7 @@ class ScheduleDetail(models.Model):
         - if theirs is 'all', returns True
         - if theirs is 'recycle' and ours is 'recycling' returns True
         """
-        if theirs == 'all':
+        if theirs == ScheduleDetail.ALL:
             return True
         if ours == ScheduleDetail.RECYCLING:
             return theirs == 'recycle'

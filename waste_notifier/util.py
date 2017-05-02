@@ -1,8 +1,33 @@
 import datetime
 
 from waste_schedule.models import ScheduleDetail
+from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from cod_utils import util
 
+
+def includes_yard_waste(services):
+    """
+    Returns True if one of the services includes yard waste.  Note that yard_waste
+    currently occurs on same schedule as bulk, so we are treating bulk pickup as including
+    yard waste pickup
+    """
+    return ScheduleDetail.ALL in services or ScheduleDetail.YARD_WASTE in services or ScheduleDetail.BULK in services
+
+def add_additional_services(services, date):
+    """
+    Add in any services that are implicitly included in this list of services
+    (e.g., yard waste is included whenever bulk is in the list).
+    Note:  services that are not year-round should only be included if they
+    are active for the given date
+    """
+    if ScheduleDetail.ALL in services:
+        services = ScheduleDetail.YEAR_ROUND_SERVICES
+
+    # Special handling for yard waste, since it is on same schedule as bulk
+    if includes_yard_waste(services) and ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, date):
+        services.append(ScheduleDetail.YARD_WASTE)
+
+    return services
 
 def get_services_desc(services):
     """
@@ -10,11 +35,8 @@ def get_services_desc(services):
     Input should be a list of services.
     """
 
-    if services[0] == "all":
-        return "waste collection"
-
     # build comma-delimited list of services
-    desc = ''.join([ service + ', ' for service in list(set(services)) ])
+    desc = ''.join([ service + ', ' for service in sorted(set(services)) ])
 
     # remove trailing comma
     desc = desc[:-2]
@@ -30,7 +52,8 @@ def get_service_message(services, date):
     """
     Returns message to be sent to subscriber, including correct list of services and date
     """
-    return "City of Detroit Public Works:  Your next upcoming pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    services = add_additional_services(services, date)
+    return "City of Detroit Public Works:  Your next pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
 
 def get_service_detail_message(services, detail):
     """
@@ -145,7 +168,7 @@ class NotificationContent():
 
         self.content = {
             "meta": {
-                "date_applicable": str(date_applicable),
+                "date_applicable": date_applicable.strftime("%Y-%m-%d"),
                 "current_time": datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
                 "dry_run": dry_run,
             },
