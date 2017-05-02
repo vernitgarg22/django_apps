@@ -59,13 +59,14 @@ def update_subscription(phone_number, activate):
         body = "City of Detroit Public Works:  your {0} pickup reminders have been cancelled (reply to this message at any time with ADD ME to start receiving reminders again)"
 
     # add description of desired list of services to response
-    services_desc = get_services_desc(subscriber.service_type.split(','))
+    services = add_additional_services(util.split_csv(subscriber.service_type), date=None, add_yard_waste_year_round=True)
+    services_desc = get_services_desc(services)
     body = body.format(services_desc)
 
     # send the subscriber a confirmation message
     MsgHandler().send_text(subscriber.phone_number, body)
 
-    return Response({ "subscriber": str(subscriber) })
+    return Response({ "subscriber": str(subscriber), "message": body })
 
 def add_subscriber_comment(phone_number, comment):
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)

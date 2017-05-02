@@ -13,18 +13,18 @@ def includes_yard_waste(services):
     """
     return ScheduleDetail.ALL in services or ScheduleDetail.YARD_WASTE in services or ScheduleDetail.BULK in services
 
-def add_additional_services(services, date):
+def add_additional_services(services, date, add_yard_waste_year_round=False):
     """
     Add in any services that are implicitly included in this list of services
     (e.g., yard waste is included whenever bulk is in the list).
     Note:  services that are not year-round should only be included if they
-    are active for the given date
+    are active for the given date, unless add_yard_waste_year_round is True.
     """
     if ScheduleDetail.ALL in services:
         services = ScheduleDetail.YEAR_ROUND_SERVICES
 
     # Special handling for yard waste, since it is on same schedule as bulk
-    if includes_yard_waste(services) and ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, date):
+    if includes_yard_waste(services) and (add_yard_waste_year_round or ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, date)):
         services.append(ScheduleDetail.YARD_WASTE)
 
     return services

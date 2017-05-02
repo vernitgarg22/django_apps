@@ -45,6 +45,7 @@ class WasteNotifierTests(TestCase):
         Set up each unit test, including making sure database is properly cleaned up before each test
         """
         cleanup_db()
+        self.maxDiff = None
 
     def test_subscriber_comment(self):
         """
@@ -154,6 +155,26 @@ class WasteNotifierTests(TestCase):
         """
         phone_number = cod_utils.util.MsgHandler.get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
+
+    def test_update_subscription_msg(self):
+
+        c = Client()
+
+        values = [
+            ("all", {'subscriber': '5005550006 - routes: ,0, - status: active - services: all', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}),
+            ("trash", {'subscriber': '5005550006 - routes: ,0, - status: active - services: trash', 'message': 'City of Detroit Public Works:  your trash pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}),
+            ("recycling", {'subscriber': '5005550006 - routes: ,0, - status: active - services: recycling', 'message': 'City of Detroit Public Works:  your recycling pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}),
+        ]
+
+        for service, expected in values:
+            cleanup_db()
+            subscriber = Subscriber(phone_number="5005550006", waste_area_ids='0', service_type=service)
+            subscriber.save()
+
+            response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
+            self.assertEqual(response.status_code, 200)
+            self.assertDictEqual(response.data, expected, "Subscription confirmation returns correct message")
+
 
     def test_includes_yard_waste_all(self):
         self.assertTrue(views.includes_yard_waste(['all']))
