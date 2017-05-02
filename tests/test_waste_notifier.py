@@ -12,7 +12,7 @@ import tests.disabled
 from waste_notifier.models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
-import waste_notifier.views
+from waste_notifier import views
 
 
 def cleanup_model(model):
@@ -52,7 +52,7 @@ class WasteNotifierTests(TestCase):
         """
         s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
         s.save()
-        waste_notifier.views.add_subscriber_comment("1234567890", "testing")
+        views.add_subscriber_comment("1234567890", "testing")
         s = Subscriber.objects.all()[0]
         self.assertTrue(str(s).find("testing"), "add_subscriber_comment() adds a comment to the subscriber")
 
@@ -154,6 +154,46 @@ class WasteNotifierTests(TestCase):
         """
         phone_number = cod_utils.util.MsgHandler.get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
+
+    def test_includes_yard_waste_all(self):
+        self.assertTrue(views.includes_yard_waste(['all']))
+
+    def test_includes_yard_waste_bulk(self):
+        self.assertTrue(views.includes_yard_waste(['bulk']))
+
+    def test_includes_yard_waste_year_round(self):
+        self.assertTrue(views.includes_yard_waste(ScheduleDetail.YEAR_ROUND_SERVICES))
+
+    def test_includes_yard_waste_trash(self):
+        self.assertFalse(views.includes_yard_waste(['trash']))
+
+    def test_add_additional_services_empty(self):
+        self.assertEqual([], views.add_additional_services([], datetime.date(2017, 7, 1)))
+
+    def test_add_additional_services_all(self):
+        self.assertEqual(ScheduleDetail.YEAR_ROUND_SERVICES, views.add_additional_services(['all'], datetime.date(2017, 7, 1)))
+
+    def test_add_additional_services(self):
+        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
+        detail.clean()
+        detail.save()
+        detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
+        detail.clean()
+        detail.save()
+
+        services = views.add_additional_services(['bulk'], datetime.date(2017, 7, 1))
+        self.assertListEqual(['bulk', 'yard waste'], services, "Yard waste, when active and bulk is getting picked up, gets added to list of services")
+
+    def test_get_service_message(self):
+        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
+        detail.clean()
+        detail.save()
+        detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
+        detail.clean()
+        detail.save()
+
+        message = views.get_service_message(['bulk'], datetime.date(2017, 7, 1))
+        self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017')
 
     def test_get_waste_routes(self):
         """
@@ -423,6 +463,23 @@ class WasteNotifierTests(TestCase):
         expected = add_meta({'recycling': {28: {'5005550006': 1}, 6: {}}, 'citywide': {}, 'trash': {12: {}, 6: {}, 7: {}}, 'bulk': {36: {}, 6: {}}}, date=datetime.date(2017, 4, 13))
         self.assertDictEqual(expected, response.data, "Eastside thursday recycling B residents should have gotten alerts")
 
+    def test_send_bulk_yard_waste(self):
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber.activate()
+
+        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
+        detail.clean()
+        detail.save()
+        detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
+        detail.clean()
+        detail.save()
+
+        c = Client()
+        response = c.post('/waste_notifier/send/?today=20170504')
+        self.assertEqual(response.status_code, 200)
+        expected = add_meta({'recycling': {8: {'5005550006': 1}, 16: {}}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'bulk': {8: {'5005550006': 1}, 38: {}}, 'citywide': {}}, date=datetime.date(2017, 5, 5))
+        self.assertDictEqual(expected, response.data, "Yard waste alerts get included whenever bulk pickup happens and yard waste pickup is active")
+
     def test_send_start_date(self):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
@@ -486,7 +543,7 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/send/?today=20170420')
         self.assertEqual(response.status_code, 200)
         date_applicable = response.data['meta']['date_applicable']
-        self.assertEqual(date_applicable, '2017-04-21 00:00:00', "Alerts run with 'today' passed in should run a day later")
+        self.assertEqual(date_applicable, '2017-04-21', "Alerts run with 'today' passed in should run a day later")
 
     def test_send_invalid_caller(self):
 
