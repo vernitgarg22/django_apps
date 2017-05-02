@@ -217,6 +217,11 @@ class WasteScheduleTests(TestCase):
         expected = {'details': [{'note': ' (other service conflicts: recycling for ,1,27, and bulk/hazardous/yard waste for ,1,29,)', 'service': 'trash', 'normalDay': '2017-05-01T00:00:00', 'wasteAreaIds': ',0,1,14,', 'newDay': '2017-05-02T00:00:00', 'description': '', 'type': 'schedule'}], 'next_pickups': {'trash': {'next_pickup': '2017-05-02T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'recycling': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'bulk': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}}}
         self.assertDictEqual(expected, response.data, "Waste schedule reschedules services around schedule changes")
 
+    def test_schedule_detail_mgr_init(self):
+        ScheduleDetailMgr.instance()
+        with self.assertRaises(Exception, msg="Invoking ScheduleDetailMgr() raises an exception") as error:
+            ScheduleDetailMgr()
+
     def test_schedule_detail_mgr_singleton(self):
         self.assertEqual(id(ScheduleDetailMgr.instance()), id(ScheduleDetailMgr.instance()), "Only one instance of SchedulDetailMgr exists")
 
