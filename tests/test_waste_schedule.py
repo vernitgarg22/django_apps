@@ -9,6 +9,7 @@ import cod_utils.util
 import tests.disabled
 
 from waste_schedule.models import ScheduleDetail
+from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
 from waste_schedule import util
 import waste_schedule.views
@@ -21,7 +22,7 @@ def cleanup_model(model):
 def cleanup_db():
     cleanup_model(ScheduleDetail)
 
-def make_schedule_detail(detail_type, service_type, normal_day, new_day):
+def make_schedule_detail(detail_type='schedule', service_type='trash', normal_day=None, new_day=None):
     detail = ScheduleDetail(detail_type=detail_type, service_type=service_type, normal_day=normal_day, new_day=new_day)
     detail.clean()
     detail.save()
@@ -46,19 +47,19 @@ class WasteScheduleInitTests(TestCase):
         self.assertFalse(util.check_month_val(2016, 7, datetime.date(2017, 7, 30)), "Date does not belong to given year")
 
     def test_check_month(self):
-        detail = make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.datetime(2017, 7, 30), new_day=datetime.datetime(2017, 7, 31))
+        detail = make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.date(2017, 7, 30), new_day=datetime.date(2017, 7, 31))
         self.assertTrue(util.check_month(2017, 7, detail), "check_month() matches Schedule Detail to month and year")
 
     def test_check_month_start_date(self):
-        detail = make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.datetime(2017, 7, 30), new_day=datetime.datetime(2017, 7, 31))
+        detail = make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.date(2017, 7, 30), new_day=datetime.date(2017, 7, 31))
         self.assertTrue(util.check_month(2017, 1, detail), "check_month() matches start date Schedule Detail")
 
     def test_filter_month(self):
-        detail = make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.datetime(2017, 7, 30), new_day=datetime.datetime(2017, 7, 31))
+        detail = make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.date(2017, 7, 30), new_day=datetime.date(2017, 7, 31))
         self.assertTrue(util.filter_month(2017, 7, [detail]) == [detail], "filter_month() returns list of details belonging to month and year")
 
     def test_filter_month_start_date(self):
-        detail = make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.datetime(2017, 7, 30), new_day=datetime.datetime(2017, 7, 31))
+        detail = make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.RECYCLING, normal_day=datetime.date(2017, 7, 30), new_day=datetime.date(2017, 7, 31))
         self.assertTrue(util.filter_month(2017, 1, [detail]) == [detail], "filter_month() returns list of details including start date details")
 
     def test_get_day_of_week_diff1(self):
@@ -88,7 +89,7 @@ class WasteScheduleTests(TestCase):
         self.maxDiff = None
 
     def test_schedule_detail_str(self):
-        detail = make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.TRASH, normal_day=datetime.datetime(2017, 5, 1), new_day=datetime.datetime(2017, 5, 2))
+        detail = make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.TRASH, normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
         self.assertTrue(str(detail).find('schedule') >= 0 and str(detail).find(ScheduleDetail.TRASH) >= 0)
 
     def test_schedule_detail_validation(self):
@@ -196,7 +197,7 @@ class WasteScheduleTests(TestCase):
     def test_get_schedule_details_by_month_year(self):
 
         c = Client()
-        response = c.get("/waste_schedule/details/0/year/2017/month/7/")
+        response = c.get("/waste_schedule/details/0/year/2017/month/7/?today=20170428")
         self.assertTrue(response.status_code == 200)
         expected = {'next_pickups': {'bulk': {'day': 'monday', 'route': 0, 'contractor': 'gfl', 'next_pickup': '2017-05-08T00:00:00', 'week': 'b'}, 'trash': {'day': 'monday', 'route': 0, 'contractor': 'gfl', 'next_pickup': '2017-05-01T00:00:00', 'week': 'b'}, 'recycling': {'day': 'monday', 'route': 0, 'contractor': 'gfl', 'next_pickup': '2017-05-08T00:00:00', 'week': 'b'}}, 'details': []}
         self.assertDictEqual(expected, response.data, "waste_schedule/details can be filtered by year and month")
@@ -210,8 +211,39 @@ class WasteScheduleTests(TestCase):
     def test_get_schedule_details_citywide_reschedule(self):
 
         c = Client()
-        make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.TRASH, normal_day=datetime.datetime(2017, 5, 1), new_day=datetime.datetime(2017, 5, 2))
+        make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.TRASH, normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
         response = c.get("/waste_schedule/details/0/?today=20170501")
         self.assertTrue(response.status_code == 200)
         expected = {'details': [{'note': ' (other service conflicts: recycling for ,1,27, and bulk/hazardous/yard waste for ,1,29,)', 'service': 'trash', 'normalDay': '2017-05-01T00:00:00', 'wasteAreaIds': ',0,1,14,', 'newDay': '2017-05-02T00:00:00', 'description': '', 'type': 'schedule'}], 'next_pickups': {'trash': {'next_pickup': '2017-05-02T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'recycling': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'bulk': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}}}
         self.assertDictEqual(expected, response.data, "Waste schedule reschedules services around schedule changes")
+
+    def test_schedule_detail_mgr_singleton(self):
+        self.assertEqual(id(ScheduleDetailMgr.instance()), id(ScheduleDetailMgr.instance()), "Only one instance of SchedulDetailMgr exists")
+
+    def test_schedule_detail_mgr_service_dates(self):
+        start_test = make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 3, 1))
+        end_test = make_schedule_detail(detail_type='end-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 11, 1))
+        start, end = ScheduleDetailMgr.instance().get_service_start_and_end('yard waste')
+
+        self.assertEqual(start.new_day, start_test.new_day, "get_service_start_and_end() returns start date for a service")
+        self.assertEqual(end.new_day, end_test.new_day, "get_service_start_and_end() returns end date for a service")
+
+    def test_schedule_detail_mgr_service_dates_none(self):
+        start, end = ScheduleDetailMgr.instance().get_service_start_and_end('yard waste')
+        self.assertTrue(start == None and end == None, "We get None back for start and end dates when they don't exist for a service")
+
+    def test_is_service_active_trash(self):
+        self.assertTrue(ScheduleDetailMgr.instance().is_service_active('trash', datetime.date(2017, 7, 1)), "Year round services are active")
+
+    def test_is_service_active_yard_waste(self):
+        make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 3, 1))
+        make_schedule_detail(detail_type='end-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 11, 1))
+        self.assertTrue(ScheduleDetailMgr.instance().is_service_active('yard waste', datetime.date(2017, 7, 1)), "Yard waste is active between start and end")
+
+    def test_is_service_active_yard_waste_too_late(self):
+        make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 3, 1))
+        make_schedule_detail(detail_type='end-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 11, 1))
+        self.assertFalse(ScheduleDetailMgr.instance().is_service_active('yard waste', datetime.date(2017, 12, 1)), "Yard waste is inactive after end")
+
+    def test_is_service_active_default(self):
+        self.assertFalse(ScheduleDetailMgr.instance().is_service_active('yard waste', datetime.date(2017, 7, 1)), "When service start and end dates are not set up it is inactive")
