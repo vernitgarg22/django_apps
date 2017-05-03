@@ -106,13 +106,20 @@ def confirm_notifications(request):
     if phone_number.startswith('1'):
         phone_number = phone_number[1:]
 
-    # Did user confirm they want to receive notifications?
     body = request.data['Body']
-    body = body.strip()
+    body = body.lower()
 
-    if "add me" in body.lower():
+    # check for several variations on 'add me'
+    add_me = False
+    ADD_ME_WORDS = ['add me', 'addme', 'add  me']
+    for word in ADD_ME_WORDS:
+        if word in body:
+            add_me = True
+
+    # Did user confirm they want to receive notifications?
+    if add_me:
         return update_subscription(phone_number, True)
-    elif "remove me" in body.lower():
+    elif "remove me" in body:
         return update_subscription(phone_number, False)
     else:
         add_subscriber_comment(phone_number, "User's response to confirmation was: {}".format(body))
