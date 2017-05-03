@@ -60,6 +60,10 @@ class Subscriber(models.Model):
         # clean up waste_area_ids
         self.waste_area_ids = util.clean_comma_delimited_string(self.waste_area_ids)
 
+        # initialize created_at timestamp
+        if self.created_at is None:
+            self.created_at = datetime.datetime.now()
+
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
 
