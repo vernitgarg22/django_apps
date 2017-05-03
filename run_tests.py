@@ -19,5 +19,5 @@ if __name__ == "__main__":
     # failures = test_runner.run_tests(["tests.test_waste_notifier"])
     # failures = test_runner.run_tests(["tests.test_waste_wizard"])
     # failures = test_runner.run_tests(["tests.test_waste_notifier.WasteNotifierTests.test_confirm_invalid_phone_number"])
-    failures = test_runner.run_tests(["tests.cod_utils_tests", "tests.test_waste_schedule", "tests.test_waste_notifier", "tests.test_waste_wizard"])
+    failures = test_runner.run_tests(["tests.cod_utils_tests", "tests.test_waste_schedule", "tests.test_waste_notifier", "tests.test_waste_wizard", "tests.test_weather_info"])
     sys.exit(bool(failures))
