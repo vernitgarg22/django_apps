@@ -162,6 +162,7 @@ class DjangoAppsRouter(object):
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
         "Sales": "eql",
+        "ParcelMaster": "eql",
     }
 
     ModelDBMapDev = {

@@ -7,7 +7,15 @@ from rest_framework.response import Response
 
 from django.http import Http404
 
-from .models import Sales
+from .models import Sales, ParcelMaster
+
+
+def clean_pum(pnum):
+    """
+    urls with dots are problematic: substitute underscores for dots in the url
+    (and replace underscores with dots here)
+    """
+    return pnum.replace('_', '.')
 
 
 def get_parcels(parcels):
@@ -114,24 +122,19 @@ def get_sales_property_address_recent(request, address=None, format=None):
 
     return get_sales_property_address(request, address=address, years_back=5, format=format)
 
+@api_view(['GET'])
+def get_parcel(request, pnum=None, format=None):
+    """
+    Return parcel data from the assessors dataset
+    """
 
+    # clean up the pnum
+    pnum = clean_pum(pnum)
 
-# from assessments.models import Sales
-# from datetime import datetime, timedelta
-# from django.db.models import Q
-# pnum='22084716.'
-# results = Sales.objects.filter(pnum__iexact=pnum)
-# date_min = datetime.now() - timedelta(days=5 * 365)
-# date_min = datetime.today() - timedelta(days=5 * 365)
-# results = results.filter(saledate__gte=date_min)
+    # excecute the search
+    parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)
+    if len(parcels) == 0:
+        raise Http404("Parcel id " + pnum + " not found")
 
-# results = Sales.objects.filter(id__iexact=3769164).filter(saledate__gte=date_min)
-# results = Sales.objects.filter(id__iexact=3769164).filter(saledate__gte=today)
-# results = Sales.objects.filter(id__iexact=3769164).filter(datetime.combine(date_min, time.min))
-
-
-# Events = Event.objects.filter(Q(date=now.date(),time__gte=now.time())|Q(date__gt=now.date())).order_by('-date')
-# results = Sales.objects.filter(id__iexact=3769164).filter(Q(saledate__gte=date_min)
-
-# results = Sales.objects.filter(pnum__iexact=pnum).filter(saledate__year=2007)
-# results = Sales.objects.filter(saledate__year=2017)
+    # return json for the parcel
+    return Response(parcels[0].json())
