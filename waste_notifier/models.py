@@ -28,6 +28,9 @@ class Subscriber(models.Model):
     last_status_update = models.DateTimeField('Time of last status change', blank=True, null=True)
     created_at = models.DateTimeField('Time of initial subscription', blank=True, null=True)
     comment = models.CharField('Internal use only', max_length = 128, blank=True, null=True)
+    latitude = models.CharField('Latitude', max_length = 32, blank=True, null=True)
+    longitude = models.CharField('Longitude', max_length = 32, blank=True, null=True)
+    address = models.CharField('Home address', max_length = 128, blank=True, null=True)
 
     def __str__(self):
         string = self.phone_number + ' - routes: ' + self.waste_area_ids + ' - status: ' + self.status + ' - services: ' + self.service_type
@@ -120,8 +123,14 @@ class Subscriber(models.Model):
             # try to create a subscriber with the posted data
             subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
 
+        # set service type
         if data.get("service_type"):
             subscriber.service_type = data['service_type']
+
+        # check for optional values
+        for value in [ 'address', 'latitude', 'longitude' ]:
+            if data.get(value):
+                setattr(subscriber, value, data.get(value))
 
         # validate and save subscriber
         subscriber.clean()

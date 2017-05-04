@@ -109,21 +109,18 @@ def confirm_notifications(request):
     body = request.data['Body']
     body = body.lower()
 
-    # check for several variations on 'add me'
-    add_me = False
-    ADD_ME_WORDS = ['add me', 'addme', 'add  me']
-    for word in ADD_ME_WORDS:
-        if word in body:
-            add_me = True
+    # unless user wants to be removed, add them
+    remove_me = "remove me" in body
+    response = {}
 
-    # Did user confirm they want to receive notifications?
-    if add_me:
-        return update_subscription(phone_number, True)
-    elif "remove me" in body:
-        return update_subscription(phone_number, False)
+    # Update user status
+    if "remove me" in body:
+        response = update_subscription(phone_number, False)
     else:
-        add_subscriber_comment(phone_number, "User's response to confirmation was: {}".format(body))
-        return Response({})
+        response = update_subscription(phone_number, True)
+
+    add_subscriber_comment(phone_number, "User's response to confirmation was: {}".format(body))
+    return response
 
 
 @api_view(['POST'])

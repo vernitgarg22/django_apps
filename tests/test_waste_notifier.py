@@ -288,6 +288,21 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/subscribe/', { "Body": "oops" } )
         self.assertEqual(response.status_code, 400, "/waste_notifier/subscribe/ rejects malformed content")
 
+    def test_subscribe_extra_values(self):
+        """
+        Test creating a subscriber with extra values
+        """
+
+        c = Client()
+
+        for value in [ 'address', 'latitude', 'longitude' ]:
+
+            cleanup_db()
+            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all", value: "test value" } )
+            self.assertEqual(response.status_code, 200)
+            subscriber = Subscriber.objects.all()[0]
+            self.assertEqual(getattr(subscriber, value), 'test value', "Subscribing can set {}".format(value))
+
     def test_confirm_invalid_phone_number(self):
 
         c = Client()
@@ -314,8 +329,8 @@ class WasteNotifierTests(TestCase):
 
         subscriber = Subscriber.objects.first()
 
-        self.assertEqual(subscriber.status, 'inactive', "User's status should be inactive")
-        self.assertEqual(subscriber.comment, "User's response to confirmation was: oops", "User's comment should contain their invalid response")
+        self.assertEqual(subscriber.status, 'active', "User's status should be active (cos remove me not present)")
+        self.assertEqual(subscriber.comment, "User's response to confirmation was: oops", "User's comment should contain their response")
 
     def test_invalid_confirm_sets_comment(self):
 
