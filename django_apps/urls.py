@@ -23,14 +23,9 @@ urlpatterns = [
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
 
     # apis
+    url(r'^assessments/', include('assessments.urls', namespace="assessments")),
     url(r'^waste_notifier/', include('waste_notifier.urls', namespace="waste_notifier")),
     url(r'^waste_schedule/', include('waste_schedule.urls', namespace="waste_schedule")),
-    url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/$', assessments.views.get_sales_property_address),
-    url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/recent/$', assessments.views.get_sales_property_address_recent),
-    url(r'^assessments/address/(?P<address>[-\w\_\.\ ]+)/recent/years/(?P<years_back>[0-9]+)/$', assessments.views.get_sales_property_address),
-    url(r'^assessments/(?P<pnum>[-\w\_\.]+)/$', assessments.views.get_sales_property),
-    url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/$', assessments.views.get_sales_property_recent),
-    url(r'^assessments/(?P<pnum>[-\w\_\.]+)/recent/years/(?P<years_back>[0-9]+)/$', assessments.views.get_sales_property),
     url(r'^weather_info/', include('weather_info.urls', namespace="weather_info")),
     
     # waste sorter
