@@ -182,6 +182,8 @@ class Sales(models.Model):
 
 class ParcelMaster(models.Model):
 
+    IGNORED_FIELDS = [ 'id' ]
+
     id = sqlserver_ado.fields.BigAutoField(primary_key=True)
     pnum = models.CharField(unique=True, max_length=25)
     relatedpnum = models.CharField(max_length=25)
@@ -246,7 +248,8 @@ class ParcelMaster(models.Model):
         json = {}
         fields = self._meta.get_fields()
         for field in fields:
-            value = getattr(self, field.name)
-            json[field.name] = clean_val(value)
+            if field.name not in ParcelMaster.IGNORED_FIELDS:
+                value = getattr(self, field.name)
+                json[field.name] = clean_val(value)
 
         return json
