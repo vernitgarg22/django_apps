@@ -128,10 +128,18 @@ class ScheduleDetail(models.Model):
 
     def save(self, *args, **kwargs):
 
+        # TODO clear this up
+        if kwargs.get('null_waste_area_ids'):
+            self.waste_area_ids = None
+            # self.waste_area_ids = kwargs['waste_area_ids']
+            # if self.waste_area_ids == 'null':
+            #     self.waste_area_ids = None
+            del kwargs['null_waste_area_ids']
+
         # if admin did not specify waste area ids, look them up for trash service
         # and add in recycling & bulk to the detail note so the admin will know about any
         # conflicts with recycling or bulk pickup
-        if not self.waste_area_ids and self.detail_type == 'schedule':
+        elif not self.waste_area_ids and self.detail_type == 'schedule':
             self.waste_area_ids = self.get_waste_route_ids(self.normal_day)
 
             recycling_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.RECYCLING)
@@ -238,6 +246,7 @@ class ScheduleDetail(models.Model):
         routes = ScheduleDetail.get_waste_routes(date, service_type)
         return ',' + ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
 
+    # TODO remove this and leave it in ScheduleDetailMgr
     @staticmethod
     def get_citywide_schedule_changes(date):
         """

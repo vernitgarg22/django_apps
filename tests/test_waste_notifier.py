@@ -11,6 +11,7 @@ import tests.disabled
 
 from waste_notifier.models import Subscriber
 from waste_schedule.models import ScheduleDetail
+from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
 from waste_notifier import views
 
@@ -39,6 +40,33 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
 
 
 class WasteNotifierTests(TestCase):
+
+    def lists_are_equal(self, list1, list2): # pragma: no cover
+        if type(list1) is not type(list2):
+            return False
+        if len(list1) != len(list2):
+            return False
+        for obj in list1:
+            if obj not in list2:
+                return False
+        return True
+
+    def assertDictEqual(self, dict1, dict2, msg): # pragma: no cover
+        equal = True
+        if len(dict1.keys()) != len(dict2.keys()):
+            equal = False
+        else:
+            for key in dict1.keys():
+                if not dict1.get(key) and not dict2.get(key):
+                    pass
+                elif dict1.get(key) != dict2.get(key):
+                    if type(dict1.get(key)) is list and not self.lists_are_equal(dict1.get(key), dict2.get(key)):
+                        equal = False
+
+        if not equal:
+            return super().assertDictEqual(dict1, dict2, msg)
+        return True
+
 
     def setUp(self):
         """
@@ -626,3 +654,55 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.get('/waste_notifier/route_info/')
         self.assertEqual(response.status_code, 200)
+
+
+
+    #
+    # Tests for new method of handling holidays (via ScheduleDetailMgr.get_day_routes(self, date))
+    #
+
+    def test_get_regular_week_routes(self):
+        week_routes = ScheduleDetailMgr.instance().get_regular_week_routes()
+        expected = [{0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 30: {'contractor': 'advance', 'week': 'b', 'services': 'bulk'}, 26: {'contractor': 'advance', 'week': 'b', 'services': 'recycle'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {32: {'contractor': 'advance', 'week': 'b', 'services': 'bulk'}, 2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 3: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 23: {'contractor': 'advance', 'week': 'b', 'services': 'recycle'}, 24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {33: {'contractor': 'advance', 'week': 'b', 'services': 'bulk'}, 34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 19: {'contractor': 'advance', 'week': 'b', 'services': 'recycle'}, 20: {'contractor': 'advance', 'week': 'b', 'services': 'recycle'}, 5: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 36: {'contractor': 'advance', 'week': 'b', 'services': 'bulk'}, 6: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 28: {'contractor': 'advance', 'week': 'b', 'services': 'recycle'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 37: {'contractor': 'advance', 'week': 'b', 'services': 'bulk'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 9: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 15: {'contractor': 'advance', 'week': 'b', 'services': 'recycle'}}, {}, {}]
+        self.assertEqual(week_routes, expected, "get_regular_week_routes() returns array of routes for a week")
+
+    def test_get_week_schedule_changes_none(self):
+        changes = ScheduleDetailMgr.instance().get_week_schedule_changes(date = datetime.date(2017, 5, 5))
+        expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': [], '20170506': [], '20170504': []}
+
+        self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns no schedule changes when there aren't any")
+
+    def test_get_week_schedule_changes(self):
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+        changes = ScheduleDetailMgr.instance().get_week_schedule_changes(date = datetime.date(2017, 5, 5))
+        expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': [detail], '20170506': [], '20170504': []}
+        self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns schedule changes")
+
+    def test_get_week_routes(self):
+        week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
+        expected = [{0: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 1: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 30: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 26: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 27: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 29: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 14: {'services': 'trash', 'contractor': 'advance', 'week': ' '}}, {32: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 2: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 3: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 23: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 24: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 25: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 13: {'services': 'trash', 'contractor': 'advance', 'week': ' '}, 31: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}}, {33: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 34: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 19: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 20: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 5: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 22: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 4: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 11: {'services': 'trash', 'contractor': 'advance', 'week': ' '}, 21: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}}, {17: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 18: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 35: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 36: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 6: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 7: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 28: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 12: {'services': 'trash', 'contractor': 'advance', 'week': ' '}}, {16: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 37: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 38: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 8: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 9: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 10: {'services': 'trash', 'contractor': 'advance', 'week': ' '}, 15: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}}, {}, {}]
+        self.assertEqual(week_routes, expected, "get_week_routes() returns array of routes for a week")
+
+    def test_get_week_routes_holiday(self):
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+        week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
+        expected = [{}, {0: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 1: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 30: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 26: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 27: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 29: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 14: {'services': 'trash', 'contractor': 'advance', 'week': ' '}}, {32: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 2: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 3: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 23: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 24: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 25: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 13: {'services': 'trash', 'contractor': 'advance', 'week': ' '}, 31: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}}, {33: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 34: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 19: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 20: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 5: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 22: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 4: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 11: {'services': 'trash', 'contractor': 'advance', 'week': ' '}, 21: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}}, {17: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 18: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 35: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 36: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 6: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 7: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 28: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}, 12: {'services': 'trash', 'contractor': 'advance', 'week': ' '}}, {16: {'services': 'recycle', 'contractor': 'advance', 'week': 'a'}, 37: {'services': 'bulk', 'contractor': 'advance', 'week': 'b'}, 38: {'services': 'bulk', 'contractor': 'advance', 'week': 'a'}, 8: {'services': 'all', 'contractor': 'gfl', 'week': 'a'}, 9: {'services': 'all', 'contractor': 'gfl', 'week': 'b'}, 10: {'services': 'trash', 'contractor': 'advance', 'week': ' '}, 15: {'services': 'recycle', 'contractor': 'advance', 'week': 'b'}}, {}]
+        self.assertEqual(week_routes, expected, "get_week_routes() reschdules array of routes for a week around holidays")
+
+    def test_get_day_routes(self):
+        routes = ScheduleDetailMgr.instance().get_day_routes(date = datetime.date(2017, 5, 5))
+        expected = { 16: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 37: {'contractor': 'advance', 'services': 'bulk', 'week': 'b'}, 38: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 8: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 9: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 10: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 15: {'contractor': 'advance', 'services': 'recycle', 'week': 'b'} }
+        self.assertEqual(routes, expected, "get_day_routes() returns routes for a date")
+
+    def test_get_day_routes_holiday(self):
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+        routes = ScheduleDetailMgr.instance().get_day_routes(date = datetime.date(2017, 5, 5))
+        expected = {17: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 18: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 35: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 36: {'contractor': 'advance', 'services': 'bulk', 'week': 'b'}, 6: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 7: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 28: {'contractor': 'advance', 'services': 'recycle', 'week': 'b'}, 12: {'contractor': 'advance', 'services': 'trash', 'week': ' '}}
+        self.assertEqual(routes, expected, "get_day_routes() reschedules routes for a date if there is a holiday earlier in the week")
+
