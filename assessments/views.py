@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.http import Http404
 
 from .models import Sales, ParcelMaster
+from assessments import util
 
 
 def clean_pum(pnum):
@@ -136,5 +137,7 @@ def get_parcel(request, pnum=None, format=None):
     if len(parcels) == 0:
         raise Http404("Parcel id " + pnum + " not found")
 
-    # return json for the parcel
-    return Response(parcels[0].json())
+    content = parcels[0].json()
+    content['field_descriptions'] = util.get_parcel_descriptions()
+
+    return Response(content)

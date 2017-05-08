@@ -5,11 +5,7 @@ from sqlserver_ado.fields import BigAutoField
 
 from django.db import models
 
-
-def clean_val(val):
-    if type(val) is str:
-        val = val.strip()
-    return val
+from assessments import util
 
 
 class Sales(models.Model):
@@ -250,6 +246,6 @@ class ParcelMaster(models.Model):
         for field in fields:
             if field.name not in ParcelMaster.IGNORED_FIELDS:
                 value = getattr(self, field.name)
-                json[field.name] = clean_val(value)
+                json[field.name] = util.clean_parcel_val(value)
 
         return json
