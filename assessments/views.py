@@ -11,14 +11,6 @@ from .models import Sales, ParcelMaster
 from assessments import util
 
 
-def clean_pum(pnum):
-    """
-    urls with dots are problematic: substitute underscores for dots in the url
-    (and replace underscores with dots here)
-    """
-    return pnum.replace('_', '.')
-
-
 def get_parcels(parcels):
     """
     Retrieve property info
@@ -130,7 +122,7 @@ def get_parcel(request, pnum=None, format=None):
     """
 
     # clean up the pnum
-    pnum = clean_pum(pnum)
+    pnum = util.clean_pnum(pnum)
 
     # excecute the search
     parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)
