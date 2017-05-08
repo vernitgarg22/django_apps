@@ -35,6 +35,18 @@ def tomorrow(today = datetime.date.today()):
     return today + datetime.timedelta(days=1)
 
 
+def get_week_start_end(date):
+    """
+    Return datetime date objects representing first and last date
+    in the week that date belongs to
+    """
+
+    days = date.weekday()
+    start = date if days == 0 else date - datetime.timedelta(days=days)
+    end = date if days == 6 else date + datetime.timedelta(days=6-days)
+
+    return start, end
+
 def clean_list(values):
     """
     Returns a cleaned-up version of values which has
