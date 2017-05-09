@@ -5,10 +5,18 @@ from datetime import datetime, timedelta
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from django.conf import settings
 from django.http import Http404
 
-from .models import Sales, ParcelMaster
+if settings.RUNNING_UNITTESTS:
+    from test_assessments.models import Sales, ParcelMaster
+else:
+    from assessments.models import Sales, ParcelMaster   # pragma: no cover
+
 from assessments import util
+
+
+# TODO restore the 404 errors?
 
 
 def get_parcels(parcels):
@@ -44,10 +52,6 @@ def get_sales_property(request, pnum=None, years_back=None, format=None):
     Retrieve property info via parcel id (aka 'pnum')
     """
 
-    # strictly GET-only
-    if request.method != 'GET':
-        raise Http404("Method not supported")
-
     # urls with dots are problematic: substitute underscores for dots in the url
     # (and replace underscores with dots here)
     pnum = pnum.replace('_', '.')
@@ -82,10 +86,6 @@ def get_sales_property_address(request, address=None, years_back=None, format=No
     """
     Retrieve property info via address
     """
-
-    # strictly GET-only
-    if request.method != 'GET':
-        raise Http404("Method not supported")
 
     # urls with dots are problematic: substitute underscores for dots in the url
     # (and replace underscores with dots here)
@@ -126,8 +126,8 @@ def get_parcel(request, pnum=None, format=None):
 
     # excecute the search
     parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)
-    if len(parcels) == 0:
-        raise Http404("Parcel id " + pnum + " not found")
+    # if len(parcels) == 0:
+    #     raise Http404("Parcel id " + pnum + " not found")
 
     content = parcels[0].json()
     content['field_descriptions'] = util.get_parcel_descriptions()

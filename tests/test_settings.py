@@ -76,6 +76,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'assessments',
+    'test_assessments',
     'waste_schedule',
     'waste_notifier',
     'waste_wizard',
@@ -146,6 +147,8 @@ APPEND_SLASH = True
 
 STATIC_ROOT = DJANGO_HOME + "/static"
 STATIC_URL = '/static/'
+
+RUNNING_UNITTESTS = True
 
 DATABASE_ROUTERS = [ 'tests.test_settings.DjangoAppsRouter', ]
 
