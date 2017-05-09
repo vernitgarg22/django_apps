@@ -4,13 +4,16 @@ import sqlserver_ado
 from sqlserver_ado.fields import BigAutoField
 
 from django.db import models
+from django.conf import settings
 
 from assessments import util
 
 
 class Sales(models.Model):
 
-    id = sqlserver_ado.fields.BigAutoField(primary_key=True)
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        id = sqlserver_ado.fields.BigAutoField(primary_key=True)
+   
     pnum = models.CharField(max_length=25)
     saledate = models.DateTimeField(blank=True, null=True)
     addresscombined = models.CharField(max_length=62)
@@ -20,14 +23,15 @@ class Sales(models.Model):
     grantor = models.CharField(max_length=35)
     grantee = models.CharField(max_length=35)
 
-    class Meta:
-        managed = False
-        db_table = 'Sales'
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        class Meta:
+            managed = False
+            db_table = 'Sales'
 
-    def __str__(self):      # pragma: no cover tested through test_assessments module
+    def __str__(self):
         return str(id) + ' - ' + self.pnum + " - " + self.addresscombined
 
-    def json(self):         # pragma: no cover tested through test_assessments module
+    def json(self):
         return {
             "pnum": self.pnum,
             "saleprice": self.saleprice,
@@ -44,7 +48,9 @@ class ParcelMaster(models.Model):
 
     IGNORED_FIELDS = [ 'id' ]
 
-    id = sqlserver_ado.fields.BigAutoField(primary_key=True)
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        id = sqlserver_ado.fields.BigAutoField(primary_key=True)
+
     pnum = models.CharField(unique=True, max_length=25)
     relatedpnum = models.CharField(max_length=25)
     propstreetcombined = models.CharField(max_length=62)
@@ -54,8 +60,8 @@ class ParcelMaster(models.Model):
     ownercity = models.CharField(max_length=25)
     ownerstate = models.CharField(max_length=2)
     ownerzip = models.CharField(max_length=10)
-    xstreetname_0 = models.CharField(db_column='xStreetName_0', max_length=25)  # Field name made lowercase.
-    xstreetname_1 = models.CharField(db_column='xStreetName_1', max_length=25)  # Field name made lowercase.
+    xstreetname_0 = models.CharField(db_column='xStreetName_0', max_length=25)
+    xstreetname_1 = models.CharField(db_column='xStreetName_1', max_length=25)
 
     resb_numresb = models.SmallIntegerField()
     resb_occ = models.SmallIntegerField()
@@ -70,7 +76,7 @@ class ParcelMaster(models.Model):
     resb_nbed = models.SmallIntegerField()
     resb_fullbaths = models.SmallIntegerField()
     resb_halfbaths = models.SmallIntegerField()
-    resb_gartype = models.SmallIntegerField(db_column='resb_garType')  # Field name made lowercase.
+    resb_gartype = models.SmallIntegerField(db_column='resb_garType')
     resb_fireplaces = models.SmallIntegerField()
     resb_exterior = models.SmallIntegerField()
     resb_floorarea = models.IntegerField()
@@ -93,17 +99,18 @@ class ParcelMaster(models.Model):
     cib_pricefloor = models.FloatField()
     cib_calcvalue = models.FloatField()
     cib_value = models.FloatField()
-    cibbedrooms = models.SmallIntegerField(db_column='CiBBedrooms')  # Field name made lowercase.
-    cibunits = models.SmallIntegerField(db_column='CiBUnits')  # Field name made lowercase.
+    cibbedrooms = models.SmallIntegerField(db_column='CiBBedrooms')
+    cibunits = models.SmallIntegerField(db_column='CiBUnits')
 
-    class Meta:
-        managed = False
-        db_table = 'ParcelMaster'
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        class Meta:
+            managed = False
+            db_table = 'ParcelMaster'
 
-    def __str__(self):      # pragma: no cover tested through test_assessments module
+    def __str__(self):
         return str(id) + ' - ' + self.pnum + " - " + self.propstreetcombined
 
-    def json(self):         # pragma: no cover tested through test_assessments module
+    def json(self):
 
         json = {}
         fields = self._meta.get_fields()

@@ -8,10 +8,8 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.http import Http404
 
-if settings.RUNNING_UNITTESTS:
-    from test_assessments.models import Sales, ParcelMaster
-else:
-    from assessments.models import Sales, ParcelMaster   # pragma: no cover
+from assessments.models import Sales, ParcelMaster
+
 
 from assessments import util
 

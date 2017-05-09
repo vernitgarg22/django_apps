@@ -13,10 +13,7 @@ import tests.disabled
 from assessments import util
 from assessments import views
 
-from test_assessments.models import Sales, ParcelMaster
-
-
-import pdb
+from assessments.models import Sales, ParcelMaster
 
 
 def cleanup_model(model):

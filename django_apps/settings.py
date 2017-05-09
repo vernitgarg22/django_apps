@@ -79,7 +79,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'assessments',
-    'test_assessments',
     'waste_schedule',
     'waste_notifier',
     'waste_wizard',
