@@ -9,12 +9,7 @@ from django.conf import settings
 from django.http import Http404
 
 from assessments.models import Sales, ParcelMaster
-
-
 from assessments import util
-
-
-# TODO restore the 404 errors?
 
 
 def get_parcels(parcels):
@@ -62,10 +57,9 @@ def get_sales_property(request, pnum=None, years_back=None, format=None):
     if years_back != None:
         results = filter_years_back(results, years_back)
 
+    # if no results found, return 404
     if len(results) == 0:
-        return Response({"pnum": pnum})
-    # if len(results) == 0:
-    #     raise Http404("Parcel id " + pnum + " not found")
+        raise Http404("Parcel id " + pnum + " not found")
 
     return get_parcels(results)
 
@@ -97,10 +91,9 @@ def get_sales_property_address(request, address=None, years_back=None, format=No
     if years_back != None:
         results = filter_years_back(results, years_back)
 
+    # if no results found, return 404
     if len(results) == 0:
-        return Response({"address": address})
-    # if len(results) == 0:
-    #     raise Http404("Address " + address + " not found")
+        raise Http404("Address " + address + " not found")
 
     return get_parcels(results)
 
@@ -124,8 +117,8 @@ def get_parcel(request, pnum=None, format=None):
 
     # excecute the search
     parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)
-    # if len(parcels) == 0:
-    #     raise Http404("Parcel id " + pnum + " not found")
+    if len(parcels) == 0:
+        raise Http404("Parcel id " + pnum + " not found")
 
     content = parcels[0].json()
     content['field_descriptions'] = util.get_parcel_descriptions()
