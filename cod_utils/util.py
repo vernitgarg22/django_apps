@@ -141,9 +141,12 @@ class MsgHandler():
         Send a text message via twilio rest client
         """
         client = TwilioRestClient(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if not MsgHandler.DRY_RUN and not dry_run_param or True:
+        if MsgHandler.DRY_RUN or dry_run_param:
+            return False
+        else:
             client.messages.create(
                 to = "+1" + phone_number,
                 from_ = MsgHandler.get_phone_sender(),
                 body = text,
             )
+            return True

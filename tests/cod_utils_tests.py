@@ -91,6 +91,30 @@ class CODUtilsTests(TestCase):
             output = util.split_csv(input)
             self.assertEqual(expected, output, "split_csv() turns {} into {}".format(input, expected))
 
-    def test_msg_handler(self):
+
+class CODUtilsMsgHandlerTests(TestCase):
+
+    def setUp(self):
+        self.dry_run_previous = util.MsgHandler.DRY_RUN
+
+    def tearDown(self):
+        util.MsgHandler.DRY_RUN = self.dry_run_previous
+
+    def test_get_phone_sender(self):
         number = util.MsgHandler.get_phone_sender()
         self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
+
+    def test_send_message(self):
+        util.MsgHandler.DRY_RUN = False
+        sent = util.MsgHandler().send_text("5005550006", "testing")
+        self.assertTrue(sent, "MsgHandler sends a text")
+
+    def test_send_message_dry_run(self):
+        util.MsgHandler.DRY_RUN = True
+        sent = util.MsgHandler().send_text("5005550006", "testing")
+        self.assertFalse(sent, "MsgHandler sends no texts when DRY_RUN is set")
+
+    def test_send_message_dry_run_param(self):
+        util.MsgHandler.DRY_RUN = False
+        sent = util.MsgHandler().send_text("5005550006", "testing", dry_run_param = True)
+        self.assertFalse(sent, "MsgHandler sends no texts when dry_run_param is True")
