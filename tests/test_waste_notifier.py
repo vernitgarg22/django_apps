@@ -243,7 +243,7 @@ class WasteNotifierTests(TestCase):
         detail.save()
 
         message = views.get_service_message(['bulk'], datetime.date(2017, 7, 1))
-        self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017')
+        self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
 
     def test_get_waste_routes(self):
         """

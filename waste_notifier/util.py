@@ -53,7 +53,11 @@ def get_service_message(services, date):
     Returns message to be sent to subscriber, including correct list of services and date
     """
     services = add_additional_services(services, date)
-    return "City of Detroit Public Works:  Your next pickup for {0} is {1}".format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    message = "\
+City of Detroit Public Works:  Your next pickup for {0} is {1} \
+(reply with REMOVE ME to cancel pickup reminders; \
+begin your reply with FEEDBACK to give us feedback on this service)."
+    return message.format(get_services_desc(services), date.strftime("%b %d, %Y"))
 
 def get_service_detail_message(services, detail):
     """
