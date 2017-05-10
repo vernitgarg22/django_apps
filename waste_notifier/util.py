@@ -166,10 +166,13 @@ class NotificationContent():
         # - info only notice
         # - start or end date
 
+        week_type = ScheduleDetail.get_date_week_type(datetime.date.today())
+
         self.content = {
             "meta": {
                 "date_applicable": date_applicable.strftime("%Y-%m-%d"),
                 "current_time": datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
+                "week_type": str(week_type),
                 "dry_run": dry_run,
             },
             "citywide": {}

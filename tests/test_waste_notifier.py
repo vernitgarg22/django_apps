@@ -10,7 +10,7 @@ import cod_utils.security
 import tests.disabled
 
 from waste_notifier.models import Subscriber
-from waste_schedule.models import ScheduleDetail
+from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
 from waste_notifier import views
@@ -28,10 +28,13 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
     """
     Add meta data for the /send endpoint (e.g., date)
     """
+
+    week_type = ScheduleDetail.get_date_week_type(datetime.date.today())
     meta = {
         'meta': {
             'current_time': datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
             'date_applicable': date.strftime("%Y-%m-%d"),
+            "week_type": str(week_type),
             'dry_run': True
         }
     }
@@ -40,33 +43,6 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
 
 
 class WasteNotifierTests(TestCase):
-
-    def lists_are_equal(self, list1, list2): # pragma: no cover
-        if type(list1) is not type(list2):
-            return False
-        if len(list1) != len(list2):
-            return False
-        for obj in list1:
-            if obj not in list2:
-                return False
-        return True
-
-    def assertDictEqual(self, dict1, dict2, msg): # pragma: no cover
-        equal = True
-        if len(dict1.keys()) != len(dict2.keys()):
-            equal = False
-        else:
-            for key in dict1.keys():
-                if not dict1.get(key) and not dict2.get(key):
-                    pass
-                elif dict1.get(key) != dict2.get(key):
-                    if type(dict1.get(key)) is list and not self.lists_are_equal(dict1.get(key), dict2.get(key)):
-                        equal = False
-
-        if not equal:
-            return super().assertDictEqual(dict1, dict2, msg)
-        return True
-
 
     def setUp(self):
         """
@@ -184,6 +160,14 @@ class WasteNotifierTests(TestCase):
         phone_number = cod_utils.util.MsgHandler.get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
+    # Test some of the ScheduleDetail utility functions
+    def test_get_date_week_type_a(self):
+        self.assertEqual(ScheduleDetail.get_date_week_type(datetime.date(2017, 5, 4)), BiWeekType.A)
+
+    def test_get_date_week_type_b(self):
+        self.assertEqual(ScheduleDetail.get_date_week_type(datetime.date(2017, 5, 11)), BiWeekType.B)
+
+    # Test actual API endpoints
     def test_subscribe_msg(self):
 
         c = Client()
@@ -668,17 +652,27 @@ class WasteNotifierTests(TestCase):
 
     def test_get_week_schedule_changes_none(self):
         changes = ScheduleDetailMgr.instance().get_week_schedule_changes(date = datetime.date(2017, 5, 5))
-        expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': [], '20170506': [], '20170504': []}
+        for key, value in changes.items():
+            self.assertFalse(value, "get_week_schedule_changes() returns no schedule changes when there aren't any")
 
-        self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns no schedule changes when there aren't any")
+        # expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': [], '20170506': [], '20170504': []}
+        # self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns no schedule changes when there aren't any")
 
     def test_get_week_schedule_changes(self):
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
         detail.clean()
         detail.save(null_waste_area_ids=True)
         changes = ScheduleDetailMgr.instance().get_week_schedule_changes(date = datetime.date(2017, 5, 5))
-        expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': [detail], '20170506': [], '20170504': []}
-        self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns schedule changes")
+
+        for key, value in changes.items():
+            if key == '20170501':
+                self.assertTrue(len(value) == 1)
+                self.assertEqual(value[0].id, detail.id, "get_week_schedule_changes() returns schedule changes")
+            else:
+                self.assertFalse(value)
+
+        # expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': ScheduleDetail.objects.filter(id=detail.id), '20170506': [], '20170504': []}
+        # self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns schedule changes")
 
     def test_get_week_routes(self):
         week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))

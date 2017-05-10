@@ -22,6 +22,9 @@ class BiWeekType(Enum):
                 return week_type
         raise Exception('invalid week type value')
 
+    def __str__(self):
+        return self.value
+
 
 class ScheduleDetail(models.Model):
 
@@ -173,18 +176,23 @@ class ScheduleDetail(models.Model):
         return True
 
     @staticmethod
+    def get_date_week_type(date):
+        """
+        Returns type of week ('a' or 'b') that the given date belongs to.
+        """
+
+        year_is_odd = (date.year % 2 == 0)
+        week_is_odd = (date.isocalendar()[1] % 2 == 0)
+        return BiWeekType.B if year_is_odd == week_is_odd else BiWeekType.A
+
+    @staticmethod
     def check_date_service(date, week_type):
         """
         Returns true if a service with the given week_type will happen 
         on the same week as 'date'
         """
 
-        year_is_odd = (date.year % 2 == 0)
-        week_is_odd = (date.isocalendar()[1] % 2 == 0)
-        if week_type == BiWeekType.A:
-            return year_is_odd != week_is_odd
-        else:
-            return year_is_odd == week_is_odd
+        return ScheduleDetail.get_date_week_type(date) == week_type
 
     # TODO might want to move some of these static methods to a util file
 
