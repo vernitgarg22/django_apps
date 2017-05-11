@@ -10,6 +10,7 @@ import cod_utils.security
 import tests.disabled
 
 from waste_notifier.models import Subscriber
+from waste_notifier.util import *
 from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
@@ -700,3 +701,8 @@ class WasteNotifierTests(TestCase):
         expected = {17: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 18: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 35: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 36: {'contractor': 'advance', 'services': 'bulk', 'week': 'b'}, 6: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 7: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 28: {'contractor': 'advance', 'services': 'recycle', 'week': 'b'}, 12: {'contractor': 'advance', 'services': 'trash', 'week': ' '}}
         self.assertEqual(routes, expected, "get_day_routes() reschedules routes for a date if there is a holiday earlier in the week")
 
+    def test_format_slack_alerts_summary(self):
+        content = {"recycling":{28:{"3136102012":1,"2676300369":1,"3138190143":1,"7347485413":1,"3134923996":1,"3135504576":1},6:{"3136575302":1}},"trash":{12:{"3132281121":1},6:{"3136575302":1},7:{"5863440535":1}},"citywide":{},"meta":{"date_applicable":"2017-05-11","dry_run":False,"week_type":"b","current_time":"2017-05-10 18:00"},"bulk":{36:{"3134923996":1,"3138025608":1,"7347485413":1,"3133202044":1},6:{"3136575302":1}}}
+        summary = format_slack_alerts_summary(content)
+        expected = 'DPW Waste Pickup Reminder Summary:\n\nbulk\n\troute 6 - 1 subscribers\n\troute 36 - 4 subscribers\nrecycling\n\troute 6 - 1 subscribers\n\troute 28 - 6 subscribers\ntrash\n\troute 6 - 1 subscribers\n\troute 7 - 1 subscribers\n\troute 12 - 1 subscribers'
+        self.assertEqual(summary, expected, "format_slack_alerts_summary() formats notifications summary correctly")

@@ -3,6 +3,49 @@ import datetime
 from waste_schedule.models import ScheduleDetail
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from cod_utils import util
+from cod_utils.messaging import SlackMsgHandler
+
+from waste_wizard.models import WasteItem
+
+
+def format_slack_alerts_summary(content):
+    """
+    Formats summary of waste pickup alerts to be sent to slack
+    """
+
+    summary = 'DPW Waste Pickup Reminder Summary:\n'
+
+    # summary notifications sent out for each service...
+    for service_type, desc in WasteItem.DESTINATION_CHOICES:
+        service_desc_added = False
+        details = content.get(service_type)
+        if details:
+
+            # group the information by route
+            route_ids = [ route_id for route_id in details.keys() if details.get(route_id) ]
+            for route_id in sorted(route_ids):
+                phone_numbers = details.get(route_id)
+
+                # make sure type of service is indicated one time
+                if not service_desc_added:
+                    summary = summary + "\n{}".format(service_type)
+                    service_desc_added = True
+
+                # give route id and number of subscribers
+                summary = summary + "\n\troute {} - {} subscribers".format(route_id, len(phone_numbers))
+                # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
+                # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
+                # summary = summary + "\n\t\t{}".format(numbers_list)
+
+    return summary
+
+def slack_alerts_summary(content):
+    """
+    Slacks a summary of waste pickup alerts to channel #zzz
+    """
+
+    summary = format_slack_alerts_summary(content)
+    SlackMsgHandler().send(summary)
 
 
 def includes_yard_waste(services):

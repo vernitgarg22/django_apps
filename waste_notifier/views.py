@@ -217,6 +217,10 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
             MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
+
+    # slack the json response to #zzz
+    slack_alerts_summary(content.get_content())
+
     return Response(content.get_content())
 
 
