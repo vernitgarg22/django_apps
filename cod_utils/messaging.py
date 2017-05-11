@@ -9,7 +9,7 @@ class SlackMsgHandler():
     WEBHOOK_URL = "https://hooks.slack.com/services/" + settings.AUTO_LOADED_DATA["SLACK_ZZZ_TOKEN"]
     DRY_RUN = settings.DEBUG or settings.DRY_RUN
 
-    def send(self, message):     # pragma: no cover  TODO mock-patch this out so we can test it better
+    def send(self, message):
         """
         Slack a message to the City of Detroit #zzz slack channel
         """
@@ -22,9 +22,10 @@ class SlackMsgHandler():
             headers={'Content-Type': 'application/json'}
         )
         if response.status_code != 200:
-            raise ValueError(
-                'Request to slack returned {}, the response is:\n{}'.format(response.status_code, response.text)
-            )
+            # Don't raise an error, at least for now, just keep running
+            # raise ValueError(
+            #     'Request to slack returned {}, the response is:\n{}'.format(response.status_code, response.text)
+            # )
             return False
         else:
             return True

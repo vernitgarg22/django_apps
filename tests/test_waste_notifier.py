@@ -5,6 +5,8 @@ from django.test import TestCase
 
 from django.core.exceptions import ValidationError
 
+import mock
+
 import cod_utils.util
 import cod_utils.security
 import tests.disabled
@@ -245,6 +247,26 @@ class WasteNotifierTests(TestCase):
 
         message = views.get_service_message(['bulk'], datetime.date(2017, 7, 1))
         self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
+
+    @mock.patch('requests.post')
+    def test_slack_msg_handler(self, mocked_requests_post):
+
+        mocked_requests_post.return_value.status_code = 200
+
+        previous_dry_run = SlackMsgHandler.DRY_RUN
+        SlackMsgHandler.DRY_RUN = False
+        self.assertTrue(SlackMsgHandler().send('test message'), "SlackMsgHandler.send() sends messages")
+        SlackMsgHandler.DRY_RUN = previous_dry_run
+
+    @mock.patch('requests.post')
+    def test_slack_msg_handler_error(self, mocked_requests_post):
+
+        mocked_requests_post.return_value.status_code = 500
+
+        previous_dry_run = SlackMsgHandler.DRY_RUN
+        SlackMsgHandler.DRY_RUN = False
+        self.assertFalse(SlackMsgHandler().send('test message'), "SlackMsgHandler.send() handles errors")
+        SlackMsgHandler.DRY_RUN = previous_dry_run
 
     def test_get_waste_routes(self):
         """
