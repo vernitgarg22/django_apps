@@ -1,4 +1,7 @@
-import datetime
+from datetime import date
+from datetime import datetime
+from datetime import timedelta
+import pytz
 
 from django.test import Client
 from django.test import TestCase, RequestFactory
@@ -15,40 +18,46 @@ class CODUtilsTests(TestCase):
         self.factory = RequestFactory()
 
     def test_date_json_date(self):
-        str = util.date_json(datetime.date(2017, 5, 1))
+        str = util.date_json(date(2017, 5, 1))
         self.assertTrue(str == '2017-05-01T00:00:00', "date_json() converts date object to json")
 
     def test_date_json_datetime(self):
-        str = util.date_json(datetime.datetime(2017, 5, 1, 00, 00, 00))
+        str = util.date_json(datetime(2017, 5, 1, 00, 00, 00))
         self.assertTrue(str == '2017-05-01T00:00:00', "date_json() converts datetime object to json")
 
     def test_date_json_none(self):
         str = util.date_json(None)
         self.assertTrue(str == '', "date_json() converts null objects to empty string")
 
+    def test_get_local_time(self):
+        utc = datetime(2001, 1, 1, 12, 1, tzinfo=pytz.utc)
+        local = util.get_local_time(utc)
+        self.assertEqual(utc, local, "get_localtime() converts datetime value to local")
+        self.assertTrue(utc.hour - local.hour == 5) # this might break during DST
+
     def test_tomorrow(self):
         dt = util.tomorrow()
-        self.assertTrue(datetime.date.today() - dt == datetime.timedelta(-1), "tomorrow() returns tomorrow")
+        self.assertTrue(date.today() - dt == timedelta(-1), "tomorrow() returns tomorrow")
 
     def test_tomorrow_string(self):
         dt = util.tomorrow("20170501")
-        self.assertTrue(datetime.datetime.strptime("20170502", "%Y%m%d") == dt, "tomorrow() parses string and returns tomorrow")
+        self.assertTrue(datetime.strptime("20170502", "%Y%m%d") == dt, "tomorrow() parses string and returns tomorrow")
 
     def test_get_week_start_end_fri(self):
-        start, end = util.get_week_start_end(datetime.date(2017, 5, 5))
-        self.assertEqual(start, datetime.date(2017, 5, 1))
-        self.assertEqual(end, datetime.date(2017, 5, 7))
+        start, end = util.get_week_start_end(date(2017, 5, 5))
+        self.assertEqual(start, date(2017, 5, 1))
+        self.assertEqual(end, date(2017, 5, 7))
 
     def test_get_week_start_end_mon(self):
-        start, end = util.get_week_start_end(datetime.date(2017, 5, 1))
-        self.assertEqual(start, datetime.date(2017, 5, 1))
-        self.assertEqual(end, datetime.date(2017, 5, 7))
+        start, end = util.get_week_start_end(date(2017, 5, 1))
+        self.assertEqual(start, date(2017, 5, 1))
+        self.assertEqual(end, date(2017, 5, 7))
 
     def test_get_week_start_end_sun(self):
 
-        start, end = util.get_week_start_end(datetime.date(2017, 5, 1))
-        self.assertEqual(start, datetime.date(2017, 5, 1))
-        self.assertEqual(end, datetime.date(2017, 5, 7))
+        start, end = util.get_week_start_end(date(2017, 5, 1))
+        self.assertEqual(start, date(2017, 5, 1))
+        self.assertEqual(end, date(2017, 5, 7))
 
     def test_block_client(self):
         # Force block_client to block us

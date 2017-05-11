@@ -1,6 +1,8 @@
 import datetime
 import json
 import random
+import pytz
+from pytz import timezone
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -11,7 +13,7 @@ from twilio.rest import TwilioRestClient
 
 def date_json(date):
     """
-    Convert a datetime or datetime.date object to json string format
+    Convert a datetime or date object to json string format
     """
 
     if not date:
@@ -22,6 +24,13 @@ def date_json(date):
         dt = datetime.datetime(date.year, date.month, date.day)
 
     return dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+def get_local_time(now_utc = datetime.datetime.now(pytz.utc)):
+    """
+    Returns now_utc, converted to eastern standard time.
+    """
+
+    return now_utc.astimezone(timezone('US/Eastern'))
 
 def tomorrow(today = datetime.date.today()):
     """

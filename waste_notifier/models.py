@@ -65,11 +65,10 @@ class Subscriber(models.Model):
 
         # initialize created_at timestamp
         if self.created_at is None:
-            self.created_at = datetime.datetime.now()
+            self.created_at = util.get_local_time()
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
-
 
     def change_status(self, activate):
         """
@@ -77,7 +76,7 @@ class Subscriber(models.Model):
         updates last_status_update to current time.
         """
         self.status = Subscriber.ACTIVE_STATUS if activate else Subscriber.INACTIVE_STATUS
-        self.last_status_update = datetime.datetime.now()
+        self.last_status_update = util.get_local_time()
         self.clean()
         self.save()
 
