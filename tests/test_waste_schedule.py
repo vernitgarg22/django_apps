@@ -1,4 +1,5 @@
 import datetime
+import requests
 
 from django.test import Client
 from django.test import TestCase
@@ -9,7 +10,7 @@ import cod_utils.util
 import tests.disabled
 
 from waste_schedule.models import ScheduleDetail
-from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
+from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr, WeekRouteInfo
 
 from waste_schedule import util
 import waste_schedule.views
@@ -80,6 +81,59 @@ class WasteScheduleInitTests(TestCase):
             util.BiWeekType.from_str(' ')
 
 
+# TODO organize tests better - maybe put related tests into subdirectories under /tests ?
+class WeekRouteInfoTests(TestCase):
+
+    def setUp(self):
+        """
+        Set up each unit test, including making sure database is properly cleaned up before each test
+        """
+        cleanup_db()
+
+    def test_add_day_route(self):
+
+        week_route_info = WeekRouteInfo()
+        monday = datetime.datetime(2017, 5, 1)
+        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'b', 'FID': 0}
+        week_route_info.add_day_route(route_info)
+        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}}
+        self.assertEqual(expected, week_route_info.data[0], "WeekRouteInfo.add_day_route() adds a day's worth of route info")
+
+    def test_reschedule_service_all(self):
+
+        week_route_info = WeekRouteInfo()
+        monday = datetime.datetime(2017, 5, 1)
+        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'b', 'FID': 0}
+        week_route_info.add_day_route(route_info)
+        week_route_info.reschedule_service(datetime.datetime(2017, 5, 1), datetime.datetime(2017, 5, 2), 'all')
+        self.assertEqual({}, week_route_info.data[0], "WeekRouteInfo.reschedule_service() cancels original day's service")
+        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}}
+        self.assertEqual(expected, week_route_info.data[1], "WeekRouteInfo.reschedule_service() reschedules service")
+
+    def test_reschedule_service_trash(self):
+
+        week_route_info = WeekRouteInfo()
+        monday = datetime.datetime(2017, 5, 1)
+        route_info = {'day': 'monday', 'services': 'all',   'contractor': 'gfl',     'week': 'b', 'FID': 0}
+        week_route_info.add_day_route(route_info)
+        route_info = {'day': 'monday', 'services': 'trash', 'contractor': 'advance', 'week': ' ', 'FID': 14}
+        week_route_info.add_day_route(route_info)
+
+        week_route_info.reschedule_service(datetime.datetime(2017, 5, 1), datetime.datetime(2017, 5, 2), 'trash')
+        self.assertEqual({}, week_route_info.data[0], "WeekRouteInfo.reschedule_service() cancels original day's trash service")
+        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}
+        self.assertEqual(expected, week_route_info.data[1], "WeekRouteInfo.reschedule_service() reschedules trash service")
+
+    def test_get_day(self):
+
+        week_route_info = WeekRouteInfo()
+        monday = datetime.datetime(2017, 5, 1)
+        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'b', 'FID': 0}
+        week_route_info.add_day_route(route_info)
+        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}}
+        self.assertEqual(expected, week_route_info.get_day(monday), "WeekRouteInfo.get_day() returns a day's worth of route info")
+
+
 class WasteScheduleTests(TestCase):
 
     def setUp(self):
@@ -133,8 +187,11 @@ class WasteScheduleTests(TestCase):
     def test_is_same_service_type_recycle(self):
         self.assertTrue(ScheduleDetail.is_same_service_type('recycling', 'recycle'), "is_same_service_type() equates 'recycling' with 'recycle'")
 
-    def test_is_same_service_type_all(self):
+    def test_is_same_service_type_all1(self):
         self.assertTrue(ScheduleDetail.is_same_service_type('bulk', 'all'), "is_same_service_type() equates 'all' with 'bulk'")
+
+    def test_is_same_service_type_all2(self):
+        self.assertTrue(ScheduleDetail.is_same_service_type('all', 'bulk'), "is_same_service_type() equates 'bulk' with 'all'")
 
     def test_get_next_oneday_pickups(self):
         """

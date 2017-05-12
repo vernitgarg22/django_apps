@@ -5,20 +5,67 @@ from waste_schedule.models import ScheduleDetail
 import cod_utils.util
 
 
+# TODO move this into WeekRouteInfo class
+WEEK_MAP = {
+    'monday': 0,
+    'tuesday': 1,
+    'wednesday': 2,
+    'thursday': 3,
+    'friday': 4,
+    'saturday': 5,
+    'sunday': 6,
+}
+
+
+class WeekRouteInfo():     # pragma: no cover  TODO finish this
+
+    def __init__(self):
+
+        # initialize the array of days, each containing an empty dict
+        self.data = [ {} for day in WEEK_MAP.values() ]
+
+    def add_day_route(self, route):
+        """
+        Adds information for a particular route, for a particular day.
+        """
+
+        index = WEEK_MAP[route.pop('day')]
+        self.data[index][route.pop('FID')] = route
+
+    def reschedule_service(self, old_date, new_date, service_type):
+        """
+        Reschedules the particular type of service from old_day to
+        new_day.  Note: if service_type is 'all', then all services
+        get rescheduled.
+        """
+
+        old_index = old_date.weekday()
+        new_index = new_date.weekday()
+
+        old_data = self.data[old_index]
+        old_data_tmp =  dict.fromkeys(old_data.keys(), old_data.values())
+
+        for route_id in old_data.keys():
+
+            route = old_data[route_id]
+            curr_service_type = route['services']
+            if ScheduleDetail.is_same_service_type(service_type, curr_service_type):
+                old_data_tmp.pop(route_id)
+                self.data[new_index][route_id] = route
+
+        self.data[old_index] = old_data_tmp
+
+    def get_day(self, date):
+        """
+        Returns all route info for the particular day
+        """
+        return self.data[date.weekday()]
+
+
 class ScheduleDetailMgr():
 
     # the one and only singlton instance of the ScheduleDetailMgr
     __instance = None
-
-    WEEK_MAP = {
-        'monday': 0,
-        'tuesday': 1,
-        'wednesday': 2,
-        'thursday': 3,
-        'friday': 4,
-        'saturday': 5,
-        'sunday': 6,
-    }
 
     def __init__(self):
         # Make sure only 1 instance of ScheduleDetailMgr is created
@@ -118,7 +165,7 @@ class ScheduleDetailMgr():
         """
 
         # initialize the array of days, each containing an empty dict
-        week_route_info = [ {} for day in ScheduleDetailMgr.WEEK_MAP.values() ]
+        week_route_info = [ {} for day in WEEK_MAP.values() ]
 
         # get the data from gis server
         r = requests.get(ScheduleDetail.GIS_URL_ALL)
@@ -126,7 +173,7 @@ class ScheduleDetailMgr():
         # put each piece of route info, into the correct day
         for feature in r.json()['features']:
             route = feature['attributes']
-            index = ScheduleDetailMgr.WEEK_MAP[route.pop('day')]
+            index = WEEK_MAP[route.pop('day')]
             week_route_info[index][route.pop('FID')] = route
 
         return week_route_info

@@ -208,10 +208,10 @@ class ScheduleDetail(models.Model):
     def is_same_service_type(ours, theirs):
         """
         Returns True if the 2 service types are the same.  In particular:
-        - if theirs is 'all', returns True
+        - if theirs or ours is 'all', returns True
         - if theirs is 'recycle' and ours is 'recycling' returns True
         """
-        if theirs == ScheduleDetail.ALL:
+        if ScheduleDetail.ALL in [ours, theirs]:
             return True
         if ours == ScheduleDetail.RECYCLING:
             return theirs == 'recycle'
