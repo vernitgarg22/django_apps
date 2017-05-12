@@ -25,11 +25,13 @@ def date_json(date):
 
     return dt.strftime("%Y-%m-%dT%H:%M:%S")
 
-def get_local_time(now_utc = datetime.datetime.now(pytz.utc)):
+def get_local_time(now_utc = None):
     """
     Returns now_utc, converted to eastern standard time.
     """
 
+    if not now_utc:
+        now_utc = datetime.datetime.now(pytz.utc)
     return now_utc.astimezone(timezone('US/Eastern'))
 
 def tomorrow(today = datetime.date.today()):
