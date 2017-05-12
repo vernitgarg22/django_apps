@@ -15,6 +15,8 @@ def format_slack_alerts_summary(content):
 
     summary = 'DPW Waste Pickup Reminder Summary:\n'
 
+    all_phone_numbers = {}
+
     # summary notifications sent out for each service...
     for service_type, desc in WasteItem.DESTINATION_CHOICES:
         service_desc_added = False
@@ -32,10 +34,15 @@ def format_slack_alerts_summary(content):
                     service_desc_added = True
 
                 # give route id and number of subscribers
-                summary = summary + "\n\troute {} - {} subscribers".format(route_id, len(phone_numbers))
+                summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
+
+                # keep track of all phone numbers receiving reminders
+                all_phone_numbers.update(phone_numbers)
                 # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
                 # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
                 # summary = summary + "\n\t\t{}".format(numbers_list)
+
+    summary = summary + "\n\nTotal reminders sent out:  {}".format(len(all_phone_numbers))
 
     return summary
 
