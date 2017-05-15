@@ -179,6 +179,7 @@ class WasteNotifierTests(TestCase):
             ("all", {'received': '5005550006 - routes: ,0, - status: inactive - services: all', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling, trash and yard waste pickup reminders'}),
             ("trash", {'received': '5005550006 - routes: ,0, - status: inactive - services: trash', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash pickup reminders'}),
             ("recycling", {'received': '5005550006 - routes: ,0, - status: inactive - services: recycling', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive recycling pickup reminders'}),
+            ("bulk|recycling|", {'received': '5005550006 - routes: ,0, - status: inactive - services: bulk,recycling,', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling and yard waste pickup reminders'}),
         ]
 
         for service, expected in values:
