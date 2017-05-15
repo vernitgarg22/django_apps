@@ -76,7 +76,7 @@ class WasteNotifierTests(TestCase):
         """
         Test creating a subscriber from a dict object
         """
-        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "waste_area_ids": "1", "service_type": "all" } )
+        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "waste_area_ids": "1", "waste_service_type": "all" } )
         self.assertEqual(error, None, "Subscriber can be created from a dict (form) object")
         self.assertEqual(s.phone_number, "1234567890", "Subscriber can be created from a dict (form) object")
 
@@ -86,7 +86,7 @@ class WasteNotifierTests(TestCase):
         """
         s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
         s.save()
-        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "waste_area_ids": "2", "service_type": "all" } )
+        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "waste_area_ids": "2", "waste_service_type": "all" } )
         self.assertEqual(error, None, "Subscriber can be updated from a dict (form) object")
         self.assertEqual(s.waste_area_ids, ",2,", "Subscriber can be updated from a dict (form) object")
 
@@ -184,7 +184,7 @@ class WasteNotifierTests(TestCase):
 
         for service, expected in values:
             cleanup_db()
-            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "0", "service_type": service } )
+            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "0", "waste_service_type": service } )
             self.assertEqual(response.status_code, 200)
             self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
 
@@ -296,7 +296,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "waste_service_type": "all" } )
         self.assertEqual(response.status_code, 200)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
@@ -334,7 +334,7 @@ class WasteNotifierTests(TestCase):
         for value in [ 'address', 'latitude', 'longitude' ]:
 
             cleanup_db()
-            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all", value: "test value" } )
+            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "waste_service_type": "all", value: "test value" } )
             self.assertEqual(response.status_code, 200)
             subscriber = Subscriber.objects.all()[0]
             self.assertEqual(getattr(subscriber, value), 'test value', "Subscribing can set {}".format(value))
@@ -357,7 +357,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "waste_service_type": "all" } )
         self.assertEqual(response.status_code, 200)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
@@ -384,7 +384,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "waste_service_type": "all" } )
         self.assertEqual(response.status_code == 200, True)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )

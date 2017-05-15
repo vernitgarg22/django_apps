@@ -123,8 +123,8 @@ class Subscriber(models.Model):
             subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
 
         # set service type
-        if data.get("service_type"):
-            subscriber.service_type = data['service_type'].replace('|', ',')
+        if data.get("waste_service_type"):
+            subscriber.service_type = data['waste_service_type'].replace('|', ',')
 
         # check for optional values
         for value in [ 'address', 'latitude', 'longitude' ]:
