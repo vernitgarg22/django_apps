@@ -124,7 +124,7 @@ class Subscriber(models.Model):
 
         # set service type
         if data.get("service_type"):
-            subscriber.service_type = data['service_type']
+            subscriber.service_type = data['service_type'].replace('|', ',')
 
         # check for optional values
         for value in [ 'address', 'latitude', 'longitude' ]:
