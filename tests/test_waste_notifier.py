@@ -80,6 +80,15 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(error, None, "Subscriber can be created from a dict (form) object")
         self.assertEqual(s.phone_number, "1234567890", "Subscriber can be created from a dict (form) object")
 
+    def test_subscriber_combine_all_service_types(self):
+        """
+        Test subscriber with all service types
+        """
+        s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="bulk,recycling,trash,")
+        s.save()
+        s = Subscriber.objects.all()[0]
+        self.assertEqual(s.service_type, 'all', "Saving subscriber combines all service types into 'all'")
+
     def test_update_or_create_from_dict_previous_subscriber(self):
         """
         Test updating existing subscriber from a dict object
