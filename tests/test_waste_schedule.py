@@ -92,42 +92,42 @@ class WeekRouteInfoTests(TestCase):
 
     def test_add_day_route(self):
 
-        week_route_info = WeekRouteInfo()
         monday = datetime.datetime(2017, 5, 1)
-        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'b', 'FID': 0}
+        week_route_info = WeekRouteInfo(monday)
+        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'a', 'FID': 0}
         week_route_info.add_day_route(route_info)
-        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}}
+        expected = {0: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}
         self.assertEqual(expected, week_route_info.data[0], "WeekRouteInfo.add_day_route() adds a day's worth of route info")
 
     def test_reschedule_service_all(self):
 
-        week_route_info = WeekRouteInfo()
         monday = datetime.datetime(2017, 5, 1)
-        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'b', 'FID': 0}
+        week_route_info = WeekRouteInfo(monday)
+        route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'a', 'FID': 0}
         week_route_info.add_day_route(route_info)
-        week_route_info.reschedule_service(datetime.datetime(2017, 5, 1), datetime.datetime(2017, 5, 2), 'all')
+        week_route_info.reschedule_service(monday, datetime.datetime(2017, 5, 2), 'all')
         self.assertEqual({}, week_route_info.data[0], "WeekRouteInfo.reschedule_service() cancels original day's service")
-        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}}
+        expected = {0: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}
         self.assertEqual(expected, week_route_info.data[1], "WeekRouteInfo.reschedule_service() reschedules service")
 
     def test_reschedule_service_trash(self):
 
-        week_route_info = WeekRouteInfo()
         monday = datetime.datetime(2017, 5, 1)
-        route_info = {'day': 'monday', 'services': 'all',   'contractor': 'gfl',     'week': 'b', 'FID': 0}
+        week_route_info = WeekRouteInfo(monday)
+        route_info = {'day': 'monday', 'services': 'all',   'contractor': 'gfl',     'week': 'a', 'FID': 0}
         week_route_info.add_day_route(route_info)
         route_info = {'day': 'monday', 'services': 'trash', 'contractor': 'advance', 'week': ' ', 'FID': 14}
         week_route_info.add_day_route(route_info)
 
-        week_route_info.reschedule_service(datetime.datetime(2017, 5, 1), datetime.datetime(2017, 5, 2), 'trash')
+        week_route_info.reschedule_service(monday, datetime.datetime(2017, 5, 2), 'trash')
         self.assertEqual({}, week_route_info.data[0], "WeekRouteInfo.reschedule_service() cancels original day's trash service")
-        expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}
+        expected = {0: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}
         self.assertEqual(expected, week_route_info.data[1], "WeekRouteInfo.reschedule_service() reschedules trash service")
 
     def test_get_day(self):
 
-        week_route_info = WeekRouteInfo()
-        monday = datetime.datetime(2017, 5, 1)
+        monday = datetime.datetime(2017, 5, 8)
+        week_route_info = WeekRouteInfo(monday)
         route_info = {'day': 'monday', 'services': 'all', 'contractor': 'gfl', 'week': 'b', 'FID': 0}
         week_route_info.add_day_route(route_info)
         expected = {0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}}

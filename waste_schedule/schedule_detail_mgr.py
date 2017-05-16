@@ -5,32 +5,36 @@ from waste_schedule.models import ScheduleDetail
 import cod_utils.util
 
 
-# TODO move this into WeekRouteInfo class
-WEEK_MAP = {
-    'monday': 0,
-    'tuesday': 1,
-    'wednesday': 2,
-    'thursday': 3,
-    'friday': 4,
-    'saturday': 5,
-    'sunday': 6,
-}
+class WeekRouteInfo():
 
+    WEEK_MAP = {
+        'monday': 0,
+        'tuesday': 1,
+        'wednesday': 2,
+        'thursday': 3,
+        'friday': 4,
+        'saturday': 5,
+        'sunday': 6,
+    }
 
-class WeekRouteInfo():     # pragma: no cover  TODO finish this
-
-    def __init__(self):
+    def __init__(self, date):
 
         # initialize the array of days, each containing an empty dict
-        self.data = [ {} for day in WEEK_MAP.values() ]
+        self.data = [ {} for day in WeekRouteInfo.WEEK_MAP.values() ]
+
+        # what kind of week are we in?  ('A' or 'B'?)
+        self.week_type = ScheduleDetail.get_date_week_type(date)
 
     def add_day_route(self, route):
         """
         Adds information for a particular route, for a particular day.
         """
 
-        index = WEEK_MAP[route.pop('day')]
-        self.data[index][route.pop('FID')] = route
+        index = WeekRouteInfo.WEEK_MAP[route.pop('day')]
+
+        week_type = route.get('week')
+        if week_type == ' ' or week_type.lower() == str(self.week_type).lower():
+            self.data[index][route.pop('FID')] = route
 
     def reschedule_service(self, old_date, new_date, service_type):
         """
@@ -39,21 +43,8 @@ class WeekRouteInfo():     # pragma: no cover  TODO finish this
         get rescheduled.
         """
 
-        old_index = old_date.weekday()
-        new_index = new_date.weekday()
-
-        old_data = self.data[old_index]
-        old_data_tmp =  dict.fromkeys(old_data.keys(), old_data.values())
-
-        for route_id in old_data.keys():
-
-            route = old_data[route_id]
-            curr_service_type = route['services']
-            if ScheduleDetail.is_same_service_type(service_type, curr_service_type):
-                old_data_tmp.pop(route_id)
-                self.data[new_index][route_id] = route
-
-        self.data[old_index] = old_data_tmp
+        self.data.pop()
+        self.data.insert(old_date.weekday(), {})
 
     def get_day(self, date):
         """
@@ -127,18 +118,6 @@ class ScheduleDetailMgr():
     #     Note:  in order for get_routes_for_date() to do this it will 
     #            need to:
     #
-    #     1.  call gis server to get routes that normally get pickups on 
-    #         the given date.
-    #     2.  remove any route that has a schedule change assigned to it
-    #         specifically (i.e., a schedule change that is not citywide)
-    #     3.  remove any routes corresponding to the service_type of
-    #         any city-wide schedule changes
-    #     4.  check if there are any citywide schedule changes occurring
-    #         earlier in the week.  if there are, then all remaining routes
-    #         should get delayed by 1 day
-    #
-    #     alternate way of figuring out schedule changes:
-    #
     #     1.  create array of days representing each day of the week
     #         that the current day belongs to
     #     2.  loop through each day of week, adding routes to each
@@ -157,7 +136,7 @@ class ScheduleDetailMgr():
         details = details.filter(waste_area_ids__isnull=True) | details.filter(waste_area_ids__exact='')
         return details.filter(normal_day__exact=date)
 
-    def get_regular_week_routes(self):
+    def get_regular_week_routes(self, date):
         """
         Return array of route information for each day of the week - each
         element in the array represents a day of the week, starting with 
@@ -165,16 +144,14 @@ class ScheduleDetailMgr():
         """
 
         # initialize the array of days, each containing an empty dict
-        week_route_info = [ {} for day in WEEK_MAP.values() ]
+        week_route_info = WeekRouteInfo(date)
 
         # get the data from gis server
         r = requests.get(ScheduleDetail.GIS_URL_ALL)
 
         # put each piece of route info, into the correct day
         for feature in r.json()['features']:
-            route = feature['attributes']
-            index = WEEK_MAP[route.pop('day')]
-            week_route_info[index][route.pop('FID')] = route
+            week_route_info.add_day_route(feature['attributes'])
 
         return week_route_info
 
@@ -203,7 +180,7 @@ class ScheduleDetailMgr():
         get pushed back by one day.
         """
 
-        week_route_info = self.get_regular_week_routes()
+        week_route_info = self.get_regular_week_routes(date)
 
         week_schedule_changes = self.get_week_schedule_changes(date)
 
@@ -212,14 +189,10 @@ class ScheduleDetailMgr():
 
             schedule_changes = week_schedule_changes.get(start_date.strftime("%Y%m%d"))
 
-            # TODO Note: this only works for situations where ALL services are pushed back by a day
             if schedule_changes:
-                week_offset = start_date.weekday()
 
-                # just insert an empty day at this offset within the list of days, then
-                # remove last day from the list
-                week_route_info.insert(week_offset, {})
-                week_route_info.pop()
+                for change in schedule_changes:
+                    week_route_info.reschedule_service(change.normal_day, change.new_day, change.service_type)
 
             start_date = start_date + datetime.timedelta(days=1)
 
@@ -233,4 +206,4 @@ class ScheduleDetailMgr():
         """
 
         week_route_info = self.get_week_routes(date)
-        return week_route_info[date.weekday()]
+        return week_route_info.get_day(date)
