@@ -124,3 +124,21 @@ def get_parcel(request, pnum=None, format=None):
     content['field_descriptions'] = util.get_parcel_descriptions()
 
     return Response(content)
+
+@api_view(['GET'])
+def get_parcel_ownership_groups(request, owners=None, format=None):
+    """
+    Return sets of parcels grouped by owner
+    """
+
+    # hardcode the owners, for own - TODO fix this
+    owners = [ 'DETROIT LAND BANK AUTHORITY', 'CITY OF DETROIT-P&DD', 'MI LAND BANK FAST TRACK AUTH', 'HANTZ WOODLANDS LLC', 'TAXPAYER' ]
+
+    # excecute the search
+    parcels = ParcelMaster.objects.filter(ownername1__in=owners)
+    if not any(parcels):
+        raise Http404("Parcels not found")
+
+    content = [ { "pnum": parcel.pnum, "address": parcel.propstreetcombined, "owner_name": parcel.ownername1 } for parcel in parcels ]
+
+    return Response(content)
