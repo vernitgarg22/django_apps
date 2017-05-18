@@ -165,6 +165,10 @@ class DjangoAppsRouter(object):
         "WasteItem": "waste_collection",
         "Sales": "eql",
         "ParcelMaster": "eql",
+        "RoleType": "tidemark",
+        "Parcel": "tidemark",
+        "CaseType": "tidemark",
+        "CaseMain": "tidemark",
     }
 
     ModelDBMapDev = {
@@ -195,3 +199,10 @@ class DjangoAppsRouter(object):
 
     def allow_migrate(self, db, model):
         return DjangoAppsRouter.get_db(model)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}

@@ -2,13 +2,19 @@ import json
 from operator import attrgetter
 from datetime import datetime, timedelta
 
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
+# from django.core.cache import cache
 
 from django.conf import settings
 from django.http import Http404
 
 from assessments.models import Sales, ParcelMaster
+
+# TODO clean this up
+from assessments.models import Parcel, CaseMain
 from assessments import util
 
 
@@ -125,20 +131,77 @@ def get_parcel(request, pnum=None, format=None):
 
     return Response(content)
 
+# @api_view(['GET'])
+# def get_parcel_ownership_groups(request, owners=None, format=None):
+#     """
+#     Return sets of parcels grouped by owner
+#     """
+
+
+#     pdb.set_trace()
+
+#     # cache_key = 'ownership_groups'
+#     # cached_content = cache.get(cache_key, None)
+#     # if cached_content:
+#     #     pdb.set_trace()
+#     #     return Response(cached_content)
+
+#     # hardcode the owners, for own - TODO fix this
+#     owners = [ 'DETROIT LAND BANK AUTHORITY', 'CITY OF DETROIT-P&DD', 'MI LAND BANK FAST TRACK AUTH', 'HANTZ WOODLANDS LLC', 'TAXPAYER' ]
+
+#     # excecute the search
+#     parcels = ParcelMaster.objects.filter(ownername1__in=owners)
+
+#     content = [ { "pnum": parcel.pnum, "address": parcel.propstreetcombined, "owner_name": parcel.ownername1 } for parcel in parcels ]
+
+#     # cache.set(cache_key, content, 60 * 60)
+
+#     return Response(content)
+
+
+class ParcelOwnershipGroupsView(APIView):
+
+    def get(request, owners=None, format=None):
+        """
+        Return sets of parcels grouped by owner
+        """
+
+        # TODO get cache working?
+        # cache_key = 'ownership_groups'
+        # cached_content = cache.get(cache_key, None)
+        # if cached_content:
+        #     pdb.set_trace()
+        #     return Response(cached_content)
+
+        # hardcode the owners, for own - TODO fix this
+        owners = [ 'DETROIT LAND BANK AUTHORITY', 'CITY OF DETROIT-P&DD', 'MI LAND BANK FAST TRACK AUTH', 'HANTZ WOODLANDS LLC', 'TAXPAYER' ]
+
+        # excecute the search
+        parcels = ParcelMaster.objects.filter(ownername1__in=owners)
+
+        content = [ { "pnum": parcel.pnum, "address": parcel.propstreetcombined, "owner_name": parcel.ownername1 } for parcel in parcels ]
+
+        # cache.set(cache_key, content, 60 * 60)
+
+        return Response(content)
+
+
+
 @api_view(['GET'])
-def get_parcel_ownership_groups(request, owners=None, format=None):
+def get_rental_cases(request, pnum=None, format=None):
     """
-    Return sets of parcels grouped by owner
+    Return rental unit cases from tidemark (oracle)
     """
 
-    # hardcode the owners, for own - TODO fix this
-    owners = [ 'DETROIT LAND BANK AUTHORITY', 'CITY OF DETROIT-P&DD', 'MI LAND BANK FAST TRACK AUTH', 'HANTZ WOODLANDS LLC', 'TAXPAYER' ]
+    # TODO need massive cleanup for tidemark pnums
+    # clean up the pnum
+    # pnum = util.clean_pnum(pnum)
 
     # excecute the search
-    parcels = ParcelMaster.objects.filter(ownername1__in=owners)
-    if not any(parcels):
-        raise Http404("Parcels not found")
+    casemains = CaseMain.objects.filter(prc_parcel_no__prc_parcel_no__exact=pnum)
+    if not casemains.exists():
+        raise Http404("Parcel id " + pnum + " not found")
 
-    content = [ { "pnum": parcel.pnum, "address": parcel.propstreetcombined, "owner_name": parcel.ownername1 } for parcel in parcels ]
+    content = [ casemain.json() for casemain in casemains ]
 
     return Response(content)
