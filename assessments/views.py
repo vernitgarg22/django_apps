@@ -138,12 +138,9 @@ def get_parcel(request, pnum=None, format=None):
 #     """
 
 
-#     pdb.set_trace()
-
 #     # cache_key = 'ownership_groups'
 #     # cached_content = cache.get(cache_key, None)
 #     # if cached_content:
-#     #     pdb.set_trace()
 #     #     return Response(cached_content)
 
 #     # hardcode the owners, for own - TODO fix this
@@ -170,7 +167,6 @@ class ParcelOwnershipGroupsView(APIView):
         # cache_key = 'ownership_groups'
         # cached_content = cache.get(cache_key, None)
         # if cached_content:
-        #     pdb.set_trace()
         #     return Response(cached_content)
 
         # hardcode the owners, for own - TODO fix this

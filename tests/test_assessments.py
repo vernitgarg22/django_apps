@@ -14,6 +14,7 @@ from assessments import util
 from assessments import views
 
 from assessments.models import Sales, ParcelMaster
+from assessments.models import Parcel, RoleType, CaseType, CaseMain
 
 
 def cleanup_model(model):
@@ -22,6 +23,12 @@ def cleanup_model(model):
 def cleanup_db():
     cleanup_model(Sales)
     cleanup_model(ParcelMaster)
+
+    cleanup_model(CaseMain)
+    cleanup_model(RoleType)
+    cleanup_model(CaseType)
+    cleanup_model(Parcel)
+
 
 def make_sale():
     data = {'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'saledate': datetime(2013, 6, 3, 0, 0), 'addresscombined': '7840 VAN DYKE PL', 'pnum': '17000074.001', 'terms': 'REVIEW NEEDED', 'instr': 'PTA', 'saleprice': Decimal('35000')}
@@ -34,6 +41,11 @@ def make_parcelmaster():
     pm = ParcelMaster(**data)
     pm.save()
     return pm
+
+def make_parcel(prc_parcel_no):
+    parcel = Parcel(prc_parcel_no='1000', prc_avp_no=1, prc_vp_no=1)
+    parcel.save()
+    return parcel
 
 
 class AssessmentsTests(TestCase):
@@ -188,3 +200,43 @@ class AssessmentsTests(TestCase):
         c = Client()
         response = c.get('/assessments/parcel/0000/')
         self.assertEqual(response.status_code, 404, "/assessments/parcel/<pnum>/ returns 404 when property not found")
+
+    def test_get_parcel_owner_groups(self):
+
+        pm = make_parcelmaster()
+        c = Client()
+
+        response = c.get('/assessments/parcel/owner_groups/')
+        self.assertEqual(response.status_code, 200, "/assessments/parcel/owner_groups/ succeeds")
+        expected = []
+        self.assertEqual(expected, response.data, "/assessments/parcel/owner_groups/ returns layers of data for property owners")
+
+    def test_get_rental_cases(self):
+
+        pm = make_parcelmaster()
+        c = Client()
+
+        parcel = Parcel(prc_parcel_no='1000', prc_avp_no=1, prc_vp_no=1)
+        parcel.save()
+        role_type = RoleType(role_type='Test Role Type', role_description='Role Description')
+        role_type.save()
+        case_type = CaseType(case_type='type-1', role_type=role_type, cst_description='Case Type')
+        case_type.save()
+
+        test_parcel1 = make_parcel(prc_parcel_no='1000')
+        test_parcel2 = make_parcel(prc_parcel_no='1001')
+
+        case_main = CaseMain.objects.create(csm_caseno=1, case_type_id='type-1', prc_parcel_no_id=test_parcel1.prc_parcel_no, csm_description='Test Case', prc_avp_no_id=test_parcel2.prc_parcel_no)
+        case_main.save()
+
+        response = c.get('/assessments/rentals/cases/1000/')
+        self.assertEqual(response.status_code, 200, "/assessments/rentals/cases/<pnum>/ succeeds")
+        expected = [{'csm_description': 'Test Case', 'prc_parcel_no': '1000', 'prc_avp_no': '1000', 'case_type': 'type-1', 'csm_target_date': None, 'csm_caseno': '1'}]
+        self.assertListEqual(expected, response.data, "/assessments/rentals/cases/<pnum>/ returns cases for rental property")
+
+    def test_get_rental_cases_404(self):
+
+        c = Client()
+
+        response = c.get('/assessments/rentals/cases/1000/')
+        self.assertEqual(response.status_code, 404)

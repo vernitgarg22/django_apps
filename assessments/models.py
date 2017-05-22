@@ -133,9 +133,10 @@ class RoleType(models.Model):
     role_updated = models.DateField(blank=True, null=True)
     role_updateby = models.CharField(max_length=4, blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'role_type'
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        class Meta:
+            managed = False
+            db_table = 'role_type'
 
 
 class Parcel(models.Model):
@@ -189,15 +190,16 @@ class Parcel(models.Model):
     prc_nghb_code = models.CharField(max_length=10, blank=True, null=True)
     prc_nsp_code = models.CharField(max_length=30, blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'parcel'
-        unique_together = (('prc_parcel_no', 'prc_avp_no'),)
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        class Meta:
+            managed = False
+            db_table = 'parcel'
+            unique_together = (('prc_parcel_no', 'prc_avp_no'),)
 
 
     IGNORED_FIELDS = [ 'casemain' ]
 
-    def json(self):
+    def json(self):     # pragma: no cover - these are used mostly for debugging
 
         json = {}
         fields = self._meta.get_fields()
@@ -207,7 +209,7 @@ class Parcel(models.Model):
 
         return json
 
-    def pp(self):
+    def pp(self):     # pragma: no cover - these are used mostly for debugging
 
         fields = self._meta.get_fields()
         for field in fields:
@@ -234,9 +236,10 @@ class CaseType(models.Model):
     cst_exp_date_param = models.CharField(max_length=80, blank=True, null=True)
     cst_summary_rpt = models.CharField(max_length=50, blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'case_type'
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        class Meta:
+            managed = False
+            db_table = 'case_type'
 
 
 class CaseMain(models.Model):
@@ -264,9 +267,10 @@ class CaseMain(models.Model):
     csm_mastno = models.CharField(max_length=14, blank=True, null=True)
     csm_tracking_no = models.BigIntegerField(blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'casemain'
+    if not settings.RUNNING_UNITTESTS: # pragma: no cover
+        class Meta:
+            managed = False
+            db_table = 'casemain'
 
     def json(self):
         return {

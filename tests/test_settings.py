@@ -160,6 +160,10 @@ class DjangoAppsRouter(object):
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
         "Sales": "eql",
+        "RoleType": "tidemark",
+        "Parcel": "tidemark",
+        "CaseType": "tidemark",
+        "CaseMain": "tidemark",
     }
 
     ModelDBMapDev = {
