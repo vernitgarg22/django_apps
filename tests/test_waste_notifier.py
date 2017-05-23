@@ -239,10 +239,10 @@ class WasteNotifierTests(TestCase):
     def test_add_additional_services(self):
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
         detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         services = views.add_additional_services(['bulk'], datetime.date(2017, 7, 1))
         self.assertListEqual(['bulk', 'yard waste'], services, "Yard waste, when active and bulk is getting picked up, gets added to list of services")
@@ -250,10 +250,10 @@ class WasteNotifierTests(TestCase):
     def test_get_service_message(self):
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
         detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         message = views.get_service_message(['bulk'], datetime.date(2017, 7, 1))
         self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
@@ -409,9 +409,11 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
 
         c = Client()
-        response = c.post('/waste_notifier/send/20170417/')
+
+        # 20170522 is a monday - week 'b', so route 0 should get picked up
+        response = c.post('/waste_notifier/send/20170522/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'trash': {0: {'5005550006': 1}, 1: {}, 14: {}}, 'recycling': {1: {}, 27: {}}, 'bulk': {1: {}, 29: {}}, 'citywide': {}}, date=datetime.date(2017, 4, 17))
+        expected = add_meta({'all': {0: {'5005550006': 1}, 1: {}}, 'citywide': {}, 'recycling': {26: {}}, 'bulk': {30: {}}, 'trash': {14: {}}}, date=datetime.date(2017, 5, 22))
         self.assertDictEqual(expected, response.data, "Phone number did not get reminder")
 
     def test_send_info(self):
@@ -420,12 +422,12 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='recycling', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20180101/')
         self.assertEqual(response.status_code, 200)
-        expected = {'recycling': {1: {}, 27: {}}, 'bulk': {1: {}, 29: {}}, 'citywide': {'5005550006': 1}, 'trash': {0: {}, 1: {}, 14: {}}}
+        expected = {'bulk': {29: {}}, 'all': {0: {}, 1: {}}, 'citywide': {'5005550006': 1}, 'recycling': {27: {}}, 'trash': {14: {}}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
         self.assertDictEqual(expected, response.data, "Phone number did not get info")
 
@@ -435,12 +437,12 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='recycling', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20180102/')
         self.assertEqual(response.status_code, 200)
-        expected = {'trash': {2: {}, 3: {}, 13: {}}, 'bulk': {2: {}, 31: {}}, 'recycling': {2: {}, 24: {}, 25: {}}, 'citywide': {}}
+        expected = {'recycling': {24: {}, 25: {}}, 'all': {2: {}, 3: {}}, 'bulk': {31: {}}, 'citywide': {}, 'trash': {13: {}}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 2))
         self.assertDictEqual(expected, response.data, "Phone number should not have gotten info")
 
@@ -450,14 +452,15 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='all', description='City services have not affected by snow storm', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20180101/')
         self.assertEqual(response.status_code, 200)
-        expected = {'trash': {0: {}, 1: {}, 14: {}}, 'recycling': {1: {}, 27: {}}, 'meta': {'current_time': '2017-05-01 14:09', 'dry_run': True, 'date_applicable': '2018-01-01'}, 'citywide': {'5005550006': 1}, 'bulk': {1: {}, 29: {}}}
+        expected = {'bulk': {29: {}}, 'meta': {'week_type': 'b', 'current_time': '2017-05-22 13:35', 'dry_run': True, 'date_applicable': '2018-01-01'}, 'trash': {14: {}}, 'recycling': {27: {}}, 'all': {1: {}}, 'citywide': {'5005550006': 1}}
+        expected = {'bulk': {29: {}}, 'meta': {'week_type': 'b', 'current_time': '2017-05-22 15:00', 'dry_run': True, 'date_applicable': '2018-01-01'}, 'trash': {14: {}}, 'citywide': {'5005550006': 1}, 'recycling': {27: {}}, 'all': {0: {}, 1: {}}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
-        self.assertDictEqual(expected, response.data, "Phone number did not get info")
+        self.assertDictEqual(expected, response.data, "Sending info for all services works")
 
     def test_send_schedule_change(self):
 
@@ -465,12 +468,12 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='test holiday', normal_day=datetime.date(2017, 4, 7), new_day=datetime.date(2017, 4, 8))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertEqual(response.status_code, 200)
-        expected = {'bulk': {38: {}}, 'citywide': {}, 'recycling': {16: {}}}
+        expected = {'recycling': {16: {}}, 'trash': {10: {}}, 'all': {8: {'5005550006': 1}, 9: {}}, 'citywide': {}, 'bulk': {38: {}}}
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Phone number should have gotten recycling reschedule alert")
 
@@ -480,7 +483,7 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='test holiday', normal_day=datetime.date(2017, 4, 7), new_day=datetime.date(2017, 4, 8))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20170408/')
@@ -496,7 +499,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'recycling': {8: {'5005550006': 1}, 16: {}}, 'citywide': {}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'bulk': {8: {'5005550006': 1}, 38: {}}}, date=datetime.date(2017, 4, 7))
+        expected = add_meta({'bulk': {38: {}}, 'recycling': {16: {}}, 'citywide': {}, 'all': {8: {'5005550006': 1}, 9: {}}, 'trash': {10: {}}}, date=datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Alerts for a/b onweek failed")
 
     def test_send_ab_offweek(self):
@@ -507,7 +510,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170414/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'recycling': {9: {}, 15: {}}, 'bulk': {9: {}, 37: {}}, 'citywide': {}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}}, date=datetime.date(2017, 4, 14))
+        expected = add_meta({'citywide': {}, 'recycling': {15: {}}, 'trash': {10: {}}, 'bulk': {37: {}}, 'all': {8: {'5005550006': 1}, 9: {}}}, date=datetime.date(2017, 4, 14))
         self.assertDictEqual(expected, response.data, "Alerts for a/b offweek failed")
 
     def test_send_mix_days(self):
@@ -517,9 +520,9 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
         date_results = {
-            '20170417': {'recycling': {1: {}, 27: {}}, 'citywide': {}, 'trash': {0: {}, 1: {}, 14: {'5005550006': 1}}, 'bulk': {1: {}, 29: {}}},
-            '20170418': {'trash': {2: {}, 3: {}, 13: {}}, 'citywide': {}, 'recycling': {2: {}, 24: {}, 25: {}}, 'bulk': {2: {}, 31: {}}},
-            '20170419': {'bulk': {4: {}, 34: {}}, 'recycling': {4: {}, 21: {}, 22: {'5005550006': 1}}, 'trash': {11: {}, 4: {}, 5: {}}, 'citywide': {}}
+            '20170417': {'all': {0: {}, 1: {}}, 'recycling': {27: {}}, 'citywide': {}, 'bulk': {29: {}}, 'trash': {14: {'5005550006': 1}}},
+            '20170418': {'trash': {13: {}}, 'bulk': {31: {}}, 'citywide': {}, 'all': {2: {}, 3: {}}, 'recycling': {24: {}, 25: {}}},
+            '20170419': {'recycling': {21: {}, 22: {'5005550006': 1}}, 'trash': {11: {}}, 'citywide': {}, 'bulk': {34: {}}, 'all': {4: {}, 5: {}}},
         }
 
         for date, expected in date_results.items():
@@ -536,7 +539,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170419/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'bulk': {34: {}, 4: {}}, 'recycling': {4: {}, 21: {}, 22: {}}, 'trash': {11: {'5005550006': 1}, 4: {}, 5: {}}, 'citywide': {}}, date=datetime.date(2017, 4, 19))
+        expected = add_meta({'trash': {11: {'5005550006': 1}}, 'all': {4: {}, 5: {}}, 'citywide': {}, 'bulk': {34: {}}, 'recycling': {21: {}, 22: {}}}, date=datetime.date(2017, 4, 19))
         self.assertDictEqual(expected, response.data, "Eastside wednesday trash residents should have gotten alerts")
 
     def test_send_eastside_thursday_bulk_a(self):
@@ -547,7 +550,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170420/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'recycling': {17: {}, 18: {}, 7: {}}, 'citywide': {}, 'trash': {12: {}, 6: {}, 7: {}}, 'bulk': {35: {'5005550006': 1}, 7: {}}}, date=datetime.date(2017, 4, 20))
+        expected = add_meta({'citywide': {}, 'recycling': {17: {}, 18: {}}, 'trash': {12: {}}, 'bulk': {35: {'5005550006': 1}}, 'all': {6: {}, 7: {}}}, date=datetime.date(2017, 4, 20))
         self.assertDictEqual(expected, response.data, "Eastside thursday bulk A residents should have gotten alerts")
 
     def test_send_eastside_thursday_recycling_b(self):
@@ -558,7 +561,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170413/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'recycling': {28: {'5005550006': 1}, 6: {}}, 'citywide': {}, 'trash': {12: {}, 6: {}, 7: {}}, 'bulk': {36: {}, 6: {}}}, date=datetime.date(2017, 4, 13))
+        expected = add_meta({'all': {6: {}, 7: {}}, 'recycling': {28: {'5005550006': 1}}, 'citywide': {}, 'trash': {12: {}}, 'bulk': {36: {}}}, date=datetime.date(2017, 4, 13))
         self.assertDictEqual(expected, response.data, "Eastside thursday recycling B residents should have gotten alerts")
 
     def test_send_bulk_yard_waste(self):
@@ -567,15 +570,15 @@ class WasteNotifierTests(TestCase):
 
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
         detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/?today=20170504')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'recycling': {8: {'5005550006': 1}, 16: {}}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'bulk': {8: {'5005550006': 1}, 38: {}}, 'citywide': {}}, date=datetime.date(2017, 5, 5))
+        expected = add_meta({'all': {8: {'5005550006': 1}, 9: {}}, 'bulk': {38: {}}, 'trash': {10: {}}, 'recycling': {16: {}}, 'citywide': {}}, date=datetime.date(2017, 5, 5))
         self.assertDictEqual(expected, response.data, "Yard waste alerts get included whenever bulk pickup happens and yard waste pickup is active")
 
     def test_send_start_date(self):
@@ -584,12 +587,12 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts monday, April 17, 2017', new_day=datetime.date(2017, 4, 17))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20170417/')
         self.assertEqual(response.status_code, 200)
-        expected = {'trash': {0: {}, 1: {}, 14: {}}, 'citywide': {'5005550006': 1}, 'recycling': {1: {}, 27: {}}, 'bulk': {1: {}, 29: {}}}
+        expected = {'all': {0: {}, 1: {}}, 'bulk': {29: {}}, 'citywide': {'5005550006': 1}, 'trash': {14: {}}, 'recycling': {27: {}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 17))
         self.assertDictEqual(expected, response.data, "Yard waste start date alert should have been sent")
 
@@ -599,12 +602,13 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
         detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends friday, December 15, 2017', new_day=datetime.date(2017, 12, 15))
         detail.clean()
-        detail.save()
+        detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20171215/')
         self.assertEqual(response.status_code, 200)
         expected = {'recycling': {8: {'5005550006': 1}, 16: {}}, 'bulk': {8: {'5005550006': 1}, 38: {}}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'citywide': {'5005550006': 1}}
+        expected = {'all': {8: {'5005550006': 1}, 9: {}}, 'trash': {10: {}}, 'citywide': {'5005550006': 1}, 'bulk': {38: {}}, 'recycling': {16: {}}}
         expected = add_meta(expected, date=datetime.date(2017, 12, 15))
         self.assertDictEqual(expected, response.data, "Yard waste end date alert should have been sent")
 
@@ -680,7 +684,7 @@ class WasteNotifierTests(TestCase):
 
     def test_get_regular_week_routes(self):
         week_routes = ScheduleDetailMgr.instance().get_regular_week_routes(date = datetime.date(2017, 5, 5))
-        expected = [{1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}, {8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {}, {}]
+        expected = [{0: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 1: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 27: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 29: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 14: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}, {2: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 3: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 24: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 25: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 13: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 31: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}}, {34: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 4: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 5: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 22: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 11: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 21: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}}, {17: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 18: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 35: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 6: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 12: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}, {8: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 9: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 10: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 38: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 16: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}}, {}, {}]
         self.assertEqual(week_routes.data, expected, "get_regular_week_routes() returns array of routes for a week")
 
     def test_get_week_schedule_changes_none(self):
@@ -710,6 +714,7 @@ class WasteNotifierTests(TestCase):
     def test_get_week_routes(self):
         week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
         expected = [{1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}, {8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {}, {}]
+        expected = [{0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 3: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 5: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 6: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 9: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {}, {}]
         self.assertEqual(week_routes.data, expected, "get_week_routes() returns array of routes for a week")
 
     def test_get_week_routes_holiday(self):
@@ -718,12 +723,12 @@ class WasteNotifierTests(TestCase):
         detail.save(null_waste_area_ids=True)
         week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
         week_routes = week_routes.data
-        expected = [{}, {1: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 27: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 29: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 14: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}, {24: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 25: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 2: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 13: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 31: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}}, {34: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 11: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 4: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 21: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 22: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}}, {17: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 18: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 35: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 12: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 7: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}}, {8: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 16: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 10: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 38: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}}, {}]
-        self.assertEqual(week_routes, expected, "get_week_routes() reschdules array of routes for a week around holidays")
+        expected = [{}, {0: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 1: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 27: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 29: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 14: {'contractor': 'advance', 'services': 'trash', 'week': ' '}}, {2: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 3: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 24: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 25: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 13: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 31: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}}, {34: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 4: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 5: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 22: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 11: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 21: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}}, {17: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 18: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 35: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 6: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 7: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 12: {'contractor': 'advance', 'services': 'trash', 'week': ' '}}, {8: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 9: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 10: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 38: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 16: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}}, {}]
+        self.assertEqual(week_routes, expected, "get_week_routes() reschedules array of routes for a week around holidays")
 
     def test_get_day_routes(self):
         routes = ScheduleDetailMgr.instance().get_day_routes(date = datetime.date(2017, 5, 5))
-        expected = {8: {'week': 'a', 'services': 'all', 'contractor': 'gfl'}, 16: {'week': 'a', 'services': 'recycle', 'contractor': 'advance'}, 10: {'week': ' ', 'services': 'trash', 'contractor': 'advance'}, 38: {'week': 'a', 'services': 'bulk', 'contractor': 'advance'}}
+        expected = {8: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 9: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 10: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 38: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 16: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}}
         self.assertEqual(routes, expected, "get_day_routes() returns routes for a date")
 
     def test_get_day_routes_holiday(self):
@@ -731,7 +736,7 @@ class WasteNotifierTests(TestCase):
         detail.clean()
         detail.save(null_waste_area_ids=True)
         routes = ScheduleDetailMgr.instance().get_day_routes(date = datetime.date(2017, 5, 5))
-        expected = {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}
+        expected = {17: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 18: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 35: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 6: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 12: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}
         self.assertEqual(routes, expected, "get_day_routes() reschedules routes for a date if there is a holiday earlier in the week")
 
     def test_format_slack_alerts_summary(self):
