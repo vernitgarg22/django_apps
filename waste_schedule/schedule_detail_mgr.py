@@ -33,7 +33,7 @@ class WeekRouteInfo():
         index = WeekRouteInfo.WEEK_MAP[route.pop('day')]
 
         week_type = route.get('week')
-        if week_type == ' ' or week_type.lower() == str(self.week_type).lower():
+        if week_type == ' ' or week_type.lower() == str(self.week_type).lower() or route['services'] == ScheduleDetail.ALL:
             self.data[index][route.pop('FID')] = route
 
     def reschedule_service(self, old_date, new_date, service_type):

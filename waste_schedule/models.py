@@ -134,9 +134,6 @@ class ScheduleDetail(models.Model):
         # TODO clear this up
         if kwargs.get('null_waste_area_ids'):
             self.waste_area_ids = None
-            # self.waste_area_ids = kwargs['waste_area_ids']
-            # if self.waste_area_ids == 'null':
-            #     self.waste_area_ids = None
             del kwargs['null_waste_area_ids']
 
         # if admin did not specify waste area ids, look them up for trash service

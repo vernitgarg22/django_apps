@@ -123,6 +123,9 @@ def confirm_notifications(request):
     return response
 
 
+# TODO redo this endpoint with ScheduleDetailMgr
+
+
 @api_view(['POST'])
 def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
     """
@@ -155,6 +158,11 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     if type(date) is str:
         date = datetime.date(int(date_val[0:4]), int(date_val[4:6]), int(date_val[6:8]))
 
+    # Use new code to figure out notifications?
+    USE_SCHEDULE_DETAIL_MGR = False
+    if USE_SCHEDULE_DETAIL_MGR:
+        return send_notifications_new(request, date, dry_run_param)
+
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
 
@@ -186,6 +194,107 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
     # check for schedule details that are city-wide (i.e., not tied to a specific route)
     schedule_details = ScheduleDetail.get_citywide_schedule_changes(date)
+    for detail in schedule_details:
+
+        subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
+
+        # Find anyone subscribed to any of the services for this schedule detail
+        if detail.service_type == ScheduleDetail.ALL:
+            subscribers = Subscriber.objects.filter(status__exact='active')
+
+            subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST, detail.waste_area_ids)
+        else:
+            for service_type in detail.service_type.split(','):
+                subscribers = Subscriber.objects.filter(status__exact='active')
+                subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
+                subscribers_services_detail.add(subscribers, service_type, detail.waste_area_ids)
+
+        subscribers_services_details.append(subscribers_services_detail)
+
+    # send text reminder to each subscriber needing a reminder
+    for subscriber in subscribers_services.get_subscribers():
+
+        message = get_service_message(subscribers_services.get_services(subscriber), date)
+        MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
+
+    # send out notifications about any schedule changes
+    for subscribers_services_detail in subscribers_services_details:
+        for subscriber in subscribers_services_detail.get_subscribers():
+
+            message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
+            MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
+
+    # TODO add in info or start-date / end-date ScheduleDetail info
+
+    content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
+
+    # slack the json response to #zzz
+    slack_alerts_summary(content.get_content())
+
+    return Response(content.get_content())
+
+
+def get_route_subscribers(service_type, route_id):
+    """
+    Return all subscribers who are subscribed to the particular service type and route
+    """
+
+    # get all active subscribers to this service type
+    subscribers = Subscriber.objects.filter(status__exact='active')
+    if service_type != ScheduleDetail.ALL:
+        subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
+
+    # also filter subscribers by route
+    return subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
+
+
+
+def send_notifications_new(request, date, dry_run_param):
+
+    subscribers_services = SubscriberServices()
+    subscribers_services_details = []
+
+    # loop through all routes for the day
+    routes = ScheduleDetailMgr.instance().get_day_routes(date)
+    for route_id, route in routes.items():
+
+        service_type = ScheduleDetail.map_service_type(route['services'])
+
+        subscribers = get_route_subscribers(service_type, route_id)
+
+        # keep track of what services each subscriber needs notifications for
+        subscribers_services.add(subscribers, service_type, [route_id])
+
+
+    # # loop through the different types of service and check for subscribers
+    # # to each route servicing a service type on the given date
+    # for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
+
+    #     # Find out which waste areas are about to get pickups for this service
+    #     routes = ScheduleDetail.get_waste_routes(date, service_type)
+
+    #     # get a list of route ids
+    #     route_ids = [ int(id) for id in list(routes.keys()) ]
+    #     for route_id in route_ids:
+
+    #         # get all active subscribers to this service ...
+    #         subscribers = Subscriber.objects.filter(status__exact='active')
+    #         subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
+
+    #         # also filter subscribers by route
+    #         subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
+
+    #         # does this route have any schedule changes for this date?
+    #         schedule_details = ScheduleDetail.get_schedule_changes(route_id, date)
+    #         if schedule_details:
+    #             subscribers_services_details.append(SubscriberServicesDetail(schedule_details[0], subscribers, service_type, [route_id]))
+    #         else:
+    #             # keep track of what services each subscriber needs notifications for
+    #             subscribers_services.add(subscribers, service_type, [route_id])
+
+
+    # check for schedule details that are city-wide (i.e., not tied to a specific route)
+    schedule_details = ScheduleDetailMgr.instance().get_citywide_schedule_changes(date)
     for detail in schedule_details:
 
         subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
