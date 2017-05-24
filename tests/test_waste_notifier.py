@@ -413,7 +413,8 @@ class WasteNotifierTests(TestCase):
         # 20170522 is a monday - week 'b', so route 0 should get picked up
         response = c.post('/waste_notifier/send/20170522/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'all': {0: {'5005550006': 1}, 1: {}}, 'citywide': {}, 'recycling': {26: {}}, 'bulk': {30: {}}, 'trash': {14: {}}}, date=datetime.date(2017, 5, 22))
+        expected = {'all': {0: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = add_meta(expected, date=datetime.date(2017, 5, 22))
         self.assertDictEqual(expected, response.data, "Phone number did not get reminder")
 
     def test_send_info(self):
@@ -427,7 +428,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20180101/')
         self.assertEqual(response.status_code, 200)
-        expected = {'bulk': {29: {}}, 'all': {0: {}, 1: {}}, 'citywide': {'5005550006': 1}, 'recycling': {27: {}}, 'trash': {14: {}}}
+        expected = {'citywide': {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Special quarterly dropoff'}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
         self.assertDictEqual(expected, response.data, "Phone number did not get info")
 
@@ -442,8 +443,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20180102/')
         self.assertEqual(response.status_code, 200)
-        expected = {'recycling': {24: {}, 25: {}}, 'all': {2: {}, 3: {}}, 'bulk': {31: {}}, 'citywide': {}, 'trash': {13: {}}}
-        expected = add_meta(expected, date = datetime.date(2018, 1, 2))
+        expected = add_meta({}, date = datetime.date(2018, 1, 2))
         self.assertDictEqual(expected, response.data, "Phone number should not have gotten info")
 
     def test_send_info_all_services(self):
@@ -457,8 +457,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20180101/')
         self.assertEqual(response.status_code, 200)
-        expected = {'bulk': {29: {}}, 'meta': {'week_type': 'b', 'current_time': '2017-05-22 13:35', 'dry_run': True, 'date_applicable': '2018-01-01'}, 'trash': {14: {}}, 'recycling': {27: {}}, 'all': {1: {}}, 'citywide': {'5005550006': 1}}
-        expected = {'bulk': {29: {}}, 'meta': {'week_type': 'b', 'current_time': '2017-05-22 15:00', 'dry_run': True, 'date_applicable': '2018-01-01'}, 'trash': {14: {}}, 'citywide': {'5005550006': 1}, 'recycling': {27: {}}, 'all': {0: {}, 1: {}}}
+        expected = {'citywide': {'message': 'City of Detroit Public Works:  City services have not affected by snow storm', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
         self.assertDictEqual(expected, response.data, "Sending info for all services works")
 
@@ -473,22 +472,28 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertEqual(response.status_code, 200)
-        expected = {'recycling': {16: {}}, 'trash': {10: {}}, 'all': {8: {'5005550006': 1}, 9: {}}, 'citywide': {}, 'bulk': {38: {}}}
+        expected = {'citywide': {'message': 'City of Detroit Public Works:  Your pickup for recycling for Apr 07, 2017 is postponed to Apr 08, 2017 due to test holiday', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Phone number should have gotten recycling reschedule alert")
 
     def test_send_no_schedule_change(self):
 
+        # route 8 gets pickups on fridays, with recycling on 'a' weeks
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
-        detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='test holiday', normal_day=datetime.date(2017, 4, 7), new_day=datetime.date(2017, 4, 8))
+
+        # reschedule recycling citywide from friday to saturday for a 'b' week
+        detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='test holiday', normal_day=datetime.date(2017, 4, 14), new_day=datetime.date(2017, 4, 15))
         detail.clean()
         detail.save(null_waste_area_ids=True)
 
         c = Client()
+
+        # now get pickup reminders for saturday
         response = c.post('/waste_notifier/send/20170408/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'citywide': {}}, date = datetime.date(2017, 4, 8))
+        expected = add_meta({}, date = datetime.date(2017, 4, 8))
+
         self.assertDictEqual(expected, response.data, "Phone number should not have gotten alert")
 
     def test_send_ab_onweek(self):
@@ -499,7 +504,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'bulk': {38: {}}, 'recycling': {16: {}}, 'citywide': {}, 'all': {8: {'5005550006': 1}, 9: {}}, 'trash': {10: {}}}, date=datetime.date(2017, 4, 7))
+        expected = {'all': {8: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Apr 07, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
+        expected = add_meta(expected, date=datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Alerts for a/b onweek failed")
 
     def test_send_ab_offweek(self):
@@ -510,7 +516,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170414/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'citywide': {}, 'recycling': {15: {}}, 'trash': {10: {}}, 'bulk': {37: {}}, 'all': {8: {'5005550006': 1}, 9: {}}}, date=datetime.date(2017, 4, 14))
+        expected = {'all': {8: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Apr 14, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
+        expected = add_meta(expected, date=datetime.date(2017, 4, 14))
         self.assertDictEqual(expected, response.data, "Alerts for a/b offweek failed")
 
     def test_send_mix_days(self):
@@ -520,9 +527,9 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
         date_results = {
-            '20170417': {'all': {0: {}, 1: {}}, 'recycling': {27: {}}, 'citywide': {}, 'bulk': {29: {}}, 'trash': {14: {'5005550006': 1}}},
-            '20170418': {'trash': {13: {}}, 'bulk': {31: {}}, 'citywide': {}, 'all': {2: {}, 3: {}}, 'recycling': {24: {}, 25: {}}},
-            '20170419': {'recycling': {21: {}, 22: {'5005550006': 1}}, 'trash': {11: {}}, 'citywide': {}, 'bulk': {34: {}}, 'all': {4: {}, 5: {}}},
+            '20170417': {'trash': {14: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Apr 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}},
+            '20170418': {},
+            '20170419': {'recycling': {22: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Apr 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}},
         }
 
         for date, expected in date_results.items():
@@ -539,7 +546,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170419/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'trash': {11: {'5005550006': 1}}, 'all': {4: {}, 5: {}}, 'citywide': {}, 'bulk': {34: {}}, 'recycling': {21: {}, 22: {}}}, date=datetime.date(2017, 4, 19))
+        expected = {'trash': {11: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Apr 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = add_meta(expected, date=datetime.date(2017, 4, 19))
         self.assertDictEqual(expected, response.data, "Eastside wednesday trash residents should have gotten alerts")
 
     def test_send_eastside_thursday_bulk_a(self):
@@ -550,7 +558,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170420/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'citywide': {}, 'recycling': {17: {}, 18: {}}, 'trash': {12: {}}, 'bulk': {35: {'5005550006': 1}}, 'all': {6: {}, 7: {}}}, date=datetime.date(2017, 4, 20))
+        expected = {'bulk': {35: {'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Apr 20, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = add_meta(expected, date=datetime.date(2017, 4, 20))
         self.assertDictEqual(expected, response.data, "Eastside thursday bulk A residents should have gotten alerts")
 
     def test_send_eastside_thursday_recycling_b(self):
@@ -561,7 +570,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170413/')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'all': {6: {}, 7: {}}, 'recycling': {28: {'5005550006': 1}}, 'citywide': {}, 'trash': {12: {}}, 'bulk': {36: {}}}, date=datetime.date(2017, 4, 13))
+        expected = {'recycling': {28: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Apr 13, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = add_meta(expected, date=datetime.date(2017, 4, 13))
         self.assertDictEqual(expected, response.data, "Eastside thursday recycling B residents should have gotten alerts")
 
     def test_send_bulk_yard_waste(self):
@@ -578,7 +588,8 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/?today=20170504')
         self.assertEqual(response.status_code, 200)
-        expected = add_meta({'all': {8: {'5005550006': 1}, 9: {}}, 'bulk': {38: {}}, 'trash': {10: {}}, 'recycling': {16: {}}, 'citywide': {}}, date=datetime.date(2017, 5, 5))
+        expected = {'all': {8: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is May 05, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = add_meta(expected, date=datetime.date(2017, 5, 5))
         self.assertDictEqual(expected, response.data, "Yard waste alerts get included whenever bulk pickup happens and yard waste pickup is active")
 
     def test_send_start_date(self):
@@ -592,7 +603,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170417/')
         self.assertEqual(response.status_code, 200)
-        expected = {'all': {0: {}, 1: {}}, 'bulk': {29: {}}, 'citywide': {'5005550006': 1}, 'trash': {14: {}}, 'recycling': {27: {}}}
+        expected = {'citywide': {'message': 'City of Detroit Public Works:  Citywide yard waste pickup starts monday, April 17, 2017 Apr 17, 2017', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 17))
         self.assertDictEqual(expected, response.data, "Yard waste start date alert should have been sent")
 
@@ -607,8 +618,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20171215/')
         self.assertEqual(response.status_code, 200)
-        expected = {'recycling': {8: {'5005550006': 1}, 16: {}}, 'bulk': {8: {'5005550006': 1}, 38: {}}, 'trash': {8: {'5005550006': 1}, 9: {}, 10: {}}, 'citywide': {'5005550006': 1}}
-        expected = {'all': {8: {'5005550006': 1}, 9: {}}, 'trash': {10: {}}, 'citywide': {'5005550006': 1}, 'bulk': {38: {}}, 'recycling': {16: {}}}
+        expected = {'all': {8: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Dec 15, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}, 'citywide': {'message': 'City of Detroit Public Works:  Citywide yard waste pickup ends friday, December 15, 2017 Dec 15, 2017', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date=datetime.date(2017, 12, 15))
         self.assertDictEqual(expected, response.data, "Yard waste end date alert should have been sent")
 
