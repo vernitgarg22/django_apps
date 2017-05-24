@@ -6,7 +6,8 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_comma_separated_integer_list
 
-from waste_schedule.models import ScheduleDetail
+from waste_schedule.models import ScheduleDetail, BiWeekType
+from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from cod_utils import util
 
 
@@ -105,6 +106,30 @@ class Subscriber(models.Model):
         Do a soft-delete (i.e., set status to 'inactive')
         """
         self.deactivate()
+
+    def has_service_on_date_week(self, service_type, date):
+        """
+        Returns true if the subscriber gets pickups for the given service
+        on the week that the given date belongs to (i.e., checks whether the week
+        is 'A' or 'B' and matches that with the subscriber's week type for the service)
+        """
+
+        if service_type == ScheduleDetail.TRASH:
+            return True
+
+        # examine all the subscriber's routes
+        for route_id in util.split_csv(self.waste_area_ids):
+
+            # get route info for this route, and check whether it matches the service
+            route_info = ScheduleDetailMgr.instance().get_route_info(route_id)
+            if route_info and ScheduleDetail.is_same_service_type(service_type, route_info['services']):
+
+                # now check if this route offers service on the given week
+                week_type = BiWeekType.from_str(route_info['week'])
+                if ScheduleDetail.check_date_service(date, week_type):
+                    return True
+
+        return False
 
     @staticmethod
     def update_or_create_from_dict(data):

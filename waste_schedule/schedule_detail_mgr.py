@@ -127,6 +127,13 @@ class ScheduleDetailMgr():
     #         in any subsequent days for the week back by one day
     #
 
+    def get_schedule_details(self, date):
+        """
+        Returns all schedule details with new day or normal day matching the given date
+        """
+
+        return ScheduleDetail.objects.filter(normal_day__exact=date) | ScheduleDetail.objects.filter(new_day__exact=date)
+
     def get_citywide_schedule_changes(self, date):
         """
         Returns schedule details that are city-wide (i.e., not tied to a specific route) and match given date
@@ -135,6 +142,26 @@ class ScheduleDetailMgr():
         details = ScheduleDetail.objects.filter(detail_type__exact='schedule')
         details = details.filter(waste_area_ids__isnull=True) | details.filter(waste_area_ids__exact='')
         return details.filter(normal_day__exact=date)
+
+    # TODO refactor the 'route info' stuff into its own class
+
+    def get_route_info(self, route_id):
+        """
+        Returns info about the particular route
+        """
+
+        # TODO cache this
+
+        # get the data from gis server
+        r = requests.get(ScheduleDetail.GIS_URL_ALL)
+
+        # find the correct route info and return it
+        for feature in r.json()['features']:
+            if int(feature['attributes']['FID']) == int(route_id):
+                return feature['attributes']
+
+        return {}
+
 
     def get_regular_week_routes(self, date):
         """

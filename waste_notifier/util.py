@@ -228,29 +228,44 @@ class NotificationContent():
                 "current_time": datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
                 "week_type": str(week_type),
                 "dry_run": dry_run,
-            },
-            "citywide": {}
+            }
         }
-
 
         # indicate, by route, which phone numbers we have texted
         service_subscribers_map = subscribers_services.get_service_subscribers()
         ssm = service_subscribers_map
 
-
+        # indicate which phone numbers we have sent route-specific alerts to
         for service_type, routes in service_subscribers_map.items():
+
+            message = get_service_message([service_type], date_applicable)
+
             for route_id, subscribers in routes.items():
-                if not self.content.get(service_type):
-                    self.content[service_type] = {}
-                self.content[service_type].update({ route_id: { subscriber.phone_number: 1 for subscriber in subscribers } })
+                if subscribers:
+                    if not self.content.get(service_type):
+                        self.content[service_type] = {}
+
+                    self.content[service_type].update({ route_id: { "message": message, "subscribers": [ subscriber.phone_number for subscriber in subscribers ] } })
 
         # indicate which phone numbers we have sent citywide alerts to
         for subscribers_services_detail in subscribers_services_details:
             service_subscribers = subscribers_services_detail.get_service_subscribers()
+
+            message = get_service_detail_message(service_subscribers.keys(), subscribers_services_detail.schedule_detail)
+
             for service_type, routes in service_subscribers.items():
+
                 for route_id, subscribers in routes.items():
-                    if route_id == '':
-                        self.content["citywide"].update( { subscriber.phone_number: 1 for subscriber in subscribers } )
+                    if subscribers:
+                        detail_content = {
+                            "message": message,
+                            "subscribers": [ subscriber.phone_number for subscriber in subscribers ]
+                        }
+
+                        if not route_id:
+                            self.content["citywide"] = detail_content
+                        else:
+                            self.content[route_id] = detail_content
 
     def get_content(self):
         return self.content

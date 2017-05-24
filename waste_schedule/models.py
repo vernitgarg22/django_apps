@@ -178,9 +178,9 @@ class ScheduleDetail(models.Model):
         Returns type of week ('a' or 'b') that the given date belongs to.
         """
 
-        year_is_odd = (date.year % 2 == 0)
-        week_is_odd = (date.isocalendar()[1] % 2 == 0)
-        return BiWeekType.B if year_is_odd == week_is_odd else BiWeekType.A
+        year_is_even = (date.year % 2 == 0)
+        week_is_even = (date.isocalendar()[1] % 2 == 0)
+        return BiWeekType.B if year_is_even == week_is_even else BiWeekType.A
 
     @staticmethod
     def check_date_service(date, week_type):
