@@ -328,6 +328,8 @@ def send_notifications_new(request, date, dry_run_param):
     for route_id, route in routes.items():
 
         service_type = ScheduleDetail.map_service_type(route['services'])
+        if service_type == ScheduleDetail.ALL:
+            service_type = ScheduleDetailMgr.instance().check_all_service_week(date, route)
 
         subscribers = get_route_subscribers(service_type, route_id)
 

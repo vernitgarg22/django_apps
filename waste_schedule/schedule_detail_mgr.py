@@ -1,7 +1,7 @@
 import datetime
 import requests
 
-from waste_schedule.models import ScheduleDetail
+from waste_schedule.models import ScheduleDetail, BiWeekType
 import cod_utils.util
 
 
@@ -234,3 +234,18 @@ class ScheduleDetailMgr():
 
         week_route_info = self.get_week_routes(date)
         return week_route_info.get_day(date)
+
+    def check_all_service_week(self, date, route):
+        """
+        Returns 'trash' if that is the only service getting picked up
+        on the given week, otherwise returns all
+        """
+
+        if route['services'] != ScheduleDetail.ALL:
+            return route['services']
+
+        week = route['week']
+        if ScheduleDetail.check_date_service(date, BiWeekType.from_str(week)):
+            return ScheduleDetail.ALL
+        else:
+            return ScheduleDetail.TRASH
