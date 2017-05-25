@@ -20,13 +20,13 @@ def format_slack_alerts_summary(content):
     # summary notifications sent out for each service...
     for service_type, desc in WasteItem.DESTINATION_CHOICES:
         service_desc_added = False
-        details = content.get(service_type)
-        if details:
+        service_details = content.get(service_type)
+        if service_details:
 
             # group the information by route
-            route_ids = [ route_id for route_id in details.keys() if details.get(route_id) ]
+            route_ids = [ route_id for route_id in service_details.keys() if service_details.get(route_id) ]
             for route_id in sorted(route_ids):
-                phone_numbers = details.get(route_id)
+                phone_numbers = service_details[route_id].get('subscribers')
 
                 # make sure type of service is indicated one time
                 if not service_desc_added:
@@ -37,7 +37,12 @@ def format_slack_alerts_summary(content):
                 summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
 
                 # keep track of all phone numbers receiving reminders
-                all_phone_numbers.update(phone_numbers)
+                for phone_number in phone_numbers:
+                    count = 1
+                    if all_phone_numbers.get(phone_number):
+                        count = all_phone_numbers[phone_number]
+                    all_phone_numbers[phone_number] = count
+
                 # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
                 # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
                 # summary = summary + "\n\t\t{}".format(numbers_list)
