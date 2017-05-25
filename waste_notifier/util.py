@@ -98,16 +98,18 @@ def get_services_desc(services):
 
     return desc
 
+def add_message_instructions(message):
+
+    return message + " (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service)."
+
 def get_service_message(services, date):
     """
     Returns message to be sent to subscriber, including correct list of services and date
     """
     services = add_additional_services(services, date)
-    message = "\
-City of Detroit Public Works:  Your next pickup for {0} is {1} \
-(reply with REMOVE ME to cancel pickup reminders; \
-begin your reply with FEEDBACK to give us feedback on this service)."
-    return message.format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    message = "City of Detroit Public Works:  Your next pickup for {0} is {1}"
+    message = message.format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    return add_message_instructions(message)
 
 def get_service_detail_message(services, detail):
     """
@@ -118,8 +120,14 @@ def get_service_detail_message(services, detail):
     message = 'City of Detroit Public Works:  '
     detail_desc = ''
     if detail.detail_type == 'schedule':
-        detail_desc = "Your pickup for {0} for {1} is postponed to {2} due to {3}".format(get_services_desc(services), 
-            detail.normal_day.strftime("%b %d, %Y"), detail.new_day.strftime("%b %d, %Y"), detail.description)
+
+        num_days = (detail.new_day - detail.normal_day).days
+        day_desc = "days" if num_days > 1 else "day"
+        services = add_additional_services(services, detail.normal_day)
+
+        detail_desc = "Pickups for {0} during the week of {1} are postponed by {2} {3} due to {4}".format(get_services_desc(services),
+            detail.normal_day.strftime("%b %d, %Y"), num_days, day_desc, detail.description)
+
     elif detail.detail_type == 'info':
         detail_desc = detail.description
     elif detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
@@ -128,6 +136,8 @@ def get_service_detail_message(services, detail):
     message = message + detail_desc
     if detail.note:
         message = message + " - " + detail.note
+
+    message = add_message_instructions(message)
 
     return message
 

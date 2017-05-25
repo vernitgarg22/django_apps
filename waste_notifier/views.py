@@ -344,7 +344,7 @@ def send_notifications_new(request, date, dry_run_param):
 
         # Find anyone subscribed to any of the services for this schedule detail
         if detail_subscribers.get(ScheduleDetail.ALL):
-            subscribers_services_detail.add(detail_subscribers[ScheduleDetail.ALL], ScheduleDetail.SERVICES_LIST, detail.waste_area_ids)
+            subscribers_services_detail.add(detail_subscribers[ScheduleDetail.ALL], ScheduleDetail.ALL, detail.waste_area_ids)
         else:
             for service_type in detail_subscribers.keys():
                 subscribers_services_detail.add(detail_subscribers[service_type], service_type, detail.waste_area_ids)
