@@ -19,6 +19,7 @@ from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
 from waste_notifier import views
+from waste_notifier import util
 
 
 def cleanup_model(model):
@@ -264,6 +265,14 @@ class WasteNotifierTests(TestCase):
 
         message = views.get_service_message(['bulk'], datetime.date(2017, 7, 1))
         self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
+
+    def test_get_service_message_note(self):
+        detail = ScheduleDetail(detail_type='info', service_type='all', description='Please note that service will be unaffected by Christmas Day', normal_day=datetime.date(2016, 12, 25), note='Please put trash and recycling bins on the curb on normal schedule')
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+
+        message = util.get_service_detail_message(['all'], detail)
+        self.assertEqual(message, 'City of Detroit Public Works:  Please note that service will be unaffected by Christmas Day - Please put trash and recycling bins on the curb on normal schedule (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
 
     @mock.patch('requests.post')
     def test_slack_msg_handler(self, mocked_requests_post):
@@ -810,7 +819,7 @@ class WasteNotifierTests(TestCase):
             self.assertDictEqual(expected, response.data, "Memorial day week gets rescheduled properly")
 
     def test_format_slack_alerts_summary(self):
-        content = {"recycling":{28:{"3136102012":1,"2676300369":1,"3138190143":1,"7347485413":1,"3134923996":1,"3135504576":1},6:{"3136575302":1}},"trash":{12:{"3132281121":1},6:{"3136575302":1},7:{"5863440535":1}},"citywide":{},"meta":{"date_applicable":"2017-05-11","dry_run":False,"week_type":"b","current_time":"2017-05-10 18:00"},"bulk":{36:{"3134923996":1,"3138025608":1,"7347485413":1,"3133202044":1},6:{"3136575302":1}}}
+        content = {'trash': {11: {'subscribers': ['3136102012', '9174538684', '3135068800', '2484992308', '2676300369', '3133202044', '5869133397', '3134923996', '2679700026', '5863228964', '3137062742', '3135504576', '3138190143', '3138080122', '7347485413', '3138025608', '2487015166', '3134546860', '3134832492', '3138623021', '3133198115', '3137015482', '3132058535', '3133462045', '2489104129', '3134737118'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 5: {'subscribers': ['3138504195', '3135803973'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {4: {'subscribers': ['5865638822', '3135498078', '3137195691', '3137581842', '3137587477'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'date_applicable': '2017-05-31', 'dry_run': True, 'week_type': 'b', 'current_time': '2017-05-26 10:51'}, 'recycling': {22: {'subscribers': ['3134495504', '3133201794', '3134780304', '3134150028', '3134617273'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {34: {'subscribers': ['8109624844', '3132084486', '3137283175', '3136139213', '3134784213'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
         summary = format_slack_alerts_summary(content)
-        expected = 'DPW Waste Pickup Reminder Summary:\n\nbulk\n\troute 6 - 1 reminders\n\troute 36 - 4 reminders\nrecycling\n\troute 6 - 1 reminders\n\troute 28 - 6 reminders\ntrash\n\troute 6 - 1 reminders\n\troute 7 - 1 reminders\n\troute 12 - 1 reminders\n\nTotal reminders sent out:  11'
+        expected = 'DPW Waste Pickup Reminder Summary:\n\nbulk\n\troute 34 - 5 reminders\nrecycling\n\troute 22 - 5 reminders\ntrash\n\troute 5 - 2 reminders\n\troute 11 - 26 reminders\n\nTotal reminders sent out:  38'
         self.assertEqual(summary, expected, "format_slack_alerts_summary() formats notifications summary correctly")

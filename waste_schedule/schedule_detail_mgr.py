@@ -160,7 +160,7 @@ class ScheduleDetailMgr():
             if int(feature['attributes']['FID']) == int(route_id):
                 return feature['attributes']
 
-        return {}
+        return {}      # pragma: no cover (should never get here)
 
 
     def get_regular_week_routes(self, date):
@@ -242,7 +242,7 @@ class ScheduleDetailMgr():
         """
 
         if route['services'] != ScheduleDetail.ALL:
-            return route['services']
+            return route['services']     # pragma: no cover (should never get here)
 
         week = route['week']
         if ScheduleDetail.check_date_service(date, BiWeekType.from_str(week)):

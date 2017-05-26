@@ -28,24 +28,26 @@ def format_slack_alerts_summary(content):
             for route_id in sorted(route_ids):
                 phone_numbers = service_details[route_id].get('subscribers')
 
-                # make sure type of service is indicated one time
-                if not service_desc_added:
-                    summary = summary + "\n{}".format(service_type)
-                    service_desc_added = True
+                if phone_numbers:
 
-                # give route id and number of subscribers
-                summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
+                    # make sure type of service is indicated one time
+                    if not service_desc_added:
+                        summary = summary + "\n{}".format(service_type)
+                        service_desc_added = True
 
-                # keep track of all phone numbers receiving reminders
-                for phone_number in phone_numbers:
-                    count = 1
-                    if all_phone_numbers.get(phone_number):
-                        count = all_phone_numbers[phone_number]
-                    all_phone_numbers[phone_number] = count
+                    # give route id and number of subscribers
+                    summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
 
-                # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
-                # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
-                # summary = summary + "\n\t\t{}".format(numbers_list)
+                    # keep track of all phone numbers receiving reminders
+                    for phone_number in phone_numbers:
+                        count = 1
+                        if all_phone_numbers.get(phone_number):
+                            count = all_phone_numbers[phone_number]
+                        all_phone_numbers[phone_number] = count
+
+                    # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
+                    # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
+                    # summary = summary + "\n\t\t{}".format(numbers_list)
 
     summary = summary + "\n\nTotal reminders sent out:  {}".format(len(all_phone_numbers))
 
