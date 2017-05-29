@@ -337,21 +337,21 @@ def send_notifications_new(request, date, dry_run_param):
         subscribers_services.add(subscribers, service_type, [route_id])
 
     # Check if there are any schedule details for this date
-    schedule_details = ScheduleDetailMgr.instance().get_schedule_details(date)
-    for detail in schedule_details:
+    # schedule_details = ScheduleDetailMgr.instance().get_schedule_details(date)
+    # for detail in schedule_details:
 
-        subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
+    #     subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
 
-        detail_subscribers = get_subscribers(detail, date)
+    #     detail_subscribers = get_subscribers(detail, date)
 
-        # Find anyone subscribed to any of the services for this schedule detail
-        if detail_subscribers.get(ScheduleDetail.ALL):
-            subscribers_services_detail.add(detail_subscribers[ScheduleDetail.ALL], ScheduleDetail.ALL, detail.waste_area_ids)
-        else:
-            for service_type in detail_subscribers.keys():
-                subscribers_services_detail.add(detail_subscribers[service_type], service_type, detail.waste_area_ids)
+    #     # Find anyone subscribed to any of the services for this schedule detail
+    #     if detail_subscribers.get(ScheduleDetail.ALL):
+    #         subscribers_services_detail.add(detail_subscribers[ScheduleDetail.ALL], ScheduleDetail.ALL, detail.waste_area_ids)
+    #     else:
+    #         for service_type in detail_subscribers.keys():
+    #             subscribers_services_detail.add(detail_subscribers[service_type], service_type, detail.waste_area_ids)
 
-        subscribers_services_details.append(subscribers_services_detail)
+    #     subscribers_services_details.append(subscribers_services_detail)
 
     # send text reminder to each subscriber needing a reminder
     for subscriber in subscribers_services.get_subscribers():
@@ -360,11 +360,14 @@ def send_notifications_new(request, date, dry_run_param):
         MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     # send out notifications about any schedule changes
-    for subscribers_services_detail in subscribers_services_details:
-        for subscriber in subscribers_services_detail.get_subscribers():
+    # TODO temporarily disable schedule detail notifications
+    # for subscribers_services_detail in subscribers_services_details:
+    #     for subscriber in subscribers_services_detail.get_subscribers():
 
-            message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
-            MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
+    #         message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
+
+    #         # TODO disable this temporarily
+    #         MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
 
