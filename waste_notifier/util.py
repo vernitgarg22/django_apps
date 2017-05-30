@@ -70,6 +70,8 @@ def includes_yard_waste(services):
     """
     return ScheduleDetail.ALL in services or ScheduleDetail.YARD_WASTE in services or ScheduleDetail.BULK in services
 
+import pdb
+
 def add_additional_services(services, date, add_yard_waste_year_round=False):
     """
     Add in any services that are implicitly included in this list of services
@@ -78,7 +80,7 @@ def add_additional_services(services, date, add_yard_waste_year_round=False):
     are active for the given date, unless add_yard_waste_year_round is True.
     """
     if ScheduleDetail.ALL in services:
-        services = ScheduleDetail.YEAR_ROUND_SERVICES
+        services = ScheduleDetail.YEAR_ROUND_SERVICES.copy()
 
     # Special handling for yard waste, since it is on same schedule as bulk
     if includes_yard_waste(services) and (add_yard_waste_year_round or ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, date)):
