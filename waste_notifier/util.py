@@ -70,8 +70,6 @@ def includes_yard_waste(services):
     """
     return ScheduleDetail.ALL in services or ScheduleDetail.YARD_WASTE in services or ScheduleDetail.BULK in services
 
-import pdb
-
 def add_additional_services(services, date, add_yard_waste_year_round=False):
     """
     Add in any services that are implicitly included in this list of services
