@@ -115,7 +115,7 @@ class Subscriber(models.Model):
         """
 
         if service_type == ScheduleDetail.TRASH:
-            return True
+            return True    # pragma: no cover  (should not get here)
 
         # examine all the subscriber's routes
         for route_id in util.split_csv(self.waste_area_ids):
@@ -129,7 +129,7 @@ class Subscriber(models.Model):
                 if ScheduleDetail.check_date_service(date, week_type):
                     return True
 
-        return False
+        return False    # pragma: no cover  (should not get here)
 
     @staticmethod
     def update_or_create_from_dict(data):

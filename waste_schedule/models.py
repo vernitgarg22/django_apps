@@ -251,16 +251,6 @@ class ScheduleDetail(models.Model):
         routes = ScheduleDetail.get_waste_routes(date, service_type)
         return ',' + ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
 
-    # TODO remove this and leave it in ScheduleDetailMgr
-    @staticmethod
-    def get_citywide_schedule_changes(date):
-        """
-        Returns schedule details that are city-wide (i.e., not tied to a specific route) and match given date
-        """
-
-        details = ScheduleDetail.objects.filter(waste_area_ids__isnull=True) | ScheduleDetail.objects.filter(waste_area_ids__exact='')
-        return details.filter(normal_day__exact=date) | details.filter(new_day__exact=date)
-
     @staticmethod
     def get_schedule_changes(route_id, date):
         """
