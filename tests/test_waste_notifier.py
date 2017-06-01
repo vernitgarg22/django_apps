@@ -743,6 +743,19 @@ class WasteNotifierTests(TestCase):
         # expected = {'20170505': [], '20170503': [], '20170507': [], '20170502': [], '20170501': ScheduleDetail.objects.filter(id=detail.id), '20170506': [], '20170504': []}
         # self.assertDictEqual(changes, expected, "get_week_schedule_changes() returns schedule changes")
 
+    def test_get_route_specific_change(self):
+        detail = ScheduleDetail(detail_type='schedule', waste_area_ids='0', service_type='all', description='flooding in SouthWest Detroit', normal_day=datetime.date(2017, 5, 5), new_day=datetime.date(2017, 5, 6))
+        detail.clean()
+        detail.save()
+        c = Client()
+        make_subscriber(waste_area_ids='0')
+
+        response = c.post('/waste_notifier/send/20170505/')
+        self.assertEqual(response.status_code, 200)
+        expected = {'0': {'message': 'City of Detroit Public Works:  Pickups for bulk, recycling and trash during the week of May 05, 2017 are postponed by 1 day due to flooding in SouthWest Detroit (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = add_meta(expected, date=datetime.date(2017, 5, 5))
+        self.assertEqual(response.data, expected, "Schedule change can be made for specific route")
+
     def test_get_week_routes(self):
         week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
         expected = [{1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}, {8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {}, {}]
