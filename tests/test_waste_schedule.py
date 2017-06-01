@@ -327,7 +327,7 @@ class WasteScheduleTests(TestCase):
             ScheduleDetailMgr()
 
     def test_schedule_detail_mgr_singleton(self):
-        self.assertEqual(id(ScheduleDetailMgr.instance()), id(ScheduleDetailMgr.instance()), "Only one instance of SchedulDetailMgr exists")
+        self.assertEqual(id(ScheduleDetailMgr.instance()), id(ScheduleDetailMgr.instance()), "Only one instance of ScheduleDetailMgr exists")
 
     def test_schedule_detail_mgr_service_dates(self):
         start_test = make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 3, 1))

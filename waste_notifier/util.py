@@ -20,27 +20,34 @@ def format_slack_alerts_summary(content):
     # summary notifications sent out for each service...
     for service_type, desc in WasteItem.DESTINATION_CHOICES:
         service_desc_added = False
-        details = content.get(service_type)
-        if details:
+        service_details = content.get(service_type)
+        if service_details:
 
             # group the information by route
-            route_ids = [ route_id for route_id in details.keys() if details.get(route_id) ]
+            route_ids = [ route_id for route_id in service_details.keys() if service_details.get(route_id) ]
             for route_id in sorted(route_ids):
-                phone_numbers = details.get(route_id)
+                phone_numbers = service_details[route_id].get('subscribers')
 
-                # make sure type of service is indicated one time
-                if not service_desc_added:
-                    summary = summary + "\n{}".format(service_type)
-                    service_desc_added = True
+                if phone_numbers:
 
-                # give route id and number of subscribers
-                summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
+                    # make sure type of service is indicated one time
+                    if not service_desc_added:
+                        summary = summary + "\n{}".format(service_type)
+                        service_desc_added = True
 
-                # keep track of all phone numbers receiving reminders
-                all_phone_numbers.update(phone_numbers)
-                # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
-                # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
-                # summary = summary + "\n\t\t{}".format(numbers_list)
+                    # give route id and number of subscribers
+                    summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
+
+                    # keep track of all phone numbers receiving reminders
+                    for phone_number in phone_numbers:
+                        count = 1
+                        if all_phone_numbers.get(phone_number):
+                            count = all_phone_numbers[phone_number]
+                        all_phone_numbers[phone_number] = count
+
+                    # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
+                    # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
+                    # summary = summary + "\n\t\t{}".format(numbers_list)
 
     summary = summary + "\n\nTotal reminders sent out:  {}".format(len(all_phone_numbers))
 
@@ -71,7 +78,7 @@ def add_additional_services(services, date, add_yard_waste_year_round=False):
     are active for the given date, unless add_yard_waste_year_round is True.
     """
     if ScheduleDetail.ALL in services:
-        services = ScheduleDetail.YEAR_ROUND_SERVICES
+        services = ScheduleDetail.YEAR_ROUND_SERVICES.copy()
 
     # Special handling for yard waste, since it is on same schedule as bulk
     if includes_yard_waste(services) and (add_yard_waste_year_round or ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, date)):
@@ -98,16 +105,18 @@ def get_services_desc(services):
 
     return desc
 
+def add_message_instructions(message):
+
+    return message + " (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service)."
+
 def get_service_message(services, date):
     """
     Returns message to be sent to subscriber, including correct list of services and date
     """
     services = add_additional_services(services, date)
-    message = "\
-City of Detroit Public Works:  Your next pickup for {0} is {1} \
-(reply with REMOVE ME to cancel pickup reminders; \
-begin your reply with FEEDBACK to give us feedback on this service)."
-    return message.format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    message = "City of Detroit Public Works:  Your next pickup for {0} is {1}"
+    message = message.format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    return add_message_instructions(message)
 
 def get_service_detail_message(services, detail):
     """
@@ -118,8 +127,14 @@ def get_service_detail_message(services, detail):
     message = 'City of Detroit Public Works:  '
     detail_desc = ''
     if detail.detail_type == 'schedule':
-        detail_desc = "Your pickup for {0} for {1} is postponed to {2} due to {3}".format(get_services_desc(services), 
-            detail.normal_day.strftime("%b %d, %Y"), detail.new_day.strftime("%b %d, %Y"), detail.description)
+
+        num_days = (detail.new_day - detail.normal_day).days
+        day_desc = "days" if num_days > 1 else "day"
+        services = add_additional_services(services, detail.normal_day)
+
+        detail_desc = "Pickups for {0} during the week of {1} are postponed by {2} {3} due to {4}".format(get_services_desc(services),
+            detail.normal_day.strftime("%b %d, %Y"), num_days, day_desc, detail.description)
+
     elif detail.detail_type == 'info':
         detail_desc = detail.description
     elif detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
@@ -128,6 +143,8 @@ def get_service_detail_message(services, detail):
     message = message + detail_desc
     if detail.note:
         message = message + " - " + detail.note
+
+    message = add_message_instructions(message)
 
     return message
 
@@ -228,29 +245,44 @@ class NotificationContent():
                 "current_time": datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
                 "week_type": str(week_type),
                 "dry_run": dry_run,
-            },
-            "citywide": {}
+            }
         }
-
 
         # indicate, by route, which phone numbers we have texted
         service_subscribers_map = subscribers_services.get_service_subscribers()
         ssm = service_subscribers_map
 
-
+        # indicate which phone numbers we have sent route-specific alerts to
         for service_type, routes in service_subscribers_map.items():
+
+            message = get_service_message([service_type], date_applicable)
+
             for route_id, subscribers in routes.items():
-                if not self.content.get(service_type):
-                    self.content[service_type] = {}
-                self.content[service_type].update({ route_id: { subscriber.phone_number: 1 for subscriber in subscribers } })
+                if subscribers:
+                    if not self.content.get(service_type):
+                        self.content[service_type] = {}
+
+                    self.content[service_type].update({ route_id: { "message": message, "subscribers": [ subscriber.phone_number for subscriber in subscribers ] } })
 
         # indicate which phone numbers we have sent citywide alerts to
         for subscribers_services_detail in subscribers_services_details:
             service_subscribers = subscribers_services_detail.get_service_subscribers()
+
+            message = get_service_detail_message(service_subscribers.keys(), subscribers_services_detail.schedule_detail)
+
             for service_type, routes in service_subscribers.items():
+
                 for route_id, subscribers in routes.items():
-                    if route_id == '':
-                        self.content["citywide"].update( { subscriber.phone_number: 1 for subscriber in subscribers } )
+                    if subscribers:
+                        detail_content = {
+                            "message": message,
+                            "subscribers": [ subscriber.phone_number for subscriber in subscribers ]
+                        }
+
+                        if not route_id:
+                            self.content["citywide"] = detail_content
+                        else:
+                            self.content[route_id] = detail_content
 
     def get_content(self):
         return self.content

@@ -1,7 +1,7 @@
 import datetime
 import requests
 
-from waste_schedule.models import ScheduleDetail
+from waste_schedule.models import ScheduleDetail, BiWeekType
 import cod_utils.util
 
 
@@ -33,7 +33,7 @@ class WeekRouteInfo():
         index = WeekRouteInfo.WEEK_MAP[route.pop('day')]
 
         week_type = route.get('week')
-        if week_type == ' ' or week_type.lower() == str(self.week_type).lower():
+        if week_type == ' ' or week_type.lower() == str(self.week_type).lower() or route['services'] == ScheduleDetail.ALL:
             self.data[index][route.pop('FID')] = route
 
     def reschedule_service(self, old_date, new_date, service_type):
@@ -127,6 +127,13 @@ class ScheduleDetailMgr():
     #         in any subsequent days for the week back by one day
     #
 
+    def get_schedule_details(self, date):
+        """
+        Returns all schedule details with new day or normal day matching the given date
+        """
+
+        return ScheduleDetail.objects.filter(normal_day__exact=date) | ScheduleDetail.objects.filter(new_day__exact=date)
+
     def get_citywide_schedule_changes(self, date):
         """
         Returns schedule details that are city-wide (i.e., not tied to a specific route) and match given date
@@ -135,6 +142,26 @@ class ScheduleDetailMgr():
         details = ScheduleDetail.objects.filter(detail_type__exact='schedule')
         details = details.filter(waste_area_ids__isnull=True) | details.filter(waste_area_ids__exact='')
         return details.filter(normal_day__exact=date)
+
+    # TODO refactor the 'route info' stuff into its own class
+
+    def get_route_info(self, route_id):
+        """
+        Returns info about the particular route
+        """
+
+        # TODO cache this
+
+        # get the data from gis server
+        r = requests.get(ScheduleDetail.GIS_URL_ALL)
+
+        # find the correct route info and return it
+        for feature in r.json()['features']:
+            if int(feature['attributes']['FID']) == int(route_id):
+                return feature['attributes']
+
+        return {}      # pragma: no cover (should never get here)
+
 
     def get_regular_week_routes(self, date):
         """
@@ -207,3 +234,18 @@ class ScheduleDetailMgr():
 
         week_route_info = self.get_week_routes(date)
         return week_route_info.get_day(date)
+
+    def check_all_service_week(self, date, route):
+        """
+        Returns 'trash' if that is the only service getting picked up
+        on the given week, otherwise returns all
+        """
+
+        if route['services'] != ScheduleDetail.ALL:
+            return route['services']     # pragma: no cover (should never get here)
+
+        week = route['week']
+        if ScheduleDetail.check_date_service(date, BiWeekType.from_str(week)):
+            return ScheduleDetail.ALL
+        else:
+            return ScheduleDetail.TRASH

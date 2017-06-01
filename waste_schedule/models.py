@@ -134,9 +134,6 @@ class ScheduleDetail(models.Model):
         # TODO clear this up
         if kwargs.get('null_waste_area_ids'):
             self.waste_area_ids = None
-            # self.waste_area_ids = kwargs['waste_area_ids']
-            # if self.waste_area_ids == 'null':
-            #     self.waste_area_ids = None
             del kwargs['null_waste_area_ids']
 
         # if admin did not specify waste area ids, look them up for trash service
@@ -181,9 +178,9 @@ class ScheduleDetail(models.Model):
         Returns type of week ('a' or 'b') that the given date belongs to.
         """
 
-        year_is_odd = (date.year % 2 == 0)
-        week_is_odd = (date.isocalendar()[1] % 2 == 0)
-        return BiWeekType.B if year_is_odd == week_is_odd else BiWeekType.A
+        year_is_even = (date.year % 2 == 0)
+        week_is_even = (date.isocalendar()[1] % 2 == 0)
+        return BiWeekType.B if year_is_even == week_is_even else BiWeekType.A
 
     @staticmethod
     def check_date_service(date, week_type):
@@ -253,16 +250,6 @@ class ScheduleDetail(models.Model):
 
         routes = ScheduleDetail.get_waste_routes(date, service_type)
         return ',' + ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
-
-    # TODO remove this and leave it in ScheduleDetailMgr
-    @staticmethod
-    def get_citywide_schedule_changes(date):
-        """
-        Returns schedule details that are city-wide (i.e., not tied to a specific route) and match given date
-        """
-
-        details = ScheduleDetail.objects.filter(waste_area_ids__isnull=True) | ScheduleDetail.objects.filter(waste_area_ids__exact='')
-        return details.filter(normal_day__exact=date) | details.filter(new_day__exact=date)
 
     @staticmethod
     def get_schedule_changes(route_id, date):

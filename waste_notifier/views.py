@@ -123,6 +123,9 @@ def confirm_notifications(request):
     return response
 
 
+# TODO redo this endpoint with ScheduleDetailMgr
+
+
 @api_view(['POST'])
 def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
     """
@@ -158,48 +161,33 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
 
-    # loop through the different types of service and check for subscribers
-    # to each route servicing a service type on the given date
-    for service_type in list(ScheduleDetail.SERVICE_ID_MAP.keys()):
+    # loop through all routes for the day
+    routes = ScheduleDetailMgr.instance().get_day_routes(date)
+    for route_id, route in routes.items():
 
-        # Find out which waste areas are about to get pickups for this service
-        routes = ScheduleDetail.get_waste_routes(date, service_type)
+        service_type = ScheduleDetail.map_service_type(route['services'])
+        if service_type == ScheduleDetail.ALL:
+            service_type = ScheduleDetailMgr.instance().check_all_service_week(date, route)
 
-        # get a list of route ids
-        route_ids = [ int(id) for id in list(routes.keys()) ]
-        for route_id in route_ids:
+        subscribers = get_route_subscribers(service_type, route_id)
 
-            # get all active subscribers to this service ...
-            subscribers = Subscriber.objects.filter(status__exact='active')
-            subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
+        # keep track of what services each subscriber needs notifications for
+        subscribers_services.add(subscribers, service_type, [route_id])
 
-            # also filter subscribers by route
-            subscribers = subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
-
-            # does this route have any schedule changes for this date?
-            schedule_details = ScheduleDetail.get_schedule_changes(route_id, date)
-            if schedule_details:
-                subscribers_services_details.append(SubscriberServicesDetail(schedule_details[0], subscribers, service_type, [route_id]))
-            else:
-                # keep track of what services each subscriber needs notifications for
-                subscribers_services.add(subscribers, service_type, [route_id])
-
-    # check for schedule details that are city-wide (i.e., not tied to a specific route)
-    schedule_details = ScheduleDetail.get_citywide_schedule_changes(date)
+    # Check if there are any schedule details for this date
+    schedule_details = ScheduleDetailMgr.instance().get_schedule_details(date)
     for detail in schedule_details:
 
         subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
 
-        # Find anyone subscribed to any of the services for this schedule detail
-        if detail.service_type == ScheduleDetail.ALL:
-            subscribers = Subscriber.objects.filter(status__exact='active')
+        detail_subscribers = get_subscribers(detail, date)
 
-            subscribers_services_detail.add(subscribers, ScheduleDetail.SERVICES_LIST, detail.waste_area_ids)
+        # Find anyone subscribed to any of the services for this schedule detail
+        if detail_subscribers.get(ScheduleDetail.ALL):
+            subscribers_services_detail.add(detail_subscribers[ScheduleDetail.ALL], ScheduleDetail.ALL, detail.waste_area_ids)
         else:
-            for service_type in detail.service_type.split(','):
-                subscribers = Subscriber.objects.filter(status__exact='active')
-                subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
-                subscribers_services_detail.add(subscribers, service_type, detail.waste_area_ids)
+            for service_type in detail_subscribers.keys():
+                subscribers_services_detail.add(detail_subscribers[service_type], service_type, detail.waste_area_ids)
 
         subscribers_services_details.append(subscribers_services_detail)
 
@@ -210,10 +198,13 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
         MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     # send out notifications about any schedule changes
+    # TODO temporarily disable schedule detail notifications
     for subscribers_services_detail in subscribers_services_details:
         for subscriber in subscribers_services_detail.get_subscribers():
 
             message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
+
+            # TODO disable this temporarily
             MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
@@ -222,6 +213,93 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     slack_alerts_summary(content.get_content())
 
     return Response(content.get_content())
+
+
+def get_route_subscribers(service_type, route_id):
+    """
+    Return all subscribers who are subscribed to the particular service type and route
+    """
+
+    # get all active subscribers to this service type
+    subscribers = Subscriber.objects.filter(status__exact='active')
+    if service_type != ScheduleDetail.ALL:
+        subscribers = subscribers.filter(service_type__contains=ScheduleDetail.ALL) | subscribers.filter(service_type__contains=service_type)
+
+    # also filter subscribers by route
+    return subscribers.filter(waste_area_ids__contains=',' + str(route_id) + ',')
+
+def filter_route_subscribers(detail, subscribers):
+    """
+    Filters out subscribers who are not subscribed to this detail's routes
+    """
+
+    route_ids = util.split_csv(detail.waste_area_ids)
+
+    # Just return all subscribers if detail is city-wide
+    if not route_ids:
+        return subscribers
+
+    # Combine subscribers to each route
+    dest = Subscriber.objects.none()
+    for route_id in route_ids:
+        tmp = subscribers.filter(waste_area_ids__contains="," + str(route_id) + ",")
+        dest = dest | tmp
+
+    return dest
+
+def map_service_subscribers(detail, subscribers, date):
+    """
+    Filter out subscribers not subscribed to the given service type(s).  Results get returned
+    as a map, which maps from service_type to subscribers for that service.
+    """
+
+    if detail.service_type == ScheduleDetail.ALL:
+        return { ScheduleDetail.ALL: subscribers }
+
+    # Combine subscribers to each service type
+    dest = {}
+    for service_type in util.split_csv(detail.service_type):
+        tmp = subscribers.filter(service_type__contains=service_type) | subscribers.filter(service_type__exact=ScheduleDetail.ALL)
+
+        service_type_subscribers = [ subscriber for subscriber in tmp if subscriber.has_service_on_date_week(service_type, date) ]
+        dest[service_type] = service_type_subscribers
+
+    return dest
+
+def get_subscribers(detail, date):
+    """
+
+    current thinking about schedule detail alerts:
+
+    schedule changes
+       - on the day when pickups would have occurred (i.e., the normal_day), a notification should go out to all subscribers 
+         to the route, or, for city-wide schedule changes, to all active subscribers
+
+    start-date and end-date
+       - on the day where the service start or end takes effect (i.e., the new day), a notification should go out to all
+         subscribers to the route, or, if this service is starting / ending city-wide, to all active subscribers
+
+    info
+       - on the day that the informational detail applies to (i.e., its normal_day), a notification should go out to all subscribers 
+         to the route, or, for city-wide schedule changes, to all active subscribers
+
+    """
+
+    # get active subscribers
+
+    subscribers = Subscriber.objects.filter(status__exact='active')
+
+    if detail.service_type == ['schedule', 'info']:
+
+        subscribers = subscribers.filter(normal_day__exact=date)
+
+    elif detail.service_type in ['start-date', 'end-date']:
+
+        subscribers = subscribers.filter(new_day__exact=date)
+
+    subscribers = filter_route_subscribers(detail, subscribers)
+
+    return map_service_subscribers(detail, subscribers, date)
 
 
 @api_view(['GET'])
