@@ -178,7 +178,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     schedule_details = ScheduleDetailMgr.instance().get_schedule_details(date)
     for detail in schedule_details:
 
-        subscribers_services_detail = SubscriberServicesDetail(detail, Subscriber.objects.none(), detail.service_type, '')
+        subscribers_services_detail = SubscriberServicesDetail(detail, detail.service_type, '')
 
         detail_subscribers = get_subscribers(detail, date)
 
@@ -266,6 +266,8 @@ def map_service_subscribers(detail, subscribers, date):
 
     return dest
 
+import pdb
+
 def get_subscribers(detail, date):
     """
 
@@ -286,17 +288,9 @@ def get_subscribers(detail, date):
     """
 
     # get active subscribers
-
     subscribers = Subscriber.objects.filter(status__exact='active')
 
-    if detail.service_type == ['schedule', 'info']:
-
-        subscribers = subscribers.filter(normal_day__exact=date)
-
-    elif detail.service_type in ['start-date', 'end-date']:
-
-        subscribers = subscribers.filter(new_day__exact=date)
-
+    # get subscribers subscribed to the particular detail routes
     subscribers = filter_route_subscribers(detail, subscribers)
 
     return map_service_subscribers(detail, subscribers, date)

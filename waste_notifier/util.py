@@ -217,11 +217,9 @@ class SubscriberServicesDetail(SubscriberServices):
     about a schedule change
     """
 
-    def __init__(self, schedule_detail, subscribers, service, route_ids):
+    def __init__(self, schedule_detail, service, route_ids):
         super().__init__()
         self.schedule_detail = schedule_detail
-        for subscriber in subscribers:
-            self.add(subscribers, service, route_ids)
 
 
 class NotificationContent():
@@ -264,7 +262,7 @@ class NotificationContent():
 
                     self.content[service_type].update({ route_id: { "message": message, "subscribers": [ subscriber.phone_number for subscriber in subscribers ] } })
 
-        # indicate which phone numbers we have sent citywide alerts to
+        # indicate which phone numbers we have sent alerts to
         for subscribers_services_detail in subscribers_services_details:
             service_subscribers = subscribers_services_detail.get_service_subscribers()
 
