@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 import cod_utils.util
 import cod_utils.security
+from cod_utils.messaging import MsgHandler
 import tests.disabled
 
 from waste_notifier.models import Subscriber
@@ -178,7 +179,7 @@ class WasteNotifierTests(TestCase):
         """
         Verify our system can handle multiple phone numbers
         """
-        phone_number = cod_utils.util.MsgHandler.get_phone_sender()
+        phone_number = MsgHandler.get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
     # Test some of the ScheduleDetail utility functions
@@ -846,7 +847,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        with patch.object(cod_utils.util.MsgHandler, 'send_text', return_value=True) as mock_send_text:
+        with patch.object(MsgHandler, 'send_text', return_value=True) as mock_send_text:
             response = c.post("/waste_notifier/send/20170529/")
 
         mock_send_text.assert_called_once_with('5005550006', 'City of Detroit Public Works:  Pickups for bulk, recycling and trash during the week of May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', False)

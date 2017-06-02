@@ -8,6 +8,7 @@ from django.test import TestCase, RequestFactory
 
 from cod_utils import util
 from cod_utils import security
+from cod_utils.messaging import MsgHandler
 import tests.disabled
 
 
@@ -104,26 +105,26 @@ class CODUtilsTests(TestCase):
 class CODUtilsMsgHandlerTests(TestCase):
 
     def setUp(self):
-        self.dry_run_previous = util.MsgHandler.DRY_RUN
+        self.dry_run_previous = MsgHandler.DRY_RUN
 
     def tearDown(self):
-        util.MsgHandler.DRY_RUN = self.dry_run_previous
+        MsgHandler.DRY_RUN = self.dry_run_previous
 
     def test_get_phone_sender(self):
-        number = util.MsgHandler.get_phone_sender()
+        number = MsgHandler.get_phone_sender()
         self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
 
     def test_send_message(self):
-        util.MsgHandler.DRY_RUN = False
-        sent = util.MsgHandler().send_text("5005550006", "testing")
+        MsgHandler.DRY_RUN = False
+        sent = MsgHandler().send_text("5005550006", "testing")
         self.assertTrue(sent, "MsgHandler sends a text")
 
     def test_send_message_dry_run(self):
-        util.MsgHandler.DRY_RUN = True
-        sent = util.MsgHandler().send_text("5005550006", "testing")
+        MsgHandler.DRY_RUN = True
+        sent = MsgHandler().send_text("5005550006", "testing")
         self.assertFalse(sent, "MsgHandler sends no texts when DRY_RUN is set")
 
     def test_send_message_dry_run_param(self):
-        util.MsgHandler.DRY_RUN = False
-        sent = util.MsgHandler().send_text("5005550006", "testing", dry_run_param = True)
+        MsgHandler.DRY_RUN = False
+        sent = MsgHandler().send_text("5005550006", "testing", dry_run_param = True)
         self.assertFalse(sent, "MsgHandler sends no texts when dry_run_param is True")

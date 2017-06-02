@@ -15,7 +15,7 @@ from waste_schedule.models import ScheduleDetail
 from waste_notifier.util import *
 import cod_utils.util
 import cod_utils.security
-from cod_utils.util import MsgHandler
+from cod_utils.messaging import MsgHandler
 
 
 @api_view(['POST'])
@@ -265,8 +265,6 @@ def map_service_subscribers(detail, subscribers, date):
         dest[service_type] = service_type_subscribers
 
     return dest
-
-import pdb
 
 def get_subscribers(detail, date):
     """

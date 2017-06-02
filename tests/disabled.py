@@ -1,4 +1,4 @@
-from cod_utils.util import MsgHandler
+from cod_utils.messaging import MsgHandler
 
 from twilio.rest import TwilioRestClient
 
