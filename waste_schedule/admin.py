@@ -11,6 +11,6 @@ class ScheduleDetailAdmin(admin.ModelAdmin):
     list_filter = ['detail_type', 'service_type']
     list_editable = ['service_type', 'description', 'normal_day', 'new_day', 'note', 'waste_area_ids']
     search_fields = ['reason', 'note']
-    ordering = ['normal_day', 'new_day', 'service_type']
+    ordering = ['detail_type', 'service_type', 'normal_day', 'new_day']
 
 admin.site.register(ScheduleDetail, ScheduleDetailAdmin)
