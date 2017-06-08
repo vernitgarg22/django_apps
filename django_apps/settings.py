@@ -180,7 +180,7 @@ class DjangoAppsRouter(object):
 
     @staticmethod
     def get_db(model):
-        name = model.__name__
+        name = model if type(model) == str else model.__name__
         database = None
         if DEBUG:
             database = DjangoAppsRouter.ModelDBMapDev.get(name)
@@ -197,8 +197,10 @@ class DjangoAppsRouter(object):
     def allow_relation(self, obj1, obj2, **hints):
         return DjangoAppsRouter.get_db(model)
 
-    def allow_migrate(self, db, model):
-        return DjangoAppsRouter.get_db(model)
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        if model_name:
+            return DjangoAppsRouter.get_db(model_name)
+
 
 CACHES = {
     'default': {
