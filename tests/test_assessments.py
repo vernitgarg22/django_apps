@@ -31,7 +31,7 @@ def cleanup_db():
 
 
 def make_sale():
-    data = {'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'saledate': datetime(2013, 6, 3, 0, 0), 'addresscombined': '7840 VAN DYKE PL', 'pnum': '17000074.001', 'terms': 'REVIEW NEEDED', 'instr': 'PTA', 'saleprice': Decimal('35000')}
+    data = {'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'saledate': datetime(2013, 6, 3, 0, 0, tzinfo=pytz.utc), 'addresscombined': '7840 VAN DYKE PL', 'pnum': '17000074.001', 'terms': 'REVIEW NEEDED', 'instr': 'PTA', 'saleprice': Decimal('35000')}
     sale = Sales(**data)
     sale.save()
     return sale
@@ -94,7 +94,7 @@ class AssessmentsTests(TestCase):
 
         response = c.get('/assessments/17000074_001/')
         self.assertEqual(response.status_code, 200, "/assessments/<pnum>/ succeeds")
-        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 5, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
+        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 0, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
         self.assertListEqual(expected, response.data, "/assessments/<pnum>/ returns sales parcel data")
 
     def test_get_sales_404(self):
@@ -110,7 +110,7 @@ class AssessmentsTests(TestCase):
 
         response = c.get('/assessments/address/7840 VAN DYKE PL/')
         self.assertEqual(response.status_code, 200, "/assessments/<address>/ succeeds")
-        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 5, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
+        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 0, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
         self.assertListEqual(expected, response.data, "/assessments/<address>/ returns sales data search results")
 
     def test_get_sales_address_search_recent(self):
@@ -120,7 +120,7 @@ class AssessmentsTests(TestCase):
 
         response = c.get('/assessments/address/7840 VAN DYKE PL/recent/')
         self.assertEqual(response.status_code, 200, "/assessments/<address>/recent/ succeeds")
-        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 5, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
+        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 0, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
         self.assertListEqual(expected, response.data, "/assessments/<address>/recent/ gets current sales data search results")
 
     def test_get_sales_address_search_recent_filters_old(self):
@@ -145,8 +145,8 @@ class AssessmentsTests(TestCase):
 
         response = c.get('/assessments/address/7840 VAN DYKE PL/recent/years/2/')
         self.assertEqual(response.status_code, 200, "/assessments/<address>/recent/years/<years>/ succeeds")
-        expected = [{'pnum': '17000074.001', 'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'terms': 'REVIEW NEEDED', 'instr': 'PTA', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2017, 6, 2, 5, 0, tzinfo=pytz.utc), 'saleprice': Decimal('35000'), 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY'}]
-        self.assertListEqual(expected, response.data, "/assessments/<address>/recent/years/<years>/ filters out old sales data search results")
+        expected = [{'pnum': '17000074.001', 'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'terms': 'REVIEW NEEDED', 'instr': 'PTA', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2017, 6, 2, 0, 0, tzinfo=pytz.utc), 'saleprice': Decimal('35000'), 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY'}]
+        self.assertListEqual(expected, response.data, "/assessments/<address>/recent/years/<years>/ can do custom years filter")
 
     def test_get_sales_address_404(self):
 
@@ -162,13 +162,13 @@ class AssessmentsTests(TestCase):
 
         response = c.get('/assessments/17000074_001/recent/')
         self.assertEqual(response.status_code, 200, "/assessments/<pnum>/recent/ succeeds")
-        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 5, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
+        expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 0, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
         self.assertListEqual(expected, response.data, "/assessments/<pnum>/recent/ gets current sales")
 
     def test_get_sales_property_recent_filters_old(self):
 
         sale = make_sale()
-        sale.saledate = datetime(2010, 1, 1)
+        sale.saledate = datetime(2010, 1, 1, 0, 0, tzinfo=pytz.utc)
         sale.save()
         c = Client()
 
