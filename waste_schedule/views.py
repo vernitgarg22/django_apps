@@ -15,6 +15,7 @@ from .schedule_detail_mgr import ScheduleDetailMgr
 from waste_schedule import util
 from waste_schedule.util import BiWeekType
 import cod_utils.util
+from cod_utils.cod_logger import CODLogger
 
 
 def get_next_pickup(today, next_day, week):
@@ -84,6 +85,8 @@ def get_schedule_details(request, waste_area_ids=None, year=None, month=None, fo
     """
     List details to the waste collection schedule for a waste area
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # Throw error if there is an unrecognized query param
     for param in request.query_params.keys():

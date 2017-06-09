@@ -17,6 +17,8 @@ from assessments.models import Sales, ParcelMaster
 from assessments.models import Parcel, CaseMain
 from assessments import util
 
+from cod_utils.cod_logger import CODLogger
+
 
 def get_parcels(parcels):
     """
@@ -51,6 +53,8 @@ def get_sales_property(request, pnum=None, years_back=None, format=None):
     Retrieve property info via parcel id (aka 'pnum')
     """
 
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
     # urls with dots are problematic: substitute underscores for dots in the url
     # (and replace underscores with dots here)
     pnum = pnum.replace('_', '.')
@@ -76,6 +80,8 @@ def get_sales_property_recent(request, pnum=None, format=None):
     Retrieve property info via parcel id (aka 'pnum'), for recent years only
     """
 
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
     return get_sales_property(request, pnum=pnum, years_back=5, format=format)
 
 
@@ -84,6 +90,8 @@ def get_sales_property_address(request, address=None, years_back=None, format=No
     """
     Retrieve property info via address
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # urls with dots are problematic: substitute underscores for dots in the url
     # (and replace underscores with dots here)
@@ -110,6 +118,8 @@ def get_sales_property_address_recent(request, address=None, format=None):
     Retrieve property info via address, for recent years only
     """
 
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
     return get_sales_property_address(request, address=address, years_back=5, format=format)
 
 @api_view(['GET'])
@@ -117,6 +127,8 @@ def get_parcel(request, pnum=None, format=None):
     """
     Return parcel data from the assessors dataset
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # clean up the pnum
     pnum = util.clean_pnum(pnum)
@@ -158,10 +170,12 @@ def get_parcel(request, pnum=None, format=None):
 
 class ParcelOwnershipGroupsView(APIView):
 
-    def get(request, owners=None, format=None):
+    def get(self, request, owners=None, format=None):
         """
         Return sets of parcels grouped by owner
         """
+
+        CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
         # TODO get cache working?
         # cache_key = 'ownership_groups'
@@ -188,6 +202,8 @@ def get_rental_cases(request, pnum=None, format=None):
     """
     Return rental unit cases from tidemark (oracle)
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # TODO need massive cleanup for tidemark pnums
     # clean up the pnum

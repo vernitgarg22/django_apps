@@ -16,6 +16,7 @@ from waste_notifier.util import *
 import cod_utils.util
 import cod_utils.security
 from cod_utils.messaging import MsgHandler
+from cod_utils.cod_logger import CODLogger
 
 
 @api_view(['POST'])
@@ -23,6 +24,8 @@ def subscribe_notifications(request):
     """
     Parse subscription request and text user request for confirmation
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):
@@ -94,6 +97,8 @@ def confirm_notifications(request):
     Parse subscription confirmation and send a simple response
     """
 
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
     # # Make sure the call came from twilio and is valid
     MsgHandler().validate(request)
 
@@ -131,6 +136,8 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):
@@ -299,6 +306,8 @@ def get_route_info(request, format=None):
     """
     Output information about each waste collection route, grouped by day
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # Build list of days -- each day will have a list of routes
     routes_by_day = [ { day: [] } for day in ScheduleDetail.DAYS[:-2] ]
