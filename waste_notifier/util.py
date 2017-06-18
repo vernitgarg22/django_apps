@@ -115,7 +115,7 @@ def get_service_message(services, date):
     """
     services = add_additional_services(services, date)
     message = "City of Detroit Public Works:  Your next pickup for {0} is {1}"
-    message = message.format(get_services_desc(services), date.strftime("%b %d, %Y"))
+    message = message.format(get_services_desc(services), date.strftime("%A, %B %d, %Y"))
     return add_message_instructions(message)
 
 def get_service_detail_message(services, detail):
@@ -133,12 +133,12 @@ def get_service_detail_message(services, detail):
         services = add_additional_services(services, detail.normal_day)
 
         detail_desc = "Pickups for {0} during the week of {1} are postponed by {2} {3} due to {4}".format(get_services_desc(services),
-            detail.normal_day.strftime("%b %d, %Y"), num_days, day_desc, detail.description)
+            detail.normal_day.strftime("%A, %B %d, %Y"), num_days, day_desc, detail.description)
 
     elif detail.detail_type == 'info':
         detail_desc = detail.description
     elif detail.detail_type == 'start-date' or detail.detail_type == 'end-date':
-        detail_desc = detail.description + ' ' + detail.new_day.strftime("%b %d, %Y")
+        detail_desc = detail.description + ' ' + detail.new_day.strftime("%A, %B %d, %Y")
 
     message = message + detail_desc
     if detail.note:

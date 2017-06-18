@@ -266,7 +266,7 @@ class WasteNotifierTests(TestCase):
         detail.save(null_waste_area_ids=True)
 
         message = views.get_service_message(['bulk'], datetime.date(2017, 7, 1))
-        self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Jul 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
+        self.assertEqual(message, 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Saturday, July 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
 
     def test_get_service_message_note(self):
         detail = ScheduleDetail(detail_type='info', service_type='all', description='Please note that service will be unaffected by Christmas Day', normal_day=datetime.date(2016, 12, 25), note='Please put trash and recycling bins on the curb on normal schedule')
@@ -431,7 +431,7 @@ class WasteNotifierTests(TestCase):
         # 20170522 is a monday - week 'b', so route 0 should get picked up
         response = c.post('/waste_notifier/send/20170522/')
         self.assertEqual(response.status_code, 200)
-        expected = {'all': {0: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'all': {0: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 5, 22))
         self.assertDictEqual(expected, response.data, "Phone number did not get reminder")
 
@@ -490,7 +490,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertEqual(response.status_code, 200)
-        expected = {'citywide': {'message': 'City of Detroit Public Works:  Pickups for recycling during the week of Apr 07, 2017 are postponed by 1 day due to test holiday (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = {'citywide': {'message': 'City of Detroit Public Works:  Pickups for recycling during the week of Friday, April 07, 2017 are postponed by 1 day due to test holiday (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Phone number should have gotten recycling reschedule alert")
 
@@ -522,7 +522,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170407/')
         self.assertEqual(response.status_code, 200)
-        expected = {'all': {8: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Apr 07, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
+        expected = {'all': {8: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Friday, April 07, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response.data, "Alerts for a/b onweek failed")
 
@@ -536,7 +536,7 @@ class WasteNotifierTests(TestCase):
         # get a week where only trash should be pickup up
         response = c.post('/waste_notifier/send/20170526/')
         self.assertEqual(response.status_code, 200)
-        expected = {'trash': {8: {'message': 'City of Detroit Public Works:  Your next pickup for trash is May 26, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'trash': {8: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Friday, May 26, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 5, 26))
         self.assertDictEqual(expected, response.data, "Alerts for a/b offweek failed")
 
@@ -547,9 +547,9 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
         date_results = {
-            '20170417': {'trash': {14: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Apr 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}},
+            '20170417': {'trash': {14: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Monday, April 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}},
             '20170418': {},
-            '20170419': {'recycling': {22: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Apr 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}},
+            '20170419': {'recycling': {22: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Wednesday, April 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}},
         }
 
         for date, expected in date_results.items():
@@ -566,7 +566,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170419/')
         self.assertEqual(response.status_code, 200)
-        expected = {'trash': {11: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Apr 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'trash': {11: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, April 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 19))
         self.assertDictEqual(expected, response.data, "Eastside wednesday trash residents should have gotten alerts")
 
@@ -578,7 +578,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170420/')
         self.assertEqual(response.status_code, 200)
-        expected = {'bulk': {35: {'message': 'City of Detroit Public Works:  Your next pickup for bulk is Apr 20, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'bulk': {35: {'message': 'City of Detroit Public Works:  Your next pickup for bulk is Thursday, April 20, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 20))
         self.assertDictEqual(expected, response.data, "Eastside thursday bulk A residents should have gotten alerts")
 
@@ -590,7 +590,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20170413/')
         self.assertEqual(response.status_code, 200)
-        expected = {'recycling': {28: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Apr 13, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'recycling': {28: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Thursday, April 13, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 13))
         self.assertDictEqual(expected, response.data, "Eastside thursday recycling B residents should have gotten alerts")
 
@@ -608,7 +608,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/?today=20170504')
         self.assertEqual(response.status_code, 200)
-        expected = {'all': {8: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is May 05, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'all': {8: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Friday, May 05, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 5, 5))
         self.assertDictEqual(expected, response.data, "Yard waste alerts get included whenever bulk pickup happens and yard waste pickup is active")
 
@@ -616,14 +616,14 @@ class WasteNotifierTests(TestCase):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
-        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts monday, April 17, 2017', new_day=datetime.date(2017, 4, 17))
+        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts Monday, April 17, 2017', new_day=datetime.date(2017, 4, 17))
         detail.clean()
         detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20170417/')
         self.assertEqual(response.status_code, 200)
-        expected = {'citywide': {'message': 'City of Detroit Public Works:  Citywide yard waste pickup starts monday, April 17, 2017 Apr 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = {'citywide': {'message': 'City of Detroit Public Works:  Citywide yard waste pickup starts Monday, April 17, 2017 Monday, April 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 17))
         self.assertDictEqual(expected, response.data, "Yard waste start date alert should have been sent")
 
@@ -641,7 +641,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.post('/waste_notifier/send/20171215/')
         self.assertEqual(response.status_code, 200)
-        expected = {'all': {8: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Dec 15, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}, 'citywide': {'message': 'City of Detroit Public Works:  Citywide yard waste pickup ends friday, December 15, 2017 Dec 15, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = {'all': {8: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Friday, December 15, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}, 'citywide': {'message': 'City of Detroit Public Works:  Citywide yard waste pickup ends friday, December 15, 2017 Friday, December 15, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date=datetime.date(2017, 12, 15))
         self.assertDictEqual(expected, response.data, "Yard waste end date alert should have been sent")
 
@@ -753,7 +753,7 @@ class WasteNotifierTests(TestCase):
 
         response = c.post('/waste_notifier/send/20170505/')
         self.assertEqual(response.status_code, 200)
-        expected = {'0': {'message': 'City of Detroit Public Works:  Pickups for bulk, recycling and trash during the week of May 05, 2017 are postponed by 1 day due to flooding in SouthWest Detroit (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = {'0': {'message': 'City of Detroit Public Works:  Pickups for bulk, recycling and trash during the week of Friday, May 05, 2017 are postponed by 1 day due to flooding in SouthWest Detroit (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date=datetime.date(2017, 5, 5))
         self.assertEqual(response.data, expected, "Schedule change can be made for specific route")
 
@@ -814,12 +814,12 @@ class WasteNotifierTests(TestCase):
 
         values = [
             ( datetime.datetime(2017, 5, 28), {} ),
-            ( datetime.datetime(2017, 5, 29), {'citywide': {'subscribers': ['5005550000', '5005550001', '5005550010', '5005550011', '5005550020', '5005550021', '5005550030', '5005550031', '5005550040', '5005550041'], 'message': 'City of Detroit Public Works:  Pickups for bulk, recycling, trash and yard waste during the week of May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}} ),
-            ( datetime.datetime(2017, 5, 30), {'recycling': {27: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'citywide': {'subscribers': ['5005550000', '5005550001', '5005550010', '5005550011', '5005550020', '5005550021', '5005550030', '5005550031', '5005550040', '5005550041'], 'message': 'City of Detroit Public Works:  Pickups for bulk, recycling, trash and yard waste during the week of May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 'trash': {0: {'subscribers': ['5005550001'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 14: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 5, 31), {'trash': {13: {'subscribers': ['5005550011'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {31: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {2: {'subscribers': ['5005550010'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 6, 1),  {'all': {4: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Jun 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550020']}}, 'trash': {5: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Jun 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550021']}}} ),
-            ( datetime.datetime(2017, 6, 2),  {'trash': {12: {'subscribers': ['5005550031'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Jun 02, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {7: {'subscribers': ['5005550030'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Jun 02, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 6, 3),  {'trash': {9: {'subscribers': ['5005550041'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Jun 03, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'week_type': 'b', 'date_applicable': '2017-06-03', 'dry_run': True, 'current_time': '2017-05-25 17:43'}, 'all': {8: {'subscribers': ['5005550040'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Jun 03, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
+            ( datetime.datetime(2017, 5, 29), {'citywide': {'subscribers': ['5005550000', '5005550001', '5005550010', '5005550011', '5005550020', '5005550021', '5005550030', '5005550031', '5005550040', '5005550041'], 'message': 'City of Detroit Public Works:  Pickups for bulk, recycling, trash and yard waste during the week of Monday, May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}} ),
+            ( datetime.datetime(2017, 5, 30), {'recycling': {27: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is Tuesday, May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'citywide': {'subscribers': ['5005550000', '5005550001', '5005550010', '5005550011', '5005550020', '5005550021', '5005550030', '5005550031', '5005550040', '5005550041'], 'message': 'City of Detroit Public Works:  Pickups for bulk, recycling, trash and yard waste during the week of Monday, May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 'trash': {0: {'subscribers': ['5005550001'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Tuesday, May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 14: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Tuesday, May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
+            ( datetime.datetime(2017, 5, 31), {'trash': {13: {'subscribers': ['5005550011'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {31: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {2: {'subscribers': ['5005550010'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
+            ( datetime.datetime(2017, 6, 1),  {'all': {4: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Thursday, June 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550020']}}, 'trash': {5: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Thursday, June 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550021']}}} ),
+            ( datetime.datetime(2017, 6, 2),  {'trash': {12: {'subscribers': ['5005550031'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Friday, June 02, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {7: {'subscribers': ['5005550030'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Friday, June 02, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
+            ( datetime.datetime(2017, 6, 3),  {'trash': {9: {'subscribers': ['5005550041'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Saturday, June 03, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'week_type': 'b', 'date_applicable': '2017-06-03', 'dry_run': True, 'current_time': '2017-05-25 17:43'}, 'all': {8: {'subscribers': ['5005550040'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Saturday, June 03, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
             ( datetime.datetime(2017, 6, 4), {} ),
         ]
 
@@ -850,10 +850,10 @@ class WasteNotifierTests(TestCase):
         with patch.object(MsgHandler, 'send_text', return_value=True) as mock_send_text:
             response = c.post("/waste_notifier/send/20170529/")
 
-        mock_send_text.assert_called_once_with('5005550006', 'City of Detroit Public Works:  Pickups for bulk, recycling and trash during the week of May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', False)
+        mock_send_text.assert_called_once_with('5005550006', 'City of Detroit Public Works:  Pickups for bulk, recycling and trash during the week of Monday, May 29, 2017 are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', False)
 
     def test_format_slack_alerts_summary(self):
-        content = {'trash': {11: {'subscribers': ['3136102012', '9174538684', '3135068800', '2484992308', '2676300369', '3133202044', '5869133397', '3134923996', '2679700026', '5863228964', '3137062742', '3135504576', '3138190143', '3138080122', '7347485413', '3138025608', '2487015166', '3134546860', '3134832492', '3138623021', '3133198115', '3137015482', '3132058535', '3133462045', '2489104129', '3134737118'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 5: {'subscribers': ['3138504195', '3135803973'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {4: {'subscribers': ['5865638822', '3135498078', '3137195691', '3137581842', '3137587477'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'date_applicable': '2017-05-31', 'dry_run': True, 'week_type': 'b', 'current_time': '2017-05-26 10:51'}, 'recycling': {22: {'subscribers': ['3134495504', '3133201794', '3134780304', '3134150028', '3134617273'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {34: {'subscribers': ['8109624844', '3132084486', '3137283175', '3136139213', '3134784213'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
+        content = {'trash': {11: {'subscribers': ['3136102012', '9174538684', '3135068800', '2484992308', '2676300369', '3133202044', '5869133397', '3134923996', '2679700026', '5863228964', '3137062742', '3135504576', '3138190143', '3138080122', '7347485413', '3138025608', '2487015166', '3134546860', '3134832492', '3138623021', '3133198115', '3137015482', '3132058535', '3133462045', '2489104129', '3134737118'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 5: {'subscribers': ['3138504195', '3135803973'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {4: {'subscribers': ['5865638822', '3135498078', '3137195691', '3137581842', '3137587477'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'date_applicable': '2017-05-31', 'dry_run': True, 'week_type': 'b', 'current_time': '2017-05-26 10:51'}, 'recycling': {22: {'subscribers': ['3134495504', '3133201794', '3134780304', '3134150028', '3134617273'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {34: {'subscribers': ['8109624844', '3132084486', '3137283175', '3136139213', '3134784213'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
         summary = format_slack_alerts_summary(content)
         expected = 'DPW Waste Pickup Reminder Summary:\n\nbulk\n\troute 34 - 5 reminders\nrecycling\n\troute 22 - 5 reminders\ntrash\n\troute 5 - 2 reminders\n\troute 11 - 26 reminders\n\nTotal reminders sent out:  38'
         self.assertEqual(summary, expected, "format_slack_alerts_summary() formats notifications summary correctly")
