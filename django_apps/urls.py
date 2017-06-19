@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework import routers
 import assessments.views
+import photo_survey.views
 import waste_notifier.views
 import waste_schedule.views
 
@@ -24,6 +25,7 @@ urlpatterns = [
 
     # apis
     url(r'^assessments/', include('assessments.urls', namespace="assessments")),
+    url(r'^photo_survey/', include('photo_survey.urls', namespace="photo_survey")),
     url(r'^waste_notifier/', include('waste_notifier.urls', namespace="waste_notifier")),
     url(r'^waste_schedule/', include('waste_schedule.urls', namespace="waste_schedule")),
     url(r'^weather_info/', include('weather_info.urls', namespace="weather_info")),
