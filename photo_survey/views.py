@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 
 from Lib import base64
@@ -43,9 +44,11 @@ def get_image(request, image_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
+    DJANGO_HOME = os.environ['DJANGO_HOME']
+
     data = None
     # image_path = 'photo_survey/demo_image.jpg'
-    image_path = "photo_survey/demo_images/demo_image1.jpg"
+    image_path = DJANGO_HOME + "/photo_survey/demo_images/demo_image1.jpg"
     with open(image_path, 'rb') as f:
         data = f.read()
     
