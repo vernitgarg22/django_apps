@@ -18,7 +18,7 @@ def get_survey_count(request, parcel_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    content = { "count": 0 }
+    content = { "count": 1 }
 
     return Response(content)
 
