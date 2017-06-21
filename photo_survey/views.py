@@ -4,6 +4,7 @@ import requests
 from Lib import base64
 
 from django.conf import settings
+from django.http import Http404
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -64,9 +65,11 @@ def get_image(request, image_path):
 
     data = None
     full_path = settings.AUTO_LOADED_DATA["PHOTO_SURVEY_IMAGE_PATH"] + decode_image_filename(image_path)
-    with open(full_path, 'rb') as f:
-        data = f.read()
 
-    encoded = base64.b64encode(data)
+    try:
+        with open(full_path, 'rb') as f:
+            data = f.read()
+    except FileNotFoundError as error:
+        raise Http404("File not found")
 
-    return Response(encoded)
+    return Response(base64.b64encode(data))
