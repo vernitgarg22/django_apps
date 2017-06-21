@@ -1,8 +1,9 @@
 import json
-import os
 import requests
 
 from Lib import base64
+
+from django.conf import settings
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -44,21 +45,20 @@ def get_metadata(request, parcel_id):
 
 
 @api_view(['GET'])
-def get_image(request, image_id):
+def get_image(request, image_path):
     """
     Return the given photo
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    DJANGO_HOME = os.environ['DJANGO_HOME']
-
     data = None
     # image_path = 'photo_survey/demo_image.jpg'
-    image_path = DJANGO_HOME + "/photo_survey/demo_images/demo_image1.jpg"
-    with open(image_path, 'rb') as f:
+    # image_path = DJANGO_HOME + "/photo_survey/demo_images/demo_image1.jpg"
+    full_path = settings.AUTO_LOADED_DATA["PHOTO_SURVEY_IMAGE_PATH"] + image_path
+    with open(full_path, 'rb') as f:
         data = f.read()
-    
+
     encoded = base64.b64encode(data)
 
     return Response(encoded)
