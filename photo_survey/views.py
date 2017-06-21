@@ -13,6 +13,16 @@ from cod_utils.cod_logger import CODLogger
 from photo_survey.models import Image, ImageMetadata
 
 
+def encode_image_filename(filename):
+    filename = filename.replace('/', '_')
+    return filename[0:-4]
+
+
+def decode_image_filename(filename):
+    filename = filename.replace('_', '/')
+    return filename + ".jpg"
+
+
 @api_view(['GET'])
 def get_survey_count(request, parcel_id):
     """
@@ -39,7 +49,7 @@ def get_metadata(request, parcel_id):
     images = []
     image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
     for img_meta in image_metadata:
-        images.append(img_meta.image.file_path)
+        images.append(encode_image_filename(img_meta.image.file_path))
 
     return Response({ "images": images })
 
@@ -53,9 +63,7 @@ def get_image(request, image_path):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     data = None
-    # image_path = 'photo_survey/demo_image.jpg'
-    # image_path = DJANGO_HOME + "/photo_survey/demo_images/demo_image1.jpg"
-    full_path = settings.AUTO_LOADED_DATA["PHOTO_SURVEY_IMAGE_PATH"] + image_path
+    full_path = settings.AUTO_LOADED_DATA["PHOTO_SURVEY_IMAGE_PATH"] + decode_image_filename(image_path)
     with open(full_path, 'rb') as f:
         data = f.read()
 
