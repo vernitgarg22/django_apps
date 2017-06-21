@@ -9,31 +9,38 @@ from rest_framework.response import Response
 
 from cod_utils.cod_logger import CODLogger
 
+from photo_survey.models import Image, ImageMetadata
+
 
 @api_view(['GET'])
 def get_survey_count(request, parcel_id):
     """
-    Get number of surveys that exist currently for the given parcel
+    Get number of images that exist currently for the given parcel.
+    TODO: Clarify if we can identify a single survey, and return number of surveys available?
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    content = { "count": 1 }
+    image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
+    content = { "count": len(image_metadata) }
 
     return Response(content)
 
 
 @api_view(['GET'])
-def get_photos(request, parcel_id):
+def get_metadata(request, parcel_id):
     """
     Get photos and survey data for the given parcel
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    content = { "images": [ "demo_image_id" ] }
+    images = []
+    image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
+    for img_meta in image_metadata:
+        images.append(img_meta.image.file_path)
 
-    return Response(content)
+    return Response({ "images": images })
 
 
 @api_view(['GET'])
