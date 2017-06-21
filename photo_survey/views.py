@@ -58,7 +58,8 @@ def get_metadata(request, parcel_id):
 @api_view(['GET'])
 def get_image(request, image_path):
     """
-    Return the given photo
+    Return the given photo as base64-encoded string
+    (note: when decoding the data you should first remove the quotes at the beginning and end of the string.)
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)

@@ -10,7 +10,7 @@ class Image(models.Model):
 
     file_path = models.CharField('Path to image file', max_length=256, unique=True, db_index=True)
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
         return self.file_path
 
 
@@ -26,7 +26,7 @@ class ImageMetadata(models.Model):
     note = models.CharField('Image note', max_length=128, blank=True)
     image = models.ForeignKey(Image)
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
         desc = str(self.image)
         desc = desc + ' - created at: ' + self.created_at.strftime("%Y-%m-%d %H:%M")
         if self.note:
@@ -37,9 +37,3 @@ class ImageMetadata(models.Model):
 # TODO:  Should we bother to have this class as well?
 # class Parcel(models.Model):
 #     app_label = 'photo_survey'
-
-
-# from photo_survey.models import Image, ImageMetadata
-# from datetime import datetime
-# img = Image(file_path='foobar.jpg')
-# img_meta = ImageMetadata(image=img, parcel_id='parcel_id', created_at=datetime.now(), note='test image')
