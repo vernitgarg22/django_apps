@@ -3,7 +3,7 @@ from django.db import models
 
 class Image(models.Model):
     """
-    Contains information required to retrieve an image
+    Contains information required to retrieve an image.
     """
 
     app_label = 'photo_survey'
@@ -14,9 +14,36 @@ class Image(models.Model):
         return self.file_path
 
 
+class SurveyTemplate(models.Model):
+    """
+    Defines different types of surveys.
+    """
+
+    app_label = 'photo_survey'
+
+    survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
+    user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
+    question_id = models.CharField('Question identifier', max_length=64)
+    question_number = models.PositiveIntegerField('Question number', unique=False)
+    question_text = models.CharField('Question', max_length=256, unique=False, help_text='The actual human-readable question itself')
+    valid_answers = models.CharField('Valid answers', max_length=256, unique=False, help_text="Pipe-delimited list of valid answers ('*' = anything)")
+
+
+class SurveyData(models.Model):
+    """
+    Stores field survey answers.
+    """
+
+    app_label = 'photo_survey'
+
+    survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
+    question_id = models.CharField('Question identifier', max_length=64)
+    answer = models.CharField("Answer", max_length=1024)
+
+
 class ImageMetadata(models.Model):
     """
-    Contains information about a specific image
+    Contains information about a specific image.
     """
 
     app_label = 'photo_survey'
