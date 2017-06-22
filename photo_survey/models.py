@@ -22,7 +22,6 @@ class SurveyTemplate(models.Model):
     app_label = 'photo_survey'
 
     survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
-    user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
     question_id = models.CharField('Question identifier', max_length=64)
     question_number = models.PositiveIntegerField('Question number', unique=False)
     question_text = models.CharField('Question', max_length=256, unique=False, help_text='The actual human-readable question itself')
@@ -36,6 +35,7 @@ class SurveyData(models.Model):
 
     app_label = 'photo_survey'
 
+    user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
     survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
     question_id = models.CharField('Question identifier', max_length=64)
     answer = models.CharField("Answer", max_length=1024)
