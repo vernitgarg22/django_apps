@@ -6,12 +6,13 @@ from Lib import base64
 from django.conf import settings
 from django.http import Http404
 
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from cod_utils.cod_logger import CODLogger
 
-from photo_survey.models import Image, ImageMetadata
+from photo_survey.models import Image, ImageMetadata, SurveyTemplate, SurveyData
 
 
 # TODO remove this, if possible?
@@ -98,17 +99,36 @@ def post_survey(request, parcel_id):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     parcel_id = clean_parcel_id(parcel_id)
+    data = json.loads(request.body.decode('utf-8'))
+    answer_errors = {}
 
-    return Response({})
+    # What are our questions and answers?
+    questions = { question.question_id: question for question in SurveyTemplate.objects.filter(survey_template_id=data['survey_id']) }
+    answers = { answer['question_id']: answer for answer in data['answers'] }
 
+    # Validate each answer
+    for question_id in questions.keys():
+        if not answers.get(question_id):
+            answer_errors[question_id] = "question answer is required"
+        else:
+            answer = answers[question_id]
+            question = questions[question_id]
+            if not question.is_valid(answer['answer']):
+                answer_errors[question_id] = "question answer is invalid"
 
+    # Report invalid content?
+    if answer_errors:
+        return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Save all the answers
+    for answer in answers.values():
+        SurveyData(**answer).save()
+
+    return Response({ "answers": answers }, status=status.HTTP_201_CREATED)
 
 
 #
 # TODO:
 #
-# - add ability to post survey answers
 # - add ability to return survey answers
-# - 
 # 

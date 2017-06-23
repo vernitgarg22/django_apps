@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 
@@ -14,20 +16,7 @@ class Image(models.Model):
         return self.file_path
 
 
-class SurveyTemplate(models.Model):
-    """
-    Defines different types of surveys.
-    """
-
-    app_label = 'photo_survey'
-
-    survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
-    question_id = models.CharField('Question identifier', max_length=64)
-    question_number = models.PositiveIntegerField('Question number', unique=False)
-    question_text = models.CharField('Question', max_length=256, unique=False, help_text='The actual human-readable question itself')
-    valid_answers = models.CharField('Valid answers', max_length=256, unique=False, help_text="Pipe-delimited list of valid answers ('*' = anything)")
-
-
+# TODO: rename this to "SurveyAnswer?"
 class SurveyData(models.Model):
     """
     Stores field survey answers.
@@ -39,6 +28,46 @@ class SurveyData(models.Model):
     survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
     question_id = models.CharField('Question identifier', max_length=64)
     answer = models.CharField("Answer", max_length=1024)
+
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
+        return "user: " + self.user_id + \
+            " survey: " + self.survey_template_id + \
+            " question: " + self.question_id + \
+            " answer: " + self.answer
+
+
+# TODO: rename this to "SurveyQuestion?"
+class SurveyTemplate(models.Model):
+    """
+    Defines different types of surveys.
+    """
+
+    app_label = 'photo_survey'
+
+    survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
+    question_id = models.CharField('Question identifier', max_length=64)
+    question_number = models.PositiveIntegerField('Question number', unique=False)
+    question_text = models.CharField('Question', max_length=256, unique=False, help_text='The actual human-readable question itself')
+
+    # TODO rename valid_answers?
+    valid_answers = models.CharField('Valid answers', max_length=256, unique=False, help_text="Pipe-delimited list of valid answers ('*' = anything)")
+
+    def is_valid(self, answer):
+        """
+        Return True if answer is valid
+        TODO check if is_xyz() is correct method name?
+        """
+
+        return len(answer) > 0
+
+        # return re.search(self.valid_answers, answer)
+
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
+        return "survey: " + self.survey_template_id + \
+            " question: " + self.question_id + \
+            " " + str(self.question_number) + \
+            " " + self.question_text + \
+            " (valid answers: " + self.valid_answers + ")"
 
 
 class ImageMetadata(models.Model):
