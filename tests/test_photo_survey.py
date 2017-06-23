@@ -56,3 +56,41 @@ class PhotoSurveyTests(TestCase):
 
         response = c.get('/photo_survey/image/wrong/')
         self.assertEqual(response.status_code, 404)
+
+    def test_post_survey(self):
+        c = Client()
+
+        survey_answer_data = {
+            "survey_id": "default",
+            "user_id": "xyz",
+            "answers": [
+            {
+              "question_id": "parcel_id",
+              "answer": "<test_parcel_id>"
+            },
+            {
+              "question_id": "needs_intervention",
+              "answer": "y"
+            },
+            {
+              "question_id": "lot_or_structure",
+              "answer": "structure"
+            },
+            {
+              "question_id": "structure_with_blight",
+              "answer": "a"
+            },
+            {
+              "question_id": "elements_of_structure",
+              "answer": "b,c,d"
+            },
+            {
+              "question_id": "elements_of_lot",
+              "answer": "a,f"
+            }
+          ]
+        }
+
+        response = c.post('/photo_survey/survey/test_parcel_id/', survey_answer_data)
+        self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers")
+        # self.assertEqual(True, True, "/photo_survey/survey/ stores field survey answers")
