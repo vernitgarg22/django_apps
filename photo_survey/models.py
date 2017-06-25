@@ -58,9 +58,7 @@ class SurveyTemplate(models.Model):
         TODO check if is_xyz() is correct method name?
         """
 
-        return len(answer) > 0
-
-        # return re.search(self.valid_answers, answer)
+        return answer and re.fullmatch(self.valid_answers, answer)
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
         return "survey: " + self.survey_template_id + \
