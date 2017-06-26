@@ -1,4 +1,5 @@
 import json
+import re
 import requests
 
 from Lib import base64
@@ -90,6 +91,15 @@ def get_image(request, image_path):
     return Response(base64.b64encode(data))
 
 
+def is_question_answer_required(question, answers):
+    if question.required_by == 'n':
+        return False
+    if question.required_by and question.required_by_answer:
+        previous_answer = answers.get(question.required_by, {}).get('answer')
+        return previous_answer and re.fullmatch(question.required_by_answer, previous_answer)
+    return True
+
+
 @api_view(['POST'])
 def post_survey(request, parcel_id):
     """
@@ -103,21 +113,22 @@ def post_survey(request, parcel_id):
     answer_errors = {}
 
     # What are our questions and answers?
-    questions = { question.question_id: question for question in SurveyTemplate.objects.filter(survey_template_id=data['survey_id']) }
+    questions = SurveyTemplate.objects.filter(survey_template_id=data['survey_id']).order_by('question_number')
     answers = { answer['question_id']: answer for answer in data['answers'] }
 
     # Validate each answer
-    for question_id in questions.keys():
-        # if not answers.get(question_id):
-        #     answer_errors[question_id] = "question answer is required"
-        # else:
-
-        # TODO figure out a way to make answers dependent on other answers
-        if answers.get(question_id):
-            answer = answers[question_id]
-            question = questions[question_id]
+    for question in questions:
+        if not answers.get(question.question_id):
+            if is_question_answer_required(question, answers):
+                answer_errors[question.question_id] = "question answer is required"
+        else:
+            answer = answers[question.question_id]
             if not question.is_valid(answer['answer']):
-                answer_errors[question_id] = "question answer is invalid"
+                answer_errors[question.question_id] = "question answer is invalid"
+            elif question.answer_trigger and question.answer_trigger_action:
+                # TODO clean this up
+                if re.fullmatch(question.answer_trigger, answer['answer']) and question.answer_trigger_action == 'exit':
+                    break
 
     # Report invalid content?
     if answer_errors:

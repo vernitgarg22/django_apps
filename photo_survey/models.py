@@ -52,8 +52,10 @@ class SurveyTemplate(models.Model):
     # TODO rename valid_answers?
     valid_answers = models.CharField('Valid answers', max_length=256, unique=False, help_text="Pipe-delimited list of valid answers ('*' = anything)")
 
-    required_by = models.CharField('Required by', max_length=64, null=True, blank=True, unique=False, help_text='Question / Answer pair that makes this required')
-    required_by_answer = models.CharField('Required by answer', max_length=64, null=True, blank=True, unique=False, help_text='Specific Answer pattern that makes this required')
+    required_by = models.CharField('Required by', max_length=64, blank=True, default='', unique=False, help_text="Question / Answer pair that makes answer required. 'n' makes answer optional. Default is required")
+    required_by_answer = models.CharField('Required by answer', max_length=64, blank=True, default='', unique=False, help_text='Specific answer pattern that makes this required')
+    answer_trigger = models.CharField('Answer trigger', max_length=16, blank=True, default='', unique=False, help_text="Required action for a given answer. e.g., 'n'")
+    answer_trigger_action = models.CharField('Trigger action', max_length=16, blank=True, default='', unique=False, help_text="Action to take if a trigger goes off. e.g., 'stop'")
 
     def is_valid(self, answer):
         """
