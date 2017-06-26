@@ -136,6 +136,7 @@ def post_survey(request, parcel_id):
 
     # Save all the answers
     for answer in answers.values():
+        answer['parcel_id'] = parcel_id
         SurveyData(**answer).save()
 
     return Response({ "answers": answers }, status=status.HTTP_201_CREATED)

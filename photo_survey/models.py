@@ -26,6 +26,7 @@ class SurveyData(models.Model):
 
     user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
     survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
+    parcel_id = models.CharField('Path to image file', max_length=32, unique=False, db_index=True)
     question_id = models.CharField('Question identifier', max_length=64)
     answer = models.CharField("Answer", max_length=1024)
 
