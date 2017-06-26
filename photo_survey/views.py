@@ -1,8 +1,7 @@
+import base64
 import json
 import re
 import requests
-
-from Lib import base64
 
 from django.conf import settings
 from django.http import Http404
