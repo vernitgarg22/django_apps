@@ -76,9 +76,18 @@ class ImageMetadata(models.Model):
     app_label = 'photo_survey'
 
     parcel_id = models.CharField('Path to image file', max_length=32, unique=False, db_index=True)
-    created_at = models.DateTimeField('Time when image was added')
-    note = models.CharField('Image note', max_length=128, blank=True)
     image = models.ForeignKey(Image)
+    created_at = models.DateTimeField('Time when image was created')
+    # TODO: get lat/long/altitude working
+    # latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True)
+    # longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True)
+    # altitude = models.DecimalField(max_digits=6, decimal_places=3, blank=True)
+    house_number = models.IntegerField('House number', unique=False, null=True, blank=True)
+    street_name = models.CharField('Street name', max_length=128, null=True, blank=True, unique=False)
+    street_type = models.CharField('Street type', max_length=32, null=True, blank=True, unique=False)
+    zipcode = models.CharField('zipcode', max_length=16, blank=True, null=True, unique=False)
+    common_name = models.CharField('Common name', max_length=128, null=True, blank=True, unique=False)
+    note = models.CharField('Image note', max_length=128, null=True, blank=True)
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
         desc = str(self.image)

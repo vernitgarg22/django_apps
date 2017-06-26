@@ -108,9 +108,12 @@ def post_survey(request, parcel_id):
 
     # Validate each answer
     for question_id in questions.keys():
-        if not answers.get(question_id):
-            answer_errors[question_id] = "question answer is required"
-        else:
+        # if not answers.get(question_id):
+        #     answer_errors[question_id] = "question answer is required"
+        # else:
+
+        # TODO figure out a way to make answers dependent on other answers
+        if answers.get(question_id):
             answer = answers[question_id]
             question = questions[question_id]
             if not question.is_valid(answer['answer']):
