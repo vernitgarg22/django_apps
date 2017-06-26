@@ -105,6 +105,8 @@ def post_survey(request, parcel_id):
     Post results of a field survey
     """
 
+    # TODO  verify that parcel_id matches answer in json?
+
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     parcel_id = clean_parcel_id(parcel_id)
@@ -137,6 +139,8 @@ def post_survey(request, parcel_id):
     for answer in answers.values():
         answer['parcel_id'] = parcel_id
         SurveyData(**answer).save()
+
+    # TODO verify that at least 1 answer got saved?
 
     return Response({ "answers": answers }, status=status.HTTP_201_CREATED)
 
