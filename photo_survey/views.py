@@ -117,15 +117,15 @@ def post_survey(request, parcel_id):
     # What are our questions and answers?
     questions = SurveyTemplate.objects.filter(survey_template_id=data['survey_id']).order_by('question_number')
     if not questions:
-        return Response("Invalid survey template id: " + str(data['survey_id']), status=status.HTTP_400_BAD_REQUEST)
+        return Response({ "invalid survey":  data['survey_id']}, status=status.HTTP_400_BAD_REQUEST)
 
     answers = { answer['question_id']: answer for answer in data['answers'] }
 
     # Report any answers that did not match a question_id
-    keys = { question.question_id for question in questions }
-    orphaned_answers = [ answer for answer in answers.values() if answer['question_id'] not in keys ]
+    question_ids = { question.question_id for question in questions }
+    orphaned_answers = { key for key in answers.keys() if key not in question_ids }
     if orphaned_answers:
-        return Response({ "invalid question ids": orphaned_answers }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({ "invalid question ids": list(orphaned_answers) }, status=status.HTTP_400_BAD_REQUEST)
 
     # Validate each answer
     for question in questions:
