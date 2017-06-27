@@ -108,8 +108,6 @@ def post_survey(request, parcel_id):
     Post results of a field survey
     """
 
-    # TODO  verify that parcel_id matches answer in json?
-
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     parcel_id = clean_parcel_id(parcel_id)
@@ -118,28 +116,36 @@ def post_survey(request, parcel_id):
 
     # What are our questions and answers?
     questions = SurveyTemplate.objects.filter(survey_template_id=data['survey_id']).order_by('question_number')
+    if not questions:
+        return Response("Invalid survey template id: " + str(data['survey_id']), status=status.HTTP_400_BAD_REQUEST)
+
     answers = { answer['question_id']: answer for answer in data['answers'] }
+
+    # Report any answers that did not match a question_id
+    keys = { question.question_id for question in questions }
+    orphaned_answers = [ answer for answer in answers.values() if answer['question_id'] not in keys ]
+    if orphaned_answers:
+        return Response({ "invalid question ids": orphaned_answers }, status=status.HTTP_400_BAD_REQUEST)
 
     # Validate each answer
     for question in questions:
-        if not answers.get(question.question_id):
-            if is_answer_required(question, answers):
-                answer_errors[question.question_id] = "question answer is required"
-        else:
-            answer = answers[question.question_id]
+        answer = answers.get(question.question_id)
+        if answer and answer['answer']:
             if not question.is_valid(answer['answer']):
                 answer_errors[question.question_id] = "question answer is invalid"
             elif question.answer_trigger and question.answer_trigger_action:
-                # TODO clean this up
+                # TODO clean this up - add 'skip to question' feature
                 if re.fullmatch(question.answer_trigger, answer['answer']) and question.answer_trigger_action == 'exit':
                     break
+        elif is_answer_required(question, answers):
+            answer_errors[question.question_id] = "question answer is required"
 
     # Report invalid content?
     if answer_errors:
         return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Save all the answers
-    for answer in answers.values():
+    for answer in (a for a in answers.values() if a['answer']):
         answer['parcel_id'] = parcel_id
         SurveyData(**answer).save()
 
