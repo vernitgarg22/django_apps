@@ -40,6 +40,31 @@ def build_survey_template():
         template = SurveyTemplate(**row)
         template.save()
 
+def build_survey_template_combined():
+    data = [
+        { "survey_template_id": "default_combined", "question_id": "is_structure_on_site",         "question_number": 1,  "question_text": "Is there a structure on site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
+        { "survey_template_id": "default_combined", "question_id": "is_structure_occupied",        "question_number": 2,  "question_text": "Is the structure occupied?",                                 "valid_answers": "[a-d]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_template_id": "default_combined", "question_id": "site_use_type",                "question_number": 3,  "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_template_id": "default_combined", "question_id": "num_residential_units",        "question_number": 4,  "question_text": "How many residential units?",                                "valid_answers": "[a-d]",   "required_by": "site_use_type",             "required_by_answer": "a" },
+        { "survey_template_id": "default_combined", "question_id": "residence_type",               "question_number": 5,  "question_text": "What type of residences?",                                   "valid_answers": "[a-c]",   "required_by": "site_use_type",             "required_by_answer": "a" },
+        { "survey_template_id": "default_combined", "question_id": "commercial_occupants_type",    "question_number": 6,  "question_text": "What type of commercial occupant(s)?",                       "valid_answers": "[a-h]",   "required_by": "site_use_type",             "required_by_answer": "b|c" },
+        { "survey_template_id": "default_combined", "question_id": "industrial_occupants_type",    "question_number": 7,  "question_text": "What type of industrial occupant(s)?",                       "valid_answers": "[a-d]",   "required_by": "site_use_type",             "required_by_answer": "d" },
+        { "survey_template_id": "default_combined", "question_id": "institutional_occupants_type", "question_number": 8,  "question_text": "What type of institutional occupant(s)?",                    "valid_answers": "[a-h]",   "required_by": "site_use_type",             "required_by_answer": "e" },
+        { "survey_template_id": "default_combined", "question_id": "structure_condition",          "question_number": 9,  "question_text": "What is the condition of the structure?",                    "valid_answers": "[a-d]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_template_id": "default_combined", "question_id": "is_structure_fire_damaged",    "question_number": 10, "question_text": "Is the structure fire damaged?",                             "valid_answers": "y|n",     "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_template_id": "default_combined", "question_id": "fire_damage_level",            "question_number": 11, "question_text": "What is the level of fire damage?",                          "valid_answers": "[a-c]",   "required_by": "is_structure_fire_damaged", "required_by_answer": "y" },
+        { "survey_template_id": "default_combined", "question_id": "is_structure_secure",          "question_number": 12, "question_text": "Is the building secure or open to trespass?",                "valid_answers": "y|n",     "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_template_id": "default_combined", "question_id": "site_use",                     "question_number": 13, "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "",                          "required_by_answer": "" },
+        { "survey_template_id": "default_combined", "question_id": "is_lot_maintained",            "question_number": 14, "question_text": "Is the lot maintained?",                                     "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
+        { "survey_template_id": "default_combined", "question_id": "is_dumping_on_site",           "question_number": 15, "question_text": "Is there dumping on the site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
+        { "survey_template_id": "default_combined", "question_id": "blighted_lot_elements",        "question_number": 16, "question_text": "Elements of the blighted lot (select all that apply)",       "valid_answers": "[a-m,]+", "required_by": "n" },
+        { "survey_template_id": "default_combined", "question_id": "blighted_structure_elements",  "question_number": 17, "question_text": "Elements of the blighted structure (select all that apply)", "valid_answers": "[a-o,]+", "required_by": "n" },
+    ]
+
+    for row in data:
+        template = SurveyTemplate(**row)
+        template.save()
+
 def get_default_survey_answers():
     return {
       "survey_id": "default",
@@ -172,6 +197,31 @@ def get_edgars_survey_answers():
       ]
     }
 
+def get_combined_survey_answers():
+    return {
+        "survey_id": "default_combined",
+        "user_id": "xyz",
+        "answers": [
+            { "question_id": "is_structure_on_site", "answer": "y" },
+            { "question_id": "is_structure_occupied", "answer": "a" },
+            { "question_id": "site_use_type", "answer": "b" },
+            { "question_id": "num_residential_units", "answer": "" },
+            { "question_id": "residence_type", "answer": "" },
+            { "question_id": "commercial_occupants_type", "answer": "a" },
+            { "question_id": "industrial_occupants_type", "answer": "" },
+            { "question_id": "institutional_occupants_type", "answer": "" },
+            { "question_id": "structure_condition", "answer": "b" },
+            { "question_id": "is_structure_fire_damaged", "answer": "n" },
+            { "question_id": "fire_damage_level", "answer": "" },
+            { "question_id": "is_structure_secure", "answer": "y" },
+            { "question_id": "site_use", "answer": "e" },
+            { "question_id": "is_lot_maintained", "answer": "y" },
+            { "question_id": "is_dumping_on_site", "answer": "n" },
+            { "question_id": "blighted_lot_elements", "answer": "" },
+            { "question_id": "blighted_structure_elements", "answer": "" }
+        ]
+    }
+
 
 class PhotoSurveyUtilTests(TestCase):
 
@@ -223,6 +273,15 @@ class PhotoSurveyTests(TestCase):
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_default_survey_answers()), content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers")
 
+    def test_post_survey_combined(self):
+
+        build_survey_template_combined()
+
+        c = Client()
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), content_type="application/json")
+        self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores combined field survey answers")
+
     def test_post_survey_parcel_ok(self):
 
         build_survey_template()
@@ -257,11 +316,46 @@ class PhotoSurveyTests(TestCase):
         c = Client()
 
         survey_answers = get_default_survey_answers()
-        survey_answers['answers'][0]['answer'] = ''
+        survey_answers['answers'][1]['answer'] = 'x'
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid data")
-        self.assertEqual({'parcel_id': 'question answer is invalid'}, response.data, "Parcel id is identified as invalid")
+        self.assertEqual({'needs_intervention': 'question answer is invalid'}, response.data, "Parcel id is identified as invalid")
+
+    def test_post_survey_missing_data(self):
+
+        build_survey_template()
+
+        c = Client()
+
+        survey_answers = get_default_survey_answers()
+        survey_answers['answers'][0] = { "question_id": "parcel_id", "answer": "" }
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags missing data")
+        self.assertEqual({'parcel_id': 'question answer is required'}, response.data, "Parcel id is identified as required")
+
+    def test_invalid_survey_template(self):
+        c = Client()
+
+        survey_answers = get_default_survey_answers()
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid survey template")
+        self.assertEqual({'invalid survey': 'default'}, response.data, "Parcel id is identified as required")
+
+    def test_invalid_question_ids(self):
+
+        build_survey_template()
+
+        c = Client()
+
+        survey_answers = get_default_survey_answers()
+        survey_answers['answers'].append({ "question_id": "invalid", "answer": "" })
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid survey template")
+        self.assertEqual({'invalid question ids': ['invalid']}, response.data, "Parcel id is identified as required")
 
     def test_post_survey_structure_edgar(self):
 
@@ -271,16 +365,3 @@ class PhotoSurveyTests(TestCase):
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_edgars_survey_answers()), content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers from edgar")
-
-    def test_post_survey_missing_data(self):
-
-        build_survey_template()
-
-        c = Client()
-
-        survey_answers = get_default_survey_answers()
-        survey_answers['answers'][0] = { "question_id": "parcel_id_xyz", "answer": "<test_parcel_id>" }
-
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
-        self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags missing data")
-        self.assertEqual({'parcel_id': 'question answer is required'}, response.data, "Parcel id is identified as required")
