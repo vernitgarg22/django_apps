@@ -172,6 +172,14 @@ def get_edgars_survey_answers():
       ]
     }
 
+
+class PhotoSurveyUtilTests(TestCase):
+
+    def test_answer_not_required(self):
+        question = SurveyTemplate(survey_template_id='test', question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
+        self.assertFalse(photo_survey.views.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
+
+
 class PhotoSurveyTests(TestCase):
 
     def setUp(self):
@@ -255,8 +263,7 @@ class PhotoSurveyTests(TestCase):
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid data")
         self.assertEqual({'parcel_id': 'question answer is invalid'}, response.data, "Parcel id is identified as invalid")
 
-
-    def test_post_survey_structure_bad(self):
+    def test_post_survey_structure_edgar(self):
 
         build_survey_template()
 
@@ -264,8 +271,6 @@ class PhotoSurveyTests(TestCase):
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_edgars_survey_answers()), content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers from edgar")
-
-
 
     def test_post_survey_missing_data(self):
 

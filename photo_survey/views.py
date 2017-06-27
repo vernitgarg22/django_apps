@@ -90,7 +90,10 @@ def get_image(request, image_path):
     return Response(base64.b64encode(data))
 
 
-def is_question_answer_required(question, answers):
+def is_answer_required(question, answers):
+    """
+    Returns True if the answer is required
+    """
     if question.required_by == 'n':
         return False
     if question.required_by and question.required_by_answer:
@@ -120,7 +123,7 @@ def post_survey(request, parcel_id):
     # Validate each answer
     for question in questions:
         if not answers.get(question.question_id):
-            if is_question_answer_required(question, answers):
+            if is_answer_required(question, answers):
                 answer_errors[question.question_id] = "question answer is required"
         else:
             answer = answers[question.question_id]
