@@ -50,10 +50,14 @@ def get_metadata(request, parcel_id):
 
     parcel_id = clean_parcel_id(parcel_id)
 
+    # TODO possibly optimize the images on the disk?
+    # https://hugogiraudel.com/2013/07/29/optimizing-with-bash/
+    # e.g., jpegtran -progressive image_raw.jpg small.jpg
+
     images = []
     image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
     for img_meta in image_metadata:
-        images.append('/photo_survey_images/' + img_meta.image.file_path)
+        images.append('/data/photo_survey/images/' + img_meta.image.file_path)
 
     return Response({ "images": images })
 
