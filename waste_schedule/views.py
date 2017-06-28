@@ -41,6 +41,14 @@ def add_route_pickup_info(route, service, today):
     next_pickup = get_next_pickup(today=today, next_day=route['day'], week=week)
 
     # check for any schedule changes
+
+    #
+    # TODO: Check if there any schedule changes (that are specifically set up for this route or city-wide)
+    # occurring on the same day as 'next_pickup' or earlier that same week.  If there are, postpone by 1 day.
+    #
+    # See ScheduleDetailMgr.instance().get_week_schedule_changes(today)
+    #
+
     schedule_changes = ScheduleDetail.get_schedule_changes(route['route'], next_pickup)
     if schedule_changes:
         next_pickup = schedule_changes[0].new_day
