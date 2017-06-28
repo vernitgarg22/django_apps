@@ -249,20 +249,7 @@ class PhotoSurveyTests(TestCase):
 
         response = c.get('/photo_survey/testparcelid/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({'images': ['demoimage1']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
-
-    def test_get_image(self):
-        c = Client()
-
-        response = c.get('/photo_survey/image/demoimage1/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(3002556, len(response.data), "/photo_survey/image/<image id>/ returns an image")
-
-    def test_get_image_404(self):
-        c = Client()
-
-        response = c.get('/photo_survey/image/wrong/')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual({'images': ['/photo_survey_images/demoimage1.jpg']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
 
     def test_post_survey(self):
 
