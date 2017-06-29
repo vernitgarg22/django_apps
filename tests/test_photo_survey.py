@@ -7,7 +7,7 @@ from django.test import TestCase
 import tests.disabled
 
 from photo_survey.models import Image, ImageMetadata
-from photo_survey.models import SurveyTemplate, SurveyData
+from photo_survey.models import SurveyQuestion, SurveyAnswer
 import photo_survey.views
 
 
@@ -17,15 +17,17 @@ def cleanup_model(model):
 def cleanup_db():
     cleanup_model(Image)
     cleanup_model(ImageMetadata)
-    cleanup_model(SurveyTemplate)
-    cleanup_model(SurveyData)
+    cleanup_model(SurveyQuestion)
+    cleanup_model(SurveyAnswer)
 
 def build_image_data():
     image = Image(file_path='demoimage1.jpg')
     image.save()
-    image_metadata = ImageMetadata(image=image, parcel_id='testparcelid', created_at=datetime.now(), note='test image')
+
+    image_metadata = ImageMetadata(image=image, parcel_id='testparcelid', created_at=datetime.now(), latitude=0, longitude=0, altitude=0, note='test image')
     image_metadata.save()
 
+# TODO rename these
 def build_survey_template():
     data = [
         { "survey_template_id": "default", "question_id": "parcel_id", "question_number": 1, "question_text": "Location information", "valid_answers": ".*", "required_by": "y" },
@@ -37,7 +39,7 @@ def build_survey_template():
     ]
 
     for row in data:
-        template = SurveyTemplate(**row)
+        template = SurveyQuestion(**row)
         template.save()
 
 def build_survey_template_combined():
@@ -62,7 +64,7 @@ def build_survey_template_combined():
     ]
 
     for row in data:
-        template = SurveyTemplate(**row)
+        template = SurveyQuestion(**row)
         template.save()
 
 def get_default_survey_answers():
@@ -230,7 +232,7 @@ def get_combined_survey_answers():
 class PhotoSurveyUtilTests(TestCase):
 
     def test_answer_not_required(self):
-        question = SurveyTemplate(survey_template_id='test', question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
+        question = SurveyQuestion(survey_template_id='test', question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
         self.assertFalse(photo_survey.views.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
 
 
@@ -272,7 +274,7 @@ class PhotoSurveyTests(TestCase):
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores combined field survey answers")
-        self.assertEqual(response.data['parcel_survey_info'], { 'nearby_parcel_id': 0, 'testparcelid': 10 }, "/photo_survey/survey/ returns info about existing surveys")
+        self.assertEqual(response.data['parcel_survey_info'], { 'nearby_parcel_id': 0, 'testparcelid': 1 }, "/photo_survey/survey/ returns info about existing surveys")
 
     def test_post_survey_parcel_ok(self):
 
