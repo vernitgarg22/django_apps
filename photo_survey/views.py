@@ -4,6 +4,7 @@ import requests
 
 from django.conf import settings
 from django.http import Http404
+from django.db.models import Count
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -74,6 +75,17 @@ def is_answer_required(question, answers):
     return True
 
 
+def check_parcels(parcel_ids):
+
+    survey_info = { parcel_id: 0 for parcel_id in parcel_ids }
+
+    survey_counts = SurveyData.objects.values('parcel_id').annotate(count=Count('parcel_id'))
+    for survey_count in survey_counts:
+        survey_info[survey_count['parcel_id']] = survey_count['count']
+
+    return survey_info
+
+
 @api_view(['POST'])
 def post_survey(request, parcel_id):
     """
@@ -123,7 +135,11 @@ def post_survey(request, parcel_id):
 
     # TODO verify that at least 1 answer got saved?
 
-    return Response({ "answers": answers }, status=status.HTTP_201_CREATED)
+
+    # Indicate number of surveys present for each parcel id in the request
+    parcel_info = check_parcels(data.get('parcel_ids', []))
+
+    return Response({ "answers": answers, "parcel_survey_info": parcel_info }, status=status.HTTP_201_CREATED)
 
 
 #

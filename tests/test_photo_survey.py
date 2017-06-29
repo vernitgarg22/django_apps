@@ -219,6 +219,10 @@ def get_combined_survey_answers():
             { "question_id": "is_dumping_on_site", "answer": "n" },
             { "question_id": "blighted_lot_elements", "answer": "" },
             { "question_id": "blighted_structure_elements", "answer": "" }
+        ],
+        "parcel_ids": [
+          "testparcelid",
+          "nearby_parcel_id"
         ]
     }
 
@@ -249,7 +253,7 @@ class PhotoSurveyTests(TestCase):
 
         response = c.get('/photo_survey/testparcelid/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({'images': ['/photo_survey_images/demoimage1.jpg']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
+        self.assertEqual({'images': ['/data/photo_survey/images/demoimage1.jpg']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
 
     def test_post_survey(self):
 
@@ -268,6 +272,7 @@ class PhotoSurveyTests(TestCase):
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores combined field survey answers")
+        self.assertEqual(response.data['parcel_survey_info'], { 'nearby_parcel_id': 0, 'testparcelid': 10 }, "/photo_survey/survey/ returns info about existing surveys")
 
     def test_post_survey_parcel_ok(self):
 
