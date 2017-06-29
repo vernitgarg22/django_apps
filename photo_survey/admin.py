@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import SurveyTemplate
+from .models import SurveyQuestion
 
 
-class SurveyTemplateAdmin(admin.ModelAdmin):
+class SurveyQuestionAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['survey_template_id', 'question_id', 'question_number', 'question_text', 'valid_answers', 'required_by', 'required_by_answer', 'answer_trigger', 'answer_trigger_action']}),
         # ('Destination', {'fields': ['destination'], 'classes': ['collapse']}),
@@ -15,4 +15,4 @@ class SurveyTemplateAdmin(admin.ModelAdmin):
     search_fields = ['survey_template_id', 'question_id', 'question_text']
     ordering = ['survey_template_id', 'question_number']
 
-admin.site.register(SurveyTemplate, SurveyTemplateAdmin)
+admin.site.register(SurveyQuestion, SurveyQuestionAdmin)

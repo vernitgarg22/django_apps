@@ -12,7 +12,8 @@ from rest_framework.response import Response
 
 from cod_utils.cod_logger import CODLogger
 
-from photo_survey.models import Image, ImageMetadata, SurveyTemplate, SurveyData
+from photo_survey.models import Image, ImageMetadata
+from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
 
 
 # TODO remove this, if possible?
@@ -78,10 +79,11 @@ def is_answer_required(question, answers):
 def check_parcels(parcel_ids):
 
     survey_info = { parcel_id: 0 for parcel_id in parcel_ids }
+    if parcel_ids:
 
-    survey_counts = SurveyData.objects.values('parcel_id').annotate(count=Count('parcel_id'))
-    for survey_count in survey_counts:
-        survey_info[survey_count['parcel_id']] = survey_count['count']
+        survey_counts = Survey.objects.filter(parcel_id__in=parcel_ids).annotate(count=Count('parcel_id'))
+        for survey_count in survey_counts:
+            survey_info[survey_count.parcel_id] = survey_count.count
 
     return survey_info
 
@@ -94,12 +96,14 @@ def post_survey(request, parcel_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    parcel_id = clean_parcel_id(parcel_id)
     data = json.loads(request.body.decode('utf-8'))
+
+    survey_template_id = data['survey_id']
+    parcel_id = clean_parcel_id(parcel_id)
     answer_errors = {}
 
     # What are our questions and answers?
-    questions = SurveyTemplate.objects.filter(survey_template_id=data['survey_id']).order_by('question_number')
+    questions = SurveyQuestion.objects.filter(survey_template_id=survey_template_id).order_by('question_number')
     if not questions:
         return Response({ "invalid survey":  data['survey_id']}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -128,10 +132,15 @@ def post_survey(request, parcel_id):
     if answer_errors:
         return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # TODO:  add in common_name, note and status
+    survey = Survey(survey_template_id=survey_template_id, user_id=data['user_id'], parcel_id=parcel_id)
+    survey.save()
+
     # Save all the answers
     for answer in (a for a in answers.values() if a['answer']):
-        answer['parcel_id'] = parcel_id
-        SurveyData(**answer).save()
+        answer = SurveyAnswer(**answer)
+        answer.survey = survey
+        answer.save()
 
     # TODO verify that at least 1 answer got saved?
 
