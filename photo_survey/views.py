@@ -15,6 +15,8 @@ from cod_utils.cod_logger import CODLogger
 from photo_survey.models import Image, ImageMetadata
 from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
 
+from assessments.models import ParcelMaster
+
 
 # TODO remove this, if possible?
 def clean_parcel_id(parcel_id):
@@ -101,6 +103,10 @@ def post_survey(request, parcel_id):
     survey_template_id = data['survey_id']
     parcel_id = clean_parcel_id(parcel_id)
     answer_errors = {}
+
+    # Is the parcel id valid?
+    if not ParcelMaster.objects.filter(pnum__iexact=parcel_id).exists():
+        return Response({ "invalid parcel id":  parcel_id }, status=status.HTTP_400_BAD_REQUEST)
 
     # What are our questions and answers?
     questions = SurveyQuestion.objects.filter(survey_template_id=survey_template_id).order_by('question_number')
