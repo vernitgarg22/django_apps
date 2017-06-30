@@ -140,7 +140,9 @@ def post_survey(request, parcel_id):
         return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
     # TODO:  add in common_name, note and status
-    survey = Survey(survey_template_id=survey_template_id, user_id=data['user_id'], parcel_id=parcel_id)
+    survey = Survey(survey_template_id=survey_template_id, user_id=data['user_id'], parcel_id=parcel_id,
+                common_name = data.get('common_name', ''), note = data.get('note', ''),
+                status = data.get('status', ''), image_url = data.get('image_url', ''))
     survey.save()
 
     # Save all the answers
@@ -150,7 +152,6 @@ def post_survey(request, parcel_id):
         answer.save()
 
     # TODO verify that at least 1 answer got saved?
-
 
     # Indicate number of surveys present for each parcel id in the request
     parcel_info = check_parcels(data.get('parcel_ids', []))

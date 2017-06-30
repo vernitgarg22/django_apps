@@ -56,6 +56,7 @@ class Survey(models.Model):
     parcel_id = models.CharField('Parcel id', max_length=32, unique=False, db_index=True)
     common_name = models.CharField("Parcel common name", max_length=1024)
     note = models.CharField("Note", max_length=1024)
+    image_url = models.CharField("Image used for survey", max_length=256)
     status = models.CharField('Survey status', max_length=16, blank=True, unique=False, db_index=True)
 
     # TODO finish this
