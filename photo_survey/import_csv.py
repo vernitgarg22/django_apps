@@ -13,10 +13,10 @@ def clean_string(buffer):
     """
     Trim quotes from start and end of string
     """
-    if len(buffer) >= 2:
+    if len(buffer) >= 2 and buffer[0] == '"' and buffer[-1] == '"':
         return buffer[1:-1]
     else:
-        return ''
+        return buffer
 
 
 def clean_decimal(buffer):
@@ -60,15 +60,26 @@ def run_import(csv_file_path):
                 # print(parcel_id + ' - ' + file_path)
 
                 if not files.get(file_path):
-                    img = Image(file_path=file_path)
-                    img.save()
 
-                    # TODO: get lat/long/altitude working
-                    # latitude=latitude, longitude=longitude, altitude=altitude,
+                    prev_meta = ImageMetadata.objects.filter(image__file_path=file_path)
+                    img_meta = None
+                    if prev_meta:
 
-                    img_meta = ImageMetadata(image=img, parcel_id=parcel_id, created_at=created_at, 
-                                    house_number=house_number, street_name=street_name, street_type=street_type, zipcode=zipcode, common_name=common_name)
-                    img_meta.save()
+                        img_meta = prev_meta[0]
+                        img_meta.latitude=latitude;
+                        img_meta.longitude=longitude;
+                        img_meta.altitude=altitude
+                        img_meta.save(force_update=True)
+
+                    else:
+
+                        img = Image(file_path=file_path)
+                        img.save()
+
+                        img_meta = ImageMetadata(image=img, parcel_id=parcel_id, created_at=created_at, 
+                                        house_number=house_number, street_name=street_name, street_type=street_type, zipcode=zipcode, common_name=common_name, 
+                                        latitude=latitude, longitude=longitude, altitude=altitude)
+                        img_meta.save()
 
                     files[file_path] = True
 
