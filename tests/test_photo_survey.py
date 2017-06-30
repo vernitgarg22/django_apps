@@ -127,86 +127,86 @@ def get_lot_ok_survey_answers():
 
 def get_lot_bad_survey_answers():
     return {
-      "survey_id": "default",
-      "user_id": "xyz",
-      "answers": [
-        {
-          "question_id": "parcel_id",
-          "answer": "<test_parcel_id>"
-        },
-        {
-          "question_id": "needs_intervention",
-          "answer": "y"
-        },
-        {
-          "question_id": "lot_or_structure",
-          "answer": "lot"
-        },
-        {
-          "question_id": "structure_with_blight",
-          "answer": "a"
-        },
-        {
-          "question_id": "elements_of_structure",
-          "answer": "b,c,d"
-        },
-        {
-          "question_id": "elements_of_lot",
-          "answer": "a,f"
-        }
-      ]
+        "survey_id": "default",
+        "user_id": "xyz",
+        "answers": [
+            {
+                "question_id": "parcel_id",
+                "answer": "<test_parcel_id>"
+            },
+            {
+                "question_id": "needs_intervention",
+                "answer": "y"
+            },
+            {
+                "question_id": "lot_or_structure",
+                "answer": "lot"
+            },
+            {
+                "question_id": "structure_with_blight",
+                "answer": "a"
+            },
+            {
+                "question_id": "elements_of_structure",
+                "answer": "b,c,d"
+            },
+            {
+                "question_id": "elements_of_lot",
+                "answer": "a,f"
+            }
+        ]
     }
 
 def get_structure_bad_survey_answers():
     return {
-      "survey_id": "default",
-      "user_id": "xyz",
-      "answers": [
-        {
-          "question_id": "parcel_id",
-          "answer": "<test_parcel_id>"
-        },
-        {
-          "question_id": "needs_intervention",
-          "answer": "y"
-        },
-        {
-          "question_id": "lot_or_structure",
-          "answer": "structure"
-        },
-        {
-          "question_id": "structure_with_blight",
-          "answer": "a"
-        },
-        {
-          "question_id": "elements_of_structure",
-          "answer": "b,c,d"
-        }
-      ]
+        "survey_id": "default",
+        "user_id": "xyz",
+        "answers": [
+            {
+                "question_id": "parcel_id",
+                "answer": "<test_parcel_id>"
+            },
+            {
+                "question_id": "needs_intervention",
+                "answer": "y"
+            },
+            {
+                "question_id": "lot_or_structure",
+                "answer": "structure"
+            },
+            {
+                "question_id": "structure_with_blight",
+                "answer": "a"
+            },
+            {
+                "question_id": "elements_of_structure",
+                "answer": "b,c,d"
+            }
+        ]
     }
 
 def get_edgars_survey_answers():
     return {
-      "survey_id": "default",
-      "user_id": "xyz",
-      "answers": [
-        {
-          "question_id": "parcel_id",
-          "answer": "testparcelid"
-        },
-        {
-          "question_id": "needs_intervention",
-          "answer": "y"
-        },
-        {
-          "question_id": "lot_or_structure",
-          "answer": "lot"
-        },
-        {
-          "question_id": "elements_of_lot",
-          "answer": "b,d,h,j"
-        }
-      ]
+        "survey_id": "default",
+        "user_id": "xyz",
+        "answers": [
+            {
+                "question_id": "parcel_id",
+                "answer": "testparcelid"
+            },
+            {
+                "question_id": "needs_intervention",
+                "answer": "y"
+            },
+            {
+                "question_id": "lot_or_structure",
+                "answer": "lot"
+            },
+            {
+                "question_id": "elements_of_lot",
+                "answer": "b,d,h,j"
+            }
+        ]
     }
 
 def get_combined_survey_answers():
