@@ -179,12 +179,22 @@ class DjangoAppsRouter(object):
         "Parcel": "tidemark",
         "CaseType": "tidemark",
         "CaseMain": "tidemark",
+        "Image": "photo_survey",
+        "ImageMetadata": "photo_survey",
+        "Survey": "photo_survey",
+        "SurveyQuestion": "photo_survey",
+        "SurveyAnswer": "photo_survey",
     }
 
     ModelDBMapDev = {
         "Subscriber": "waste_collection_dev",
         "ScheduleDetail": "waste_collection_dev",
         "WasteItem": "waste_collection_dev",
+        "Image": "photo_survey_dev",
+        "ImageMetadata": "photo_survey_dev",
+        "Survey": "photo_survey_dev",
+        "SurveyQuestion": "photo_survey_dev",
+        "SurveyAnswer": "photo_survey_dev",
     }
 
 

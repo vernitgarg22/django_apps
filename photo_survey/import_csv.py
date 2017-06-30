@@ -6,7 +6,8 @@ from decimal import Decimal
 
 
 # python manage.py shell
-# from photo_survey import import_csv; import_csv.run_import('survey.csv')
+# from photo_survey import import_csv; import_csv.run_import('survey_20170623.csv')
+# from photo_survey import import_csv; import_csv.run_import('survey_20170629.csv')
 
 
 def clean_string(buffer):
