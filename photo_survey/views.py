@@ -61,7 +61,8 @@ def get_metadata(request, parcel_id):
     images = []
     image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
     for img_meta in image_metadata:
-        images.append('/data/photo_survey/images/' + img_meta.image.file_path)
+        url = request.build_absolute_uri(location='/data/photo_survey/images/' + img_meta.image.file_path)
+        images.append(url)
 
     return Response({ "images": images })
 
