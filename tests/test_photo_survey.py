@@ -265,7 +265,7 @@ class PhotoSurveyTests(TestCase):
 
         response = c.get('/photo_survey/testparcelid/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({'images': ['/data/photo_survey/images/demoimage1.jpg']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
+        self.assertEqual({'images': ['http://testserver/data/photo_survey/images/demoimage1.jpg']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
 
     def test_post_survey(self):
 
