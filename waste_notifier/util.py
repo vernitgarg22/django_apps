@@ -132,8 +132,11 @@ def get_service_detail_message(services, detail):
         day_desc = "days" if num_days > 1 else "day"
         services = add_additional_services(services, detail.normal_day)
 
-        detail_desc = "Pickups for {0} during the week of {1} are postponed by {2} {3} due to {4}".format(get_services_desc(services),
-            detail.normal_day.strftime("%A, %B %d, %Y"), num_days, day_desc, detail.description)
+        # detail_desc = "Pickups for {0} during the week of {1} are postponed by {2} {3} due to {4}".format(get_services_desc(services),
+        #     detail.normal_day.strftime("%A, %B %d, %Y"), num_days, day_desc, detail.description)
+
+        detail_desc = "Pickups for {0} for the remainder of the week are postponed by {1} {2} due to {3}".format(get_services_desc(services),
+            num_days, day_desc, detail.description)
 
     elif detail.detail_type == 'info':
         detail_desc = detail.description
