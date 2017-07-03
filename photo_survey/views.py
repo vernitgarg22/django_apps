@@ -18,6 +18,15 @@ from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
 from assessments.models import ParcelMaster
 
 
+from rest_framework.decorators import api_view, permission_classes
+
+
+@api_view(['POST'])
+def get_dummy_token(request):
+
+    return Response({ "token": "dummy_token"} )
+
+
 # TODO remove this, if possible?
 def clean_parcel_id(parcel_id):
     """
