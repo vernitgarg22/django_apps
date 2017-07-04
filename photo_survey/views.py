@@ -3,10 +3,13 @@ import re
 import requests
 
 from django.conf import settings
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.http import Http404
 from django.db.models import Count
 
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -24,7 +27,44 @@ from rest_framework.decorators import api_view, permission_classes
 @api_view(['POST'])
 def get_dummy_token(request):
 
-    return Response({ "token": "dummy_token"} )
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    if not request.is_secure():
+        return Response({ "required must be secure": request.path }, status=status.HTTP_403_FORBIDDEN)
+
+    # create a dummy user just to get a token
+    user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+
+    # return an auth token
+    token = Token.objects.create(user=user)
+    return Response({ "token": token.key }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+def get_auth_token(request):
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    if not request.is_secure():
+        return Response({ "required must be secure": request.path }, status=status.HTTP_403_FORBIDDEN)
+
+    # Parse the data and get email and password
+    data = json.loads(request.body.decode('utf-8'))
+    if not data.get('email') or not data.get('password'):
+        return Response({ "required": [ "email", "password" ] }, status=status.HTTP_400_BAD_REQUEST)
+
+    email = data['email']
+    password = data['password']
+
+    # Try to authenticate the user
+    # Note: we are using email for username
+    user = authenticate(username=email, password=password)
+    if not user:
+        return Response({ "user not authorized": email }, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Authentication succeeded:  return an auth token
+    token = Token.objects.create(user=user)
+    return Response({ "token": token.key }, status=status.HTTP_201_CREATED)
 
 
 # TODO remove this, if possible?
@@ -107,6 +147,12 @@ def post_survey(request, parcel_id):
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    if not request.user or not request.user.is_authenticated():
+        return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
+
+    if not request.is_secure():
+        return Response({ "error": "required must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
     data = json.loads(request.body.decode('utf-8'))
 

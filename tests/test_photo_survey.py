@@ -1,6 +1,12 @@
 from datetime import datetime
 import json
 
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
 from django.test import Client
 from django.test import TestCase
 
@@ -22,13 +28,13 @@ def init_parcel_master(parcel_id = 'testparcelid'):
     pm.save()
     return pm
 
-
 def cleanup_db():
     cleanup_model(Image)
     cleanup_model(ImageMetadata)
     cleanup_model(SurveyQuestion)
     cleanup_model(SurveyAnswer)
     cleanup_model(ParcelMaster)
+    cleanup_model(User)
 
 def build_image_data():
     image = Image(file_path='demoimage1.jpg')
@@ -36,6 +42,10 @@ def build_image_data():
 
     image_metadata = ImageMetadata(image=image, parcel_id='testparcelid', created_at=datetime.now(), latitude=0, longitude=0, altitude=0, note='test image')
     image_metadata.save()
+
+def create_user(email='lennon@thebeatles.com', password='johnpassword'):
+    # Note: we are using email for username
+    return User.objects.create_user(email, email, password)
 
 # TODO rename these
 def build_survey_template():
@@ -239,6 +249,56 @@ def get_combined_survey_answers():
     }
 
 
+class PhotoSurveyAuthTests(TestCase):
+
+    def test_get_dummy_token(self):
+
+        c = Client()
+        response = c.post('/photo_survey/get_token/', {}, secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 201, "/photo_survey/get_dummy_token/ creates an authentication token")
+        self.assertTrue(len(response.data['token']) > 0, "/photo_survey/get_dummy_token/ returns json with an authentication token")
+
+    def test_get_dummy_token_not_secure(self):
+
+        c = Client()
+        response = c.post('/photo_survey/get_token/', {}, secure=False, content_type="application/json")
+        self.assertEqual(response.status_code, 403, "/photo_survey/get_dummy_token/ requires https")
+
+    def test_get_auth_token(self):
+
+        create_user()
+
+        c = Client()
+        data = { "email": "lennon@thebeatles.com", "password": "johnpassword" }
+        response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 201, "/photo_survey/auth_token/ creates an authentication token")
+        self.assertTrue(len(response.data['token']) > 0, "/photo_survey/get_auth_token/ returns json with an authentication token")
+
+    def test_get_auth_token_not_secure(self):
+
+        create_user()
+
+        c = Client()
+        data = { "email": "lennon@thebeatles.com", "password": "johnpassword" }
+        response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=False, content_type="application/json")
+        self.assertEqual(response.status_code, 403, "/photo_survey/auth_token/ requires https")
+
+    def test_get_auth_token_bad_password(self):
+
+        create_user()
+
+        c = Client()
+        data = { "email": "lennon@thebeatles.com", "password": "wrong" }
+        response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 401, "/photo_survey/auth_token/ requires correct email/password combo")
+
+    def test_get_auth_token_error_handling(self):
+        c = Client()
+        data = { "email": "lennon@thebeatles.com" }
+        response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 400, "/photo_survey/auth_token/ requires email and password")
+
+
 class PhotoSurveyUtilTests(TestCase):
 
     def test_answer_not_required(self):
@@ -252,6 +312,20 @@ class PhotoSurveyTests(TestCase):
         cleanup_db()
         build_image_data()
         self.maxDiff = None
+
+    def get_auth_client(self):
+
+        create_user()
+        user = authenticate(username='lennon@thebeatles.com', password='johnpassword')
+
+        token = Token.objects.create(user=user)
+        c = APIClient()
+        c.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        # TODO do we absolutely need this?
+        c.force_authenticate(user=user)
+
+        return c
 
     def test_get_survey_count(self):
         c = Client()
@@ -272,9 +346,9 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_default_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_default_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers")
 
     def test_post_survey_combined(self):
@@ -282,9 +356,9 @@ class PhotoSurveyTests(TestCase):
         build_survey_template_combined()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores combined field survey answers")
         self.assertEqual(response.data['parcel_survey_info'], { 'nearby_parcel_id': 0, 'testparcelid': 1 }, "/photo_survey/survey/ returns info about existing surveys")
 
@@ -293,9 +367,9 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_lot_ok_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_lot_ok_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers when lot does not need intervention")
 
     def test_post_survey_lot_bad(self):
@@ -303,9 +377,9 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_lot_bad_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_lot_bad_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers when lot needs intervention")
 
     def test_post_survey_structure_bad(self):
@@ -313,32 +387,52 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_structure_bad_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_structure_bad_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers when structure needs intervention")
 
     def test_post_survey_invalid_parcel_id(self):
 
         build_survey_template_combined()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ stores combined field survey answers")
         self.assertEqual({'invalid parcel id': 'testparcelid'}, response.data, "Parcel id is identified as invalid")
+
+    def test_post_survey_unauthorized(self):
+
+        build_survey_template_combined()
+        init_parcel_master()
+
+        c = Client()
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 401, "/photo_survey/survey/ requires authentication")
+
+    def test_post_survey_not_secure(self):
+
+        build_survey_template_combined()
+        init_parcel_master()
+
+        c = self.get_auth_client()
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=False, content_type="application/json")
+        self.assertEqual(response.status_code, 403, "/photo_survey/survey/ requires https")
 
     def test_post_survey_invalid_data(self):
 
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
         survey_answers = get_default_survey_answers()
         survey_answers['answers'][1]['answer'] = 'x'
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid data")
         self.assertEqual({'needs_intervention': 'question answer is invalid'}, response.data, "Parcel id is identified as invalid")
 
@@ -347,23 +441,23 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
         survey_answers = get_default_survey_answers()
         survey_answers['answers'][0] = { "question_id": "parcel_id", "answer": "" }
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags missing data")
         self.assertEqual({'parcel_id': 'question answer is required'}, response.data, "Parcel id is identified as required")
 
     def test_invalid_survey_template(self):
-        c = Client()
 
         init_parcel_master()
-
         survey_answers = get_default_survey_answers()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        c = self.get_auth_client()
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid survey template")
         self.assertEqual({'invalid survey': 'default'}, response.data, "Parcel id is identified as required")
 
@@ -372,12 +466,12 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
         survey_answers = get_default_survey_answers()
         survey_answers['answers'].append({ "question_id": "invalid", "answer": "" })
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(survey_answers), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ flags invalid survey template")
         self.assertEqual({'invalid question ids': ['invalid']}, response.data, "Parcel id is identified as required")
 
@@ -386,7 +480,7 @@ class PhotoSurveyTests(TestCase):
         build_survey_template()
         init_parcel_master()
 
-        c = Client()
+        c = self.get_auth_client()
 
-        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_edgars_survey_answers()), content_type="application/json")
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_edgars_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers from edgar")
