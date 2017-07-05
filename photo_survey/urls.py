@@ -13,7 +13,6 @@ from . import views
 app_name = 'photo_survey'
 urlpatterns = [
 
-    url(r'^get_token/$', views.get_dummy_token),
     url(r'^auth_token/$', views.get_auth_token),
 
     url(r'^count/(?P<parcel_id>[-\w\_\.]+)/$', views.get_survey_count),

@@ -24,20 +24,12 @@ from assessments.models import ParcelMaster
 from rest_framework.decorators import api_view, permission_classes
 
 
-@api_view(['POST'])
-def get_dummy_token(request):
-
-    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
-
-    if not request.is_secure():
-        return Response({ "required must be secure": request.path }, status=status.HTTP_403_FORBIDDEN)
-
-    # create a dummy user just to get a token
-    user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
-
-    # return an auth token
-    token = Token.objects.create(user=user)
-    return Response({ "token": token.key }, status=status.HTTP_201_CREATED)
+#
+# To create users:
+#
+# from django.contrib.auth.models import User
+# User.objects.db_manager('photo_survey').create_user(<usernam>, <email>, <password>)
+#
 
 
 @api_view(['POST'])
@@ -46,7 +38,10 @@ def get_auth_token(request):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     if not request.is_secure():
-        return Response({ "required must be secure": request.path }, status=status.HTTP_403_FORBIDDEN)
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    if not request.body or request.body == b'{}':
+        return Response({ "required": [ "email", "password" ] }, status=status.HTTP_400_BAD_REQUEST)
 
     # Parse the data and get email and password
     data = json.loads(request.body.decode('utf-8'))
@@ -152,7 +147,7 @@ def post_survey(request, parcel_id):
         return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
 
     if not request.is_secure():
-        return Response({ "error": "required must be secure" }, status=status.HTTP_403_FORBIDDEN)
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
     data = json.loads(request.body.decode('utf-8'))
 

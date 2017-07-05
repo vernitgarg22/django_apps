@@ -251,19 +251,6 @@ def get_combined_survey_answers():
 
 class PhotoSurveyAuthTests(TestCase):
 
-    def test_get_dummy_token(self):
-
-        c = Client()
-        response = c.post('/photo_survey/get_token/', {}, secure=True, content_type="application/json")
-        self.assertEqual(response.status_code, 201, "/photo_survey/get_dummy_token/ creates an authentication token")
-        self.assertTrue(len(response.data['token']) > 0, "/photo_survey/get_dummy_token/ returns json with an authentication token")
-
-    def test_get_dummy_token_not_secure(self):
-
-        c = Client()
-        response = c.post('/photo_survey/get_token/', {}, secure=False, content_type="application/json")
-        self.assertEqual(response.status_code, 403, "/photo_survey/get_dummy_token/ requires https")
-
     def test_get_auth_token(self):
 
         create_user()
@@ -297,6 +284,11 @@ class PhotoSurveyAuthTests(TestCase):
         data = { "email": "lennon@thebeatles.com" }
         response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/auth_token/ requires email and password")
+
+    def test_get_auth_token_no_data(self):
+        c = Client()
+        response = c.post('/photo_survey/auth_token/', secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 400, "/photo_survey/auth_token/ requires data")
 
 
 class PhotoSurveyUtilTests(TestCase):
