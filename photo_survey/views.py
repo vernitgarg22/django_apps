@@ -32,6 +32,22 @@ from rest_framework.decorators import api_view, permission_classes
 #
 
 
+def authenticate_user(email, password, using = 'photo_survey'):
+    """
+    Returns True if user
+    """
+
+    try:
+        user = User.objects.db_manager(using).get_by_natural_key(email)
+    except User.DoesNotExist:
+        # Run the default password hasher once to reduce the timing
+        # difference between an existing and a nonexistent user (#20760).
+        User().set_password(password)
+    else:
+        if user and user.check_password(password) and user.is_active:
+            return user
+
+
 @api_view(['POST'])
 def get_auth_token(request):
 
@@ -53,12 +69,12 @@ def get_auth_token(request):
 
     # Try to authenticate the user
     # Note: we are using email for username
-    user = authenticate(username=email, password=password)
+    user = authenticate_user(email, password)
     if not user:
         return Response({ "user not authorized": email }, status=status.HTTP_401_UNAUTHORIZED)
 
     # Authentication succeeded:  return an auth token
-    token = Token.objects.create(user=user)
+    token, created = Token.objects.using('photo_survey').get_or_create(user=user)
     return Response({ "token": token.key }, status=status.HTTP_201_CREATED)
 
 

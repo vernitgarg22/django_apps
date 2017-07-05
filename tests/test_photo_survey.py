@@ -17,10 +17,11 @@ from photo_survey.models import SurveyQuestion, SurveyAnswer
 from assessments.models import ParcelMaster
 
 import photo_survey.views
+from photo_survey.views import authenticate_user
 
 
-def cleanup_model(model):
-    model.objects.all().delete()
+def cleanup_model(model, using='photo_survey'):
+    model.objects.using(using).all().delete()
 
 def init_parcel_master(parcel_id = 'testparcelid'):
     data = {'resb_priceground': 29.04669, 'resb_occ': 0, 'cib_effage': 0, 'resb_depr': 38, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_floorarea': 0.0, 'resb_value': 37325.0, 'cib_numcib': 0, 'resb_style': 'SINGLE FAMILY', 'cib_calcvalue': 0.0, 'cib_pricefloor': 0.0, 'resb_heat': 2, 'resb_calcvalue': 106948.421875, 'resb_nbed': 0, 'resb_exterior': 3, 'ownerstate': 'MI', 'ownercity': 'DETROIT', 'resb_pricefloor': 13.31134, 'resb_gartype': 1, 'resb_yearbuilt': 1914, 'resb_garagearea': 504, 'resb_groundarea': 1285, 'resb_fireplaces': 1, 'resb_styhgt': 5, 'resb_basementarea': 1110, 'resb_bldgclass': 2, 'cib_yearbuilt': 0, 'ownername2': '', 'relatedpnum': '', 'resb_avestyht': 2.1821, 'resb_plusminus': 0, 'cib_bldgclass': 0, 'pnum': parcel_id, 'resb_effage': 52, 'resb_fullbaths': 2, 'resb_floorarea': 2804, 'cib_occ': 0, 'cibunits': 0, 'resb_halfbaths': 1, 'ownerstreetaddr': '7840 VAN DYKE PL', 'cibbedrooms': 0, 'ownerzip': '48214', 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'xstreetname_1': 'SEYBURN', 'xstreetname_0': 'VAN DYKE', 'resb_numresb': 1, 'cib_stories': 0, 'cib_value': 0.0}
@@ -33,7 +34,8 @@ def cleanup_db():
     cleanup_model(ImageMetadata)
     cleanup_model(SurveyQuestion)
     cleanup_model(SurveyAnswer)
-    cleanup_model(ParcelMaster)
+    cleanup_model(ParcelMaster, 'default')
+    cleanup_model(Token)
     cleanup_model(User)
 
 def build_image_data():
@@ -45,7 +47,7 @@ def build_image_data():
 
 def create_user(email='lennon@thebeatles.com', password='johnpassword'):
     # Note: we are using email for username
-    return User.objects.create_user(email, email, password)
+    return User.objects.db_manager('photo_survey').create_user(email, email, password)
 
 # TODO rename these
 def build_survey_template():
@@ -251,6 +253,9 @@ def get_combined_survey_answers():
 
 class PhotoSurveyAuthTests(TestCase):
 
+    def setUp(self):
+        cleanup_db()
+
     def test_get_auth_token(self):
 
         create_user()
@@ -269,6 +274,15 @@ class PhotoSurveyAuthTests(TestCase):
         data = { "email": "lennon@thebeatles.com", "password": "johnpassword" }
         response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=False, content_type="application/json")
         self.assertEqual(response.status_code, 403, "/photo_survey/auth_token/ requires https")
+
+    def test_get_auth_token_bad_user(self):
+
+        create_user()
+
+        c = Client()
+        data = { "email": "wrong@thebeatles.com", "password": "johnpassword" }
+        response = c.post('/photo_survey/auth_token/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 401, "/photo_survey/auth_token/ requires correct email/password combo")
 
     def test_get_auth_token_bad_password(self):
 
@@ -308,7 +322,7 @@ class PhotoSurveyTests(TestCase):
     def get_auth_client(self):
 
         create_user()
-        user = authenticate(username='lennon@thebeatles.com', password='johnpassword')
+        user = authenticate_user(email='lennon@thebeatles.com', password='johnpassword')
 
         token = Token.objects.create(user=user)
         c = APIClient()
