@@ -159,13 +159,34 @@ def post_survey(request, parcel_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    if not request.user or not request.user.is_authenticated():
-        return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
-
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
+
+
+    # TODO remove this once we get mod_wsgi passing the authorization header through properly
+    auth_meta = request.META.get('HTTP_AUTHORIZATION')
+    if auth_meta:
+        print(auth_meta)
+    else:
+        print('saw no http auth meta')
+
+
+
     data = json.loads(request.body.decode('utf-8'))
+
+    user = None
+    if request.user and request.user.is_authenticated():
+        user = request.user
+    else:
+        # TODO remove this once we get mod_wsgi passing the authorization header through properly
+        buf = data.get("auth_token", "")
+        tokens = Token.objects.using("photo_survey").filter(key=buf)
+        if tokens:
+            user = tokens[0].user
+
+    if user == None:
+        return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
 
     survey_template_id = data['survey_id']
     parcel_id = clean_parcel_id(parcel_id)
@@ -191,7 +212,7 @@ def post_survey(request, parcel_id):
     # Validate each answer
     for question in questions:
         answer = answers.get(question.question_id)
-        if answer and answer['answer']:
+        if answer and answer.get('answer'):
             if not question.is_valid(answer['answer']):
                 answer_errors[question.question_id] = "question answer is invalid"
             elif question.answer_trigger and question.answer_trigger_action:
@@ -205,8 +226,7 @@ def post_survey(request, parcel_id):
     if answer_errors:
         return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO:  add in common_name, note and status
-    survey = Survey(survey_template_id=survey_template_id, user_id=data['user_id'], parcel_id=parcel_id,
+    survey = Survey(survey_template_id=survey_template_id, user_id=str(user.id), parcel_id=parcel_id,
                 common_name=data.get('common_name', ''), note=data.get('note', ''), status=data.get('status', ''), image_url=data.get('image_url', ''))
     survey.save()
 

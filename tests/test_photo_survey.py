@@ -418,6 +418,22 @@ class PhotoSurveyTests(TestCase):
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 401, "/photo_survey/survey/ requires authentication")
 
+    def test_post_survey_json_auth_token(self):
+
+        build_survey_template_combined()
+        init_parcel_master()
+
+        c = Client()
+        create_user()
+        user = authenticate_user(email='lennon@thebeatles.com', password='johnpassword')
+        token = Token.objects.using('photo_survey').create(user=user)
+
+        data = get_combined_survey_answers()
+        data['auth_token'] = token.key
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 201, "/photo_survey/survey/ accepts auth token in json")
+
     def test_post_survey_not_secure(self):
 
         build_survey_template_combined()
