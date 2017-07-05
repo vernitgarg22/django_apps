@@ -506,3 +506,14 @@ class PhotoSurveyTests(TestCase):
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_edgars_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/survey/ stores field survey answers from edgar")
+
+    def test_status(self):
+
+        # Run a different test just to get a survey submitted
+        self.test_post_survey_combined()
+
+        c = Client()
+
+        response = c.get('/photo_survey/status/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({ 'testparcelid': 1 }, response.data, "/photo_survey/status/ returns how many times each parcel has been surveyed")

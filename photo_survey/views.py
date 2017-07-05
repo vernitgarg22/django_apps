@@ -242,8 +242,17 @@ def post_survey(request, parcel_id):
     return Response({ "answers": answers, "parcel_survey_info": parcel_info }, status=status.HTTP_201_CREATED)
 
 
-#
-# TODO:
-#
-# - add ability to return survey answers
-# 
+@api_view(['GET'])
+def get_status(request):
+    """
+    Returns all parcels that have already been surveyed.  Each parcel is paired with the number of
+    times it has been surveyed.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    parcel_counts = Survey.objects.values("parcel_id").annotate(count=Count("parcel_id"))
+
+    content = { parcel_count['parcel_id']: parcel_count['count'] for parcel_count in parcel_counts }
+
+    return Response(content)

@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^auth_token/$', views.get_auth_token),
 
     url(r'^count/(?P<parcel_id>[-\w\_\.]+)/$', views.get_survey_count),
+    url(r'^status/$', views.get_status),
     url(r'^(?P<parcel_id>[-\w\_\.]+)/$', views.get_metadata),
     # url(r'^(?P<parcel_id>[-\w\_\.]+)/$', views.get_metadata, lookup_value_regex = '[^/]+'),
     url(r'^survey/(?P<parcel_id>[-\w\_\.]+)/$', views.post_survey),
