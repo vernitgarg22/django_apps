@@ -1,6 +1,21 @@
 from django.contrib import admin
 
-from .models import SurveyQuestion
+from .models import Survey, SurveyQuestion
+
+
+class SurveyAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None, {'fields': ['survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status']}),
+        # ('Destination', {'fields': ['destination'], 'classes': ['collapse']}),
+    ]
+    # inlines = [ChoiceInline]
+    list_display = ('survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status')
+    list_filter = ['survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status']
+    list_editable = ['note', 'status']
+    search_fields = ['survey_template_id', 'user_id', 'parcel_id', 'note', 'status']
+    ordering = ['survey_template_id']
+
+admin.site.register(Survey, SurveyAdmin)
 
 
 class SurveyQuestionAdmin(admin.ModelAdmin):
