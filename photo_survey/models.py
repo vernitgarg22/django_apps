@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 
 from django.db import models
@@ -59,6 +60,17 @@ class Survey(models.Model):
     note = models.CharField("Note", max_length=1024)
     image_url = models.CharField("Image used for survey", max_length=256)
     status = models.CharField('Survey status', max_length=16, blank=True, unique=False, db_index=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Override save() method so we can set created_at
+        """
+
+        self.created_at = datetime.now()
+
+        # Call the "real" save() method in base class
+        super().save(*args, **kwargs)
+
 
     # TODO finish this
     # def get_survey_answers(self, parcel_id):
