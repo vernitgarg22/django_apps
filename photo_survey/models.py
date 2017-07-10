@@ -54,6 +54,7 @@ class Survey(models.Model):
     survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
     user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
     parcel_id = models.CharField('Parcel id', max_length=32, unique=False, db_index=True)
+    created_at = models.DateTimeField('Time when survey was made', null=True, default=None)
     common_name = models.CharField("Parcel common name", max_length=1024)
     note = models.CharField("Note", max_length=1024)
     image_url = models.CharField("Image used for survey", max_length=256)
