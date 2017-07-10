@@ -1,6 +1,7 @@
 from datetime import datetime
 import re
 
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -60,6 +61,15 @@ class Survey(models.Model):
     note = models.CharField("Note", max_length=1024)
     image_url = models.CharField("Image used for survey", max_length=256)
     status = models.CharField('Survey status', max_length=16, blank=True, unique=False, db_index=True)
+
+    @property
+    def user(self):
+        """
+        Return the surveyor (user) who created the survey
+        """
+
+        return User.objects.using('photo_survey').filter(id=self.user_id).first()
+        
 
     def save(self, *args, **kwargs):
         """
