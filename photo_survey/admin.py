@@ -13,7 +13,7 @@ class SurveyAdmin(admin.ModelAdmin):
     list_filter = ['survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status']
     list_editable = ['note', 'status']
     search_fields = ['survey_template_id', 'user_id', 'parcel_id', 'note', 'status']
-    ordering = ['survey_template_id']
+    ordering = ['survey_template_id', 'parcel_id', 'common_name', 'status']
 
 admin.site.register(Survey, SurveyAdmin)
 
