@@ -115,7 +115,7 @@ class SurveyAnswer(models.Model):
     note = models.CharField("Note", max_length=1024, blank=True, unique=False)
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
-        desc = " survey: " + self.survey_template_id + \
+        desc = " survey: " + str(self.survey_id) + \
             " question: " + self.question_id + \
             " answer: " + self.answer
         if self.note:
