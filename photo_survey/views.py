@@ -267,7 +267,7 @@ def get_surveyor_survey_count(request):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     user_info = { user.id : user for user in User.objects.using('photo_survey') }
-    survey_counts = Survey.objects.using('photo_survey').values('user_id').annotate(count=Count('parcel_id', distinct=True)).order_by('-count')
+    survey_counts = Survey.objects.values('user_id').annotate(count=Count('parcel_id', distinct=True)).order_by('-count')
 
     results = []
     for survey_count in survey_counts:

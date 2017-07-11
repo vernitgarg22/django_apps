@@ -13,15 +13,18 @@ from django.test import TestCase
 import tests.disabled
 
 from photo_survey.models import Image, ImageMetadata
-from photo_survey.models import SurveyQuestion, SurveyAnswer
+from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
 from assessments.models import ParcelMaster
 
 import photo_survey.views
 from photo_survey.views import authenticate_user
 
 
-def cleanup_model(model, using='photo_survey'):
-    model.objects.using(using).all().delete()
+def cleanup_model(model, using=None):
+    if using:
+        model.objects.using(using).all().delete()
+    else:
+        model.objects.all().delete()
 
 def init_parcel_master(parcel_id = 'testparcelid'):
     data = {'resb_priceground': 29.04669, 'resb_occ': 0, 'cib_effage': 0, 'resb_depr': 38, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_floorarea': 0.0, 'resb_value': 37325.0, 'cib_numcib': 0, 'resb_style': 'SINGLE FAMILY', 'cib_calcvalue': 0.0, 'cib_pricefloor': 0.0, 'resb_heat': 2, 'resb_calcvalue': 106948.421875, 'resb_nbed': 0, 'resb_exterior': 3, 'ownerstate': 'MI', 'ownercity': 'DETROIT', 'resb_pricefloor': 13.31134, 'resb_gartype': 1, 'resb_yearbuilt': 1914, 'resb_garagearea': 504, 'resb_groundarea': 1285, 'resb_fireplaces': 1, 'resb_styhgt': 5, 'resb_basementarea': 1110, 'resb_bldgclass': 2, 'cib_yearbuilt': 0, 'ownername2': '', 'relatedpnum': '', 'resb_avestyht': 2.1821, 'resb_plusminus': 0, 'cib_bldgclass': 0, 'pnum': parcel_id, 'resb_effage': 52, 'resb_fullbaths': 2, 'resb_floorarea': 2804, 'cib_occ': 0, 'cibunits': 0, 'resb_halfbaths': 1, 'ownerstreetaddr': '7840 VAN DYKE PL', 'cibbedrooms': 0, 'ownerzip': '48214', 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'xstreetname_1': 'SEYBURN', 'xstreetname_0': 'VAN DYKE', 'resb_numresb': 1, 'cib_stories': 0, 'cib_value': 0.0}
@@ -34,9 +37,10 @@ def cleanup_db():
     cleanup_model(ImageMetadata)
     cleanup_model(SurveyQuestion)
     cleanup_model(SurveyAnswer)
+    cleanup_model(Survey)
     cleanup_model(ParcelMaster, 'default')
     cleanup_model(Token)
-    cleanup_model(User)
+    cleanup_model(User, using='photo_survey')
 
 def build_image_data():
     image = Image(file_path='demoimage1.jpg')
@@ -517,3 +521,23 @@ class PhotoSurveyTests(TestCase):
         response = c.get('/photo_survey/status/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual({ 'testparcelid': 1 }, response.data, "/photo_survey/status/ returns how many times each parcel has been surveyed")
+
+    def test_surveyor_survey_count(self):
+
+        # Run a different test just to get a survey submitted
+        self.test_post_survey_combined()
+
+        c = Client()
+
+        response = c.get('/photo_survey/surveyor/survey_count/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{'lennon@thebeatles.com': 1}], "/photo_survey/surveyor/survey_count/ returns count of surveys submitted by each surveyor")
+
+    # TODO ideally this should be somewhere else since this is not testing an api call
+    def test_survey_user(self):
+
+        # Run a different test just to get a survey submitted
+        self.test_post_survey_combined()
+
+        survey = Survey.objects.first()
+        self.assertEqual(survey.user.email, 'lennon@thebeatles.com')
