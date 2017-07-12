@@ -10,7 +10,7 @@ from django.db.models import Count
 
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from cod_utils.cod_logger import CODLogger
@@ -20,8 +20,7 @@ from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
 
 from assessments.models import ParcelMaster
 
-
-from rest_framework.decorators import api_view, permission_classes
+from cod_utils.util import date_json
 
 
 #
@@ -124,7 +123,43 @@ def get_metadata(request, parcel_id):
         url = request.build_absolute_uri(location='/data/photo_survey/images/' + img_meta.image.file_path)
         images.append(url)
 
-    return Response({ "images": images })
+    surveys = [ survey.id for survey in Survey.objects.filter(parcel_id=parcel_id) ]
+
+    return Response({ "images": images, "surveys": surveys })
+
+
+@api_view(['GET'])
+def get_survey(request, survey_id):
+    """
+    Get photos and survey data for the given parcel
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    surveys = Survey.objects.filter(id=int(survey_id))
+    if not surveys:
+         return Response({"survey not found": survey_id}, status=status.HTTP_404_NOT_FOUND)
+
+    survey = surveys[0]
+    answers = [ { survey_answer.question_id: survey_answer.answer } for survey_answer in survey.survey_answers ]
+
+    content = {
+        "survey_template": survey.survey_template_id,
+        "parcel_id": survey.parcel_id,
+        "created_at": date_json(survey.created_at),
+        "surveyor": {
+            "id": survey.user.id,
+            "username": survey.user.username,
+            "email": survey.user.email,
+        },
+        "answers": answers,
+        "common_name": survey.common_name,
+        "note": survey.note,
+        "image_url": survey.image_url,
+        "status": survey.status,
+    }
+
+    return Response(content)
 
 
 def is_answer_required(question, answers):

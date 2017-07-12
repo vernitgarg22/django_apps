@@ -69,7 +69,6 @@ class Survey(models.Model):
         """
 
         return User.objects.using('photo_survey').filter(id=self.user_id).first()
-        
 
     def save(self, *args, **kwargs):
         """
@@ -81,14 +80,31 @@ class Survey(models.Model):
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
 
+    @property
+    def survey_questions(self):
+        """
+        Returns the questions belonging to the survey.
+        """
 
-    # TODO finish this
-    # def get_survey_answers(self, parcel_id):
-    #     """
-    #     Returns answes belonging to the survey, for the given parcel id
-    #     """
+        return SurveyQuestion.objects.filter(survey_template_id=self.survey_template_id).order_by('question_number')
 
-    #     return self.survey_ansers
+    @property
+    def survey_answers(self):
+        """
+        Returns the answers belonging to the survey.
+        """
+
+        questions = self.survey_questions
+
+        answers_dict = { answer.question_id : answer for answer in SurveyAnswer.objects.filter(survey_id=self.id) }
+
+        answers = []
+        for question in questions:
+            answer = answers_dict.get(question.question_id)
+            if answer:
+                answers.append(answer)
+
+        return answers
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
         desc = "user: " + self.user_id + \

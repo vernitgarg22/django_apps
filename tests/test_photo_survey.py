@@ -16,6 +16,8 @@ from photo_survey.models import Image, ImageMetadata
 from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
 from assessments.models import ParcelMaster
 
+from cod_utils.util import date_json
+
 import photo_survey.views
 from photo_survey.views import authenticate_user
 
@@ -347,11 +349,37 @@ class PhotoSurveyTests(TestCase):
         self.assertEqual({ "count": 1 }, response.data, "/photo_survey/count/<parce id>/ returns number of surveys available for the given parcel")
 
     def test_get_survey_metadata(self):
+
         c = Client()
+
+        survey = Survey(parcel_id='testparcelid')
+        survey.save()
 
         response = c.get('/photo_survey/testparcelid/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({'images': ['http://testserver/data/photo_survey/images/demoimage1.jpg']}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
+        self.assertEqual({'images': ['http://testserver/data/photo_survey/images/demoimage1.jpg'], 'surveys': [survey.id]}, response.data, "/photo_survey/<parce id>/ returns metadata about information available for the given parcel")
+
+    def test_get_survey(self):
+
+        c = Client()
+
+        # Run a different test just to get a survey submitted
+        self.test_post_survey_combined()
+
+        survey = Survey.objects.first()
+
+        expected = {'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
+
+        response = c.get("/photo_survey/survey/data/1/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(expected, response.data, "/photo_survey/survey/data/<parce id>/ returns data from a survey")
+
+    def test_get_survey_404(self):
+
+        c = Client()
+
+        response = c.get("/photo_survey/survey/data/0000/")
+        self.assertEqual(response.status_code, 404)
 
     def test_post_survey(self):
 
