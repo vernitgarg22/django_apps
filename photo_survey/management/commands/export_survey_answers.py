@@ -43,6 +43,15 @@ class Command(BaseCommand):
         self.surveys = Survey.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('parcel_id')
         self.answers = SurveyAnswer.objects.using(self.using_db).all()
 
+    def cache_data(self):
+        """
+        Pre-fetch data, wherever helpful.
+        """
+
+        survey_ids = { survey.parcel_id for survey in self.surveys }
+        parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_ids))
+        self.parcels = { parcel.pnum: parcel for parcel in parcels_tmp }
+
     def get_fieldnames(self):
         """
         Returns correct header row column names.
@@ -76,9 +85,8 @@ class Command(BaseCommand):
 
         # Get the ownership data?
         if self.data_types.get('ownership', False):
-            parcels = ParcelMaster.objects.filter(pnum=survey.parcel_id)
-            if parcels:
-                parcel = parcels[0]
+            parcel = self.parcels.get(survey.parcel_id, None)
+            if parcel:
                 owner_name = parcel.ownername1
                 if parcel.ownername2:
                     owner_name = owner_name + ' - ' + parcel.ownername2
@@ -107,7 +115,7 @@ class Command(BaseCommand):
                     writer.writerow(answer_data)
                     self.num_exported = self.num_exported + 1
 
-                    if self.num_exported % 20 == 0:
+                    if self.num_exported % 100 == 0:
                         self.stdout.write("{} rows exported ...".format(self.num_exported))
                         self.stdout.flush()
 
@@ -116,6 +124,8 @@ class Command(BaseCommand):
         self.init_metadata(options)
 
         self.get_data()
+
+        self.cache_data()
 
         self.export_data()
 
