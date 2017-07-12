@@ -340,6 +340,8 @@ class PhotoSurveyTests(TestCase):
     def test_get_survey_count(self):
         c = Client()
 
+        Survey(parcel_id='testparcelid').save()
+
         response = c.get('/photo_survey/count/testparcelid/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual({ "count": 1 }, response.data, "/photo_survey/count/<parce id>/ returns number of surveys available for the given parcel")

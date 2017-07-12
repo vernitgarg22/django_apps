@@ -98,8 +98,8 @@ def get_survey_count(request, parcel_id):
 
     parcel_id = clean_parcel_id(parcel_id)
 
-    image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
-    content = { "count": len(image_metadata) }
+    surveys = Survey.objects.filter(parcel_id=parcel_id)
+    content = { "count": len(surveys) }
 
     return Response(content)
 
