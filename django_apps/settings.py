@@ -185,6 +185,7 @@ class DjangoAppsRouter(object):
         "Survey": "photo_survey",
         "SurveyQuestion": "photo_survey",
         "SurveyAnswer": "photo_survey",
+        "SurveyQuestionAvailAnswer": "photo_survey",
     }
 
     ModelDBMapDev = {
@@ -196,6 +197,7 @@ class DjangoAppsRouter(object):
         "Survey": "photo_survey_dev",
         "SurveyQuestion": "photo_survey_dev",
         "SurveyAnswer": "photo_survey_dev",
+        "SurveyQuestionAvailAnswer": "photo_survey_dev",
     }
 
 

@@ -174,3 +174,20 @@ class SurveyQuestion(models.Model):
             " " + str(self.question_number) + \
             " " + self.question_text + \
             " (valid answers: " + self.valid_answers + ")"
+
+
+class SurveyQuestionAvailAnswer(models.Model):
+    """
+    Defines different answers available for each question.
+    """
+
+    app_label = 'photo_survey'
+
+    survey_question = models.ForeignKey(SurveyQuestion)
+    value = models.CharField('Answer Value', max_length=64, unique=False, help_text="Answer value as stored in database")
+    text = models.CharField('Human-readable Answer', max_length=128, unique=False, help_text="Human-readable version of answer")
+
+    def survey_question_question_id(self):
+        return self.survey_question.question_id
+
+    survey_question_question_id.short_description = 'Survey Question ID'

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Survey, SurveyQuestion
+from .models import Survey, SurveyQuestion, SurveyQuestionAvailAnswer
 
 
 class SurveyAdmin(admin.ModelAdmin):
@@ -31,3 +31,23 @@ class SurveyQuestionAdmin(admin.ModelAdmin):
     ordering = ['survey_template_id', 'question_number']
 
 admin.site.register(SurveyQuestion, SurveyQuestionAdmin)
+
+class SurveyQuestionAvailAnswerAdmin(admin.ModelAdmin):
+    """
+    Defines different answers available for each question.
+    """
+
+    app_label = 'photo_survey'
+
+    fieldsets = [
+        (None, {'fields': ['value', 'text']}),
+        # ('Destination', {'fields': ['destination'], 'classes': ['collapse']}),
+    ]
+    # inlines = [ChoiceInline]
+    list_display = ('survey_question_question_id', 'value', 'text')
+    list_filter = []
+    list_editable = ['value', 'text']
+    search_fields = ['value', 'text']
+    ordering = ['value']
+
+admin.site.register(SurveyQuestionAvailAnswer, SurveyQuestionAvailAnswerAdmin)
