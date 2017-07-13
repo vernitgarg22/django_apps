@@ -191,3 +191,6 @@ class SurveyQuestionAvailAnswer(models.Model):
         return self.survey_question.question_id
 
     survey_question_question_id.short_description = 'Survey Question ID'
+
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
+        return self.survey_question.question_id + ' - ' + self.value + ' - ' + self.text
