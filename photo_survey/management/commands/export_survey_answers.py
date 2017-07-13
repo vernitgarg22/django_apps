@@ -6,6 +6,8 @@ from django.core.management.base import BaseCommand, CommandError
 from photo_survey.models import Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer
 from assessments.models import ParcelMaster
 
+from cod_utils.util import split_csv
+
 
 class Command(BaseCommand):
     help = """
@@ -72,11 +74,9 @@ class Command(BaseCommand):
         """
 
         for question_id in answer_data.keys():
-            answer_values = answer_data[question_id].split(',')
             pretty_answer = ''
-            for answer_value in answer_values:
+            for answer_value in split_csv(answer_data[question_id]):
                 if pretty_answer:
-                    pdb.set_trace()
                     pretty_answer = pretty_answer + ', '
                 pretty_answer = pretty_answer + self.avail_answers[question_id][answer_value]
 
