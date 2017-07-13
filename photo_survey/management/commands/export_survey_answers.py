@@ -3,7 +3,7 @@ from datetime import datetime
 
 from django.core.management.base import BaseCommand, CommandError
 
-from photo_survey.models import Survey, SurveyAnswer, SurveyQuestion
+from photo_survey.models import Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer
 from assessments.models import ParcelMaster
 
 
@@ -35,6 +35,13 @@ class Command(BaseCommand):
         self.out_file = now.strftime("%Y%m%d_%H%M%S.csv")
         self.num_exported = 0
 
+        if self.pretty_print:
+            avail_answers_tmp = SurveyQuestionAvailAnswer.objects.using(self.using_db).filter(survey_question__survey_template_id=self.survey_template_id)
+
+            self.avail_answers = { avail_answer.survey_question.question_id: {} for avail_answer in avail_answers_tmp }
+            for avail_answer in avail_answers_tmp:
+                self.avail_answers[avail_answer.survey_question.question_id][avail_answer.value] = avail_answer.text
+
     def get_data(self):
         """
         Retrieve all the survey answers.
@@ -43,14 +50,10 @@ class Command(BaseCommand):
         self.surveys = Survey.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('parcel_id')
         self.answers = SurveyAnswer.objects.using(self.using_db).all()
 
-    def cache_data(self):
-        """
-        Pre-fetch data, wherever helpful.
-        """
-
-        survey_ids = { survey.parcel_id for survey in self.surveys }
-        parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_ids))
-        self.parcels = { parcel.pnum: parcel for parcel in parcels_tmp }
+        if self.data_types.get('ownership', False):
+            survey_ids = { survey.parcel_id for survey in self.surveys }
+            parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_ids))
+            self.parcels = { parcel.pnum: parcel for parcel in parcels_tmp }
 
     def get_fieldnames(self):
         """
@@ -62,6 +65,22 @@ class Command(BaseCommand):
             field_names.extend( [ 'owner name', 'owner address', 'owner city', 'owner state', 'owner zip' ] )
 
         return field_names
+
+    def prettify_answers(self, answer_data):
+        """
+        Replace answer values with human-readable text.
+        """
+
+        for question_id in answer_data.keys():
+            answer_values = answer_data[question_id].split(',')
+            pretty_answer = ''
+            for answer_value in answer_values:
+                if pretty_answer:
+                    pdb.set_trace()
+                    pretty_answer = pretty_answer + ', '
+                pretty_answer = pretty_answer + self.avail_answers[question_id][answer_value]
+
+            answer_data[question_id] = pretty_answer
 
     def get_answerdata(self, survey):
         """
@@ -78,8 +97,9 @@ class Command(BaseCommand):
         # Get the answers
         answer_data_tmp = { answer.question_id: answer.answer for answer in curr_answers }
 
-        # TODO pretty print the answers?
-        # if self.pretty_print:
+        # Pretty print the answers?
+        if self.pretty_print:
+            self.prettify_answers(answer_data_tmp)
 
         answer_data.update(answer_data_tmp)
 
@@ -124,8 +144,6 @@ class Command(BaseCommand):
         self.init_metadata(options)
 
         self.get_data()
-
-        self.cache_data()
 
         self.export_data()
 
