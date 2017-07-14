@@ -5,6 +5,7 @@ from pytz import timezone
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 
 
 def date_json(date):
@@ -27,8 +28,9 @@ def get_local_time(now_utc = None):
     """
 
     if not now_utc:
-        now_utc = datetime.datetime.now(pytz.utc)
-    return now_utc.astimezone(timezone('US/Eastern'))
+        # TODO timezone.localtime() ignores DST
+        return timezone.localtime()
+    return now_utc.astimezone()
 
 def tomorrow(today = datetime.date.today()):
     """

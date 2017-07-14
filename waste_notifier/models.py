@@ -4,7 +4,6 @@ import re
 from django.db import models
 from django.core import validators
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_comma_separated_integer_list
 
 from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
@@ -23,7 +22,7 @@ class Subscriber(models.Model):
     VALID_STATUS_VALUES = [ ACTIVE_STATUS, INACTIVE_STATUS ]
 
     phone_number = models.CharField('Subscriber phone number', unique = True, max_length = 32)
-    waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64, validators=[validate_comma_separated_integer_list])
+    waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64)
     status = models.CharField('Subscriber status (for soft deletes)', max_length = 32, choices=STATUS_CHOICES, default=DEFAULT_STATUS)
     service_type = models.CharField('Service', max_length=32, default=ScheduleDetail.DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + ScheduleDetail.SERVICES_LIST + ')')
     last_status_update = models.DateTimeField('Time of last status change', blank=True, null=True)
@@ -48,8 +47,8 @@ class Subscriber(models.Model):
         if not self.waste_area_ids:
             raise ValidationError({'waste_area_ids': "Waste area ids value is required"})
 
-        # validate the waste area ids
-        validators.validate_comma_separated_integer_list(self.waste_area_ids)
+        if not (re.search(r'^[0-9,][0-9,]*$', self.waste_area_ids)):
+            raise ValidationError({'waste_area_ids': "Must be comma-separated list of numbers"})
 
         # only certain values are allowed for status
         if self.status not in self.VALID_STATUS_VALUES:

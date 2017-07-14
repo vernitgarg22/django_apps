@@ -28,6 +28,8 @@ class BiWeekType(Enum):
 
 class ScheduleDetail(models.Model):
 
+    app_label = 'waste_schedule'
+
     ALL = 'all'
     RECYCLING = WasteItem.DESTINATION_CHOICES[2][0]
     BULK = WasteItem.DESTINATION_CHOICES[0][0]

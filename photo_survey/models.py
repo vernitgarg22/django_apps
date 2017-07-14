@@ -1,8 +1,8 @@
-from datetime import datetime
 import re
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 
 class Image(models.Model):
@@ -75,7 +75,7 @@ class Survey(models.Model):
         Override save() method so we can set created_at
         """
 
-        self.created_at = datetime.now()
+        self.created_at = timezone.now()
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)

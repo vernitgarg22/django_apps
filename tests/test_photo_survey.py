@@ -1,8 +1,9 @@
-from datetime import datetime
 import json
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+
+from django.utils import timezone
 
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -48,7 +49,7 @@ def build_image_data():
     image = Image(file_path='demoimage1.jpg')
     image.save()
 
-    image_metadata = ImageMetadata(image=image, parcel_id='testparcelid', created_at=datetime.now(), latitude=0, longitude=0, altitude=0, note='test image')
+    image_metadata = ImageMetadata(image=image, parcel_id='testparcelid', created_at=timezone.now(), latitude=0, longitude=0, altitude=0, note='test image')
     image_metadata.save()
 
 def create_user(email='lennon@thebeatles.com', password='johnpassword'):

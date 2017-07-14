@@ -1,6 +1,7 @@
 import json
 from operator import attrgetter
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -40,10 +41,10 @@ def filter_years_back(results, years_back):
 
     # TODO not sure why this blows up on me (for now
     # just filter manually)
-    # date_min = datetime.now() - timedelta(days=5 * 365)
+    # date_min = timezone.now() - timedelta(days=5 * 365)
     # results = results.filter(saledate__gte=date_min)
 
-    today = datetime.now()
+    today = timezone.now()
     return [ result for result in results if today.year - result.saledate.year <= int(years_back) ]
 
 

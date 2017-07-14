@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 
-import sqlserver_ado
-from sqlserver_ado.fields import BigAutoField
-
 from django.db import models
 from django.conf import settings
+
+from django.db.models.fields import BigAutoField
 
 from assessments import util
 
@@ -12,7 +11,7 @@ from assessments import util
 class Sales(models.Model):
 
     if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        id = sqlserver_ado.fields.BigAutoField(primary_key=True)
+        id = BigAutoField(primary_key=True)
    
     pnum = models.CharField(max_length=25)
     saledate = models.DateTimeField(blank=True, null=True)
@@ -49,7 +48,7 @@ class ParcelMaster(models.Model):
     IGNORED_FIELDS = [ 'id' ]
 
     if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        id = sqlserver_ado.fields.BigAutoField(primary_key=True)
+        id = BigAutoField(primary_key=True)
 
     pnum = models.CharField(unique=True, max_length=25)
     relatedpnum = models.CharField(max_length=25)

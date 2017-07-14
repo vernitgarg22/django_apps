@@ -1,7 +1,7 @@
 import csv
-from datetime import datetime
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
 from photo_survey.models import Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer
 from assessments.models import ParcelMaster
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         # Now finish initializing everything
         self.using_db='photo_survey'
         self.questions = SurveyQuestion.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('question_number')
-        now = datetime.now()
+        now = timezone.now()
         self.out_file = now.strftime("%Y%m%d_%H%M%S.csv")
         self.num_exported = 0
 
