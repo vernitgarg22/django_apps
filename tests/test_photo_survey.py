@@ -552,6 +552,17 @@ class PhotoSurveyTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual({ 'testparcelid': 1 }, response.data, "/photo_survey/status/ returns how many times each parcel has been surveyed")
 
+    def test_status_summary(self):
+
+        # Run a different test just to get a survey submitted
+        self.test_post_survey_combined()
+
+        c = Client()
+
+        response = c.get('/photo_survey/status/summary/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({ 'num_parcels_surveyed': 1 }, response.data, "/photo_survey/status/summary/ returns general information about surveys")
+
     def test_surveyor_survey_count(self):
 
         # Run a different test just to get a survey submitted

@@ -89,8 +89,7 @@ def clean_parcel_id(parcel_id):
 @api_view(['GET'])
 def get_survey_count(request, parcel_id):
     """
-    Get number of images that exist currently for the given parcel.
-    TODO: Clarify if we can identify a single survey, and return number of surveys available?
+    Get number of surveys that exist currently for the given parcel.
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
@@ -291,6 +290,22 @@ def get_status(request):
     content = { parcel_count['parcel_id']: parcel_count['count'] for parcel_count in parcel_counts }
 
     return Response(content)
+
+
+@api_view(['GET'])
+def get_status_summary(request):
+    """
+    Returns general info:  number of parcels that currently have surveys, etc.
+    TODO:  add any other metadata here?
+    e.g., add in this, but for residential / commercial:
+    num_parcels_total = ParcelMaster.objects.count()
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    num_parcels_surveyed = Survey.objects.values('parcel_id').distinct().count()
+
+    return Response({ "num_parcels_surveyed": num_parcels_surveyed })
 
 
 @api_view(['GET'])
