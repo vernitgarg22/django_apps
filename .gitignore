@@ -1,4 +1,5 @@
 *.pyc
+.Python
 secrets.json
 *.sqlite3
 test_secrets.json
@@ -12,3 +13,4 @@ Lib
 Scripts
 tcl
 pip-selfcheck.json
+bin
