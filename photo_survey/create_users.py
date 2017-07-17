@@ -1,16 +1,20 @@
 from django.contrib.auth.models import User
 
 user_data = [
-#     ['Andrew', 'Salazar', 'metalgearfallout45@gmail.com'],
-#     ['Ryan', 'Moonka', 'rmoonka@umich.edu'],
-#     ['Dawan', 'Perry', 'dperry@detroitmi.gov'],
-#     ['Robert', 'Huguley', 'huguleyR@detroitmi.gov'],
-#     ['Emily', 'Krupp', 'KruppE@detroitmi.gov'],
-#     ['Michael', 'Hartt', 'harttm@detroitmi.gov'],
-#     ['Asia', 'Hudson', 'hudsona@detroitmi.gov'],
-#     ['Nidhi', 'Kumar', 'kumarn@detroitmi.gov'],
+    # ['Andrew', 'Salazar', 'metalgearfallout45@gmail.com'],
+    # ['Ryan', 'Moonka', 'rmoonka@umich.edu'],
+    # ['Dawan', 'Perry', 'dperry@detroitmi.gov'],
+    # ['Robert', 'Huguley', 'huguleyR@detroitmi.gov'],
+    # ['Emily', 'Krupp', 'KruppE@detroitmi.gov'],
+    # ['Michael', 'Hartt', 'harttm@detroitmi.gov'],
+    # ['Asia', 'Hudson', 'hudsona@detroitmi.gov'],
+    # ['Nidhi', 'Kumar', 'kumarn@detroitmi.gov'],
     # [ 'Alleah', 'Walker', 'AlleahW@gmail.com' ],
     # [ 'Myla', 'Collins', 'MylaDcollins@yahoo.com' ],
+    # [ 'Jamie', 'Sedlacek', 'JamieSedlacek@rockventures.com' ],
+    [ 'Martha', 'Potere', 'mpotere@degc.org' ],
+    [ 'Cydney', 'Camp', 'ccamp@degc.org' ],
+    [ 'Lily', 'Hamburger', 'ehamburger@degc.org' ],
 ]
 for data in user_data:
     first_name = data[0]

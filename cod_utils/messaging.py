@@ -4,8 +4,8 @@ import requests
 
 from django.conf import settings
 
-from twilio.util import RequestValidator
-from twilio.rest import TwilioRestClient
+from twilio.request_validator import RequestValidator
+from twilio.rest import Client
 
 
 class MsgHandler():
@@ -51,7 +51,7 @@ class MsgHandler():
         """
         Send a text message via twilio rest client
         """
-        client = TwilioRestClient(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
+        client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
         if MsgHandler.DRY_RUN or dry_run_param:
             return False
         else:
