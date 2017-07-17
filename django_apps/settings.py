@@ -183,6 +183,7 @@ class DjangoAppsRouter(object):
         "CaseMain": "tidemark",
         "Image": "photo_survey",
         "ImageMetadata": "photo_survey",
+        "PublicPropertyData": "photo_survey",
         "Survey": "photo_survey",
         "SurveyQuestion": "photo_survey",
         "SurveyAnswer": "photo_survey",
@@ -196,6 +197,7 @@ class DjangoAppsRouter(object):
         "WasteItem": "waste_collection_dev",
         "Image": "photo_survey_dev",
         "ImageMetadata": "photo_survey_dev",
+        "PublicPropertyData": "photo_survey_dev",
         "Survey": "photo_survey_dev",
         "SurveyQuestion": "photo_survey_dev",
         "SurveyAnswer": "photo_survey_dev",
@@ -223,10 +225,13 @@ class DjangoAppsRouter(object):
         return DjangoAppsRouter.get_db(model)
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
+        if db in [ 'blight_tickets', 'eql', 'tidemark' ]:
+            return False
         if model_name:
             return DjangoAppsRouter.get_db(model_name)
 
 
+# TODO remove this?
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',

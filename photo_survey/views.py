@@ -17,6 +17,7 @@ from cod_utils.cod_logger import CODLogger
 
 from photo_survey.models import Image, ImageMetadata
 from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
+from photo_survey.models import PublicPropertyData
 
 from assessments.models import ParcelMaster
 
@@ -124,7 +125,14 @@ def get_metadata(request, parcel_id):
 
     surveys = [ survey.id for survey in Survey.objects.filter(parcel_id=parcel_id) ]
 
-    return Response({ "images": images, "surveys": surveys })
+    # Is this parcel publicly owned?
+    # TODO: make sure the dataset for this eventually 'goes live' (currently we load it
+    # whenever dexter slusarski gets a new csv with this content)
+    # pdb.set_trace()
+    public_property_data = PublicPropertyData.objects.filter(parcelno=parcel_id)
+    publicly_owned = len(public_property_data) > 0
+
+    return Response({ "images": images, "surveys": surveys, "publicly_owned": publicly_owned })
 
 
 @api_view(['GET'])

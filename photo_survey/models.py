@@ -194,3 +194,30 @@ class SurveyQuestionAvailAnswer(models.Model):
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
         return self.survey_question.question_id + ' - ' + self.value + ' - ' + self.text
+
+
+class PublicPropertyData(models.Model):
+    """
+    Defines information about known public property.
+    Note:  this table was provided as a one-off csv file from Dexter Slusarski and
+    should be updated as often as possible.  Ideally it should be replaced
+    with live data.
+    """
+
+    # TODO where should this live?
+    app_label = 'photo_survey'
+
+    parcelno = models.CharField('Parcel ID', max_length=32, db_index=True)
+    propaddress = models.CharField('Address', max_length=64)
+    propzip = models.CharField('ZIP', max_length=12)
+    taxpayer1 = models.CharField('Tax Payer 1', max_length=64)
+    taxpayer2 = models.CharField('Tax Payer 2', max_length=64)
+    taxaddr = models.CharField('Tax Payer Address', max_length=64)
+    taxcity = models.CharField('Tax Payer City', max_length=32)
+    taxstate = models.CharField('Tax Payer State', max_length=2)
+    taxzip = models.CharField('Tax Payer ZIP', max_length=32)
+    project_co = models.CharField('Project Code', max_length=32)
+    ownership = models.CharField('Owner', max_length=64)
+
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
+        return self.parcelno + ' - ' + self.propaddress + ' - ' + self.taxpayer1 + ' - ' + self.ownership
