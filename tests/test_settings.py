@@ -77,6 +77,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'assessments',
+    'blight_tickets',
     'photo_survey',
     'waste_schedule',
     'waste_notifier',
@@ -172,6 +173,7 @@ class DjangoAppsRouter(object):
         "SurveyQuestion": "photo_survey",
         "SurveyAnswer": "photo_survey",
         "SurveyQuestionAvailAnswer": "photo_survey",
+        "Tblztickets": "blight_tickets",
     }
 
     ModelDBMapDev = {
