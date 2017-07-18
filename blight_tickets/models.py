@@ -1,8 +1,12 @@
 from django.db import models
+from django.conf import settings
 
 
 class Tblztickets(models.Model):
-    zticketid = models.IntegerField(db_column='ZTicketID')  # Field name made lowercase.
+
+    app_label = 'blight_tickets'
+
+    zticketid = models.IntegerField(db_column='ZTicketID', primary_key=True)  # Field name made lowercase.
     ticketnumber = models.CharField(db_column='TicketNumber', primary_key=True, max_length=12)  # Field name made lowercase.
     agencyid = models.IntegerField(db_column='AgencyID')  # Field name made lowercase.
     violstreetnumber = models.IntegerField(db_column='ViolStreetNumber')  # Field name made lowercase.
@@ -48,5 +52,6 @@ class Tblztickets(models.Model):
     ticketprintdt = models.DateTimeField(db_column='TicketPrintDT', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        if not settings.RUNNING_UNITTESTS: # pragma: no cover
+            managed = False
         db_table = 'tblZTickets'
