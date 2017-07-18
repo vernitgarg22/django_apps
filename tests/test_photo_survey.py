@@ -14,7 +14,7 @@ from django.test import TestCase
 import tests.disabled
 
 from photo_survey.models import Image, ImageMetadata
-from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
+from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer, SurveyQuestionAvailAnswer
 from assessments.models import ParcelMaster
 
 from cod_utils.util import date_json
@@ -317,6 +317,17 @@ class PhotoSurveyUtilTests(TestCase):
     def test_answer_not_required(self):
         question = SurveyQuestion(survey_template_id='test', question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
         self.assertFalse(photo_survey.views.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
+
+
+    def test_avail_answer_question_id(self):
+
+        survey_question = SurveyQuestion(survey_template_id='template', question_id='sample_question', question_number=1, question_text='Question Text')
+        survey_question.save()
+
+        avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='value', text='Human readable question')
+        avail_answer.save()
+
+        self.assertEqual(avail_answer.survey_question_question_id(), survey_question.question_id)
 
 
 class PhotoSurveyTests(TestCase):
