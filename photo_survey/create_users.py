@@ -1,3 +1,5 @@
+# from photo_survey import create_users
+
 from django.contrib.auth.models import User
 
 user_data = [
@@ -12,9 +14,14 @@ user_data = [
     # [ 'Alleah', 'Walker', 'AlleahW@gmail.com' ],
     # [ 'Myla', 'Collins', 'MylaDcollins@yahoo.com' ],
     # [ 'Jamie', 'Sedlacek', 'JamieSedlacek@rockventures.com' ],
-    [ 'Martha', 'Potere', 'mpotere@degc.org' ],
-    [ 'Cydney', 'Camp', 'ccamp@degc.org' ],
-    [ 'Lily', 'Hamburger', 'ehamburger@degc.org' ],
+    # [ 'Martha', 'Potere', 'mpotere@degc.org' ],
+    # [ 'Cydney', 'Camp', 'ccamp@degc.org' ],
+    # [ 'Lily', 'Hamburger', 'ehamburger@degc.org' ],
+    [ 'Katie', 'Navetta', 'KatieNavetta@quickenloans.com' ],
+    [ 'Alyssa', 'Doutsas', 'AlyssaDoutsas@quickenloans.com' ],
+    [ 'Brady', 'Lazuka', 'bradylazuka@quickenloans.com' ],
+    [ 'Breia', 'Berrien', 'breiaberrien@quickenloans.com' ],
+    [ 'Austin', 'Janice', 'austinjanice@quickenloans.com' ],
 ]
 for data in user_data:
     first_name = data[0]
