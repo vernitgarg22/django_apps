@@ -24,12 +24,24 @@ from assessments.models import ParcelMaster
 from cod_utils.util import date_json
 
 
-#
-# To create users:
-#
-# from django.contrib.auth.models import User
-# User.objects.db_manager('photo_survey').create_user(<usernam>, <email>, <password>)
-#
+def get_survey_data(survey):
+    answers = [ { survey_answer.question_id: survey_answer.answer } for survey_answer in survey.survey_answers ]
+    return {
+        "id": survey.id,
+        "survey_template": survey.survey_template_id,
+        "parcel_id": survey.parcel_id,
+        "created_at": date_json(survey.created_at),
+        "surveyor": {
+            "id": survey.user.id,
+            "username": survey.user.username,
+            "email": survey.user.email,
+        },
+        "answers": answers,
+        "common_name": survey.common_name,
+        "note": survey.note,
+        "image_url": survey.image_url,
+        "status": survey.status,
+    }
 
 
 def authenticate_user(email, password, using = 'photo_survey'):
@@ -128,7 +140,6 @@ def get_metadata(request, parcel_id):
     # Is this parcel publicly owned?
     # TODO: make sure the dataset for this eventually 'goes live' (currently we load it
     # whenever dexter slusarski gets a new csv with this content)
-    # pdb.set_trace()
     public_property_data = PublicPropertyData.objects.filter(parcelno=parcel_id)
     publicly_owned = len(public_property_data) > 0
 
@@ -147,24 +158,23 @@ def get_survey(request, survey_id):
     if not surveys:
          return Response({"survey not found": survey_id}, status=status.HTTP_404_NOT_FOUND)
 
-    survey = surveys[0]
-    answers = [ { survey_answer.question_id: survey_answer.answer } for survey_answer in survey.survey_answers ]
+    return Response(get_survey_data(surveys[0]))
 
-    content = {
-        "survey_template": survey.survey_template_id,
-        "parcel_id": survey.parcel_id,
-        "created_at": date_json(survey.created_at),
-        "surveyor": {
-            "id": survey.user.id,
-            "username": survey.user.username,
-            "email": survey.user.email,
-        },
-        "answers": answers,
-        "common_name": survey.common_name,
-        "note": survey.note,
-        "image_url": survey.image_url,
-        "status": survey.status,
-    }
+
+@api_view(['GET'])
+def get_latest_survey(request, parcel_id):
+    """
+    Returns latest survey data for the parcel.
+    TODO return latest survey that has a 'good' status.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    parcel_id = clean_parcel_id(parcel_id)
+
+    survey = Survey.objects.filter(parcel_id=parcel_id).last()
+
+    content = get_survey_data(survey) if survey else {}
 
     return Response(content)
 

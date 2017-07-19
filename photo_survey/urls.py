@@ -22,5 +22,6 @@ urlpatterns = [
     # url(r'^(?P<parcel_id>[-\w\_\.]+)/$', views.get_metadata, lookup_value_regex = '[^/]+'),
     url(r'^survey/(?P<parcel_id>[-\w\_\.]+)/$', views.post_survey),
     url(r'^survey/data/(?P<survey_id>[0-9]+)/$', views.get_survey),
+    url(r'^survey/latest/(?P<parcel_id>[-\w\_\.]+)/$', views.get_latest_survey),
     url(r'^surveyor/survey_count/$', views.get_surveyor_survey_count),
 ]

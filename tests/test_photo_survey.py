@@ -380,11 +380,27 @@ class PhotoSurveyTests(TestCase):
 
         survey = Survey.objects.first()
 
-        expected = {'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
+        expected = {'id': survey.id, 'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
 
-        response = c.get("/photo_survey/survey/data/1/")
+        response = c.get("/photo_survey/survey/data/{}/".format(survey.id))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(expected, response.data, "/photo_survey/survey/data/<parce id>/ returns data from a survey")
+
+    def test_get_latest_survey(self):
+
+        c = Client()
+
+        # Run a different test just to get a survey submitted
+        self.test_post_survey_combined()
+
+        survey = Survey.objects.first()
+
+        expected = {'id': survey.id, 'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
+
+        response = c.get("/photo_survey/survey/latest/testparcelid/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(expected, response.data, "/photo_survey/survey/latest/<parce id>/ returns data from latest survey for a parcel")
 
     def test_get_survey_404(self):
 
