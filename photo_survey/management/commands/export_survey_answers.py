@@ -17,6 +17,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('survey_template_id', type=str, help='Identifies the survey type')
         parser.add_argument('--pretty_print', default='y', help='Pretty print values')
+        parser.add_argument('--remove_dupes', default='y', help='Only return most-recent survey for each parcel')
         parser.add_argument('--add_data', default='ownership,address_info', help='Comma-delimited set of types of data to add')
 
     def init_metadata(self, options):
@@ -26,6 +27,7 @@ class Command(BaseCommand):
 
         # First parse out command-line options
         self.pretty_print = options['pretty_print'] == 'y'
+        self.remove_dupes = options['remove_dupes'] == 'y'
         tmp = options.get('add_data', '')
         self.data_types = { data_type: True for data_type in tmp.split(',') }
         self.survey_template_id = options['survey_template_id']
@@ -49,7 +51,11 @@ class Command(BaseCommand):
         Retrieve all the survey answers.
         """
 
-        self.surveys = Survey.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('parcel_id')
+        self.surveys = Survey.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('id')
+        if self.remove_dupes:
+            survey_map = { survey.parcel_id: survey for survey in self.surveys }
+            self.surveys = survey_map.values()
+
         self.answers = SurveyAnswer.objects.using(self.using_db).all()
 
         if self.data_types.get('ownership', False) or self.data_types.get('address_info', False):
