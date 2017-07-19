@@ -3,7 +3,7 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from photo_survey.models import Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer
+from photo_survey.models import PublicPropertyData, Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer
 from assessments.models import ParcelMaster
 
 from cod_utils.util import split_csv
@@ -17,7 +17,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('survey_template_id', type=str, help='Identifies the survey type')
         parser.add_argument('--pretty_print', default='y', help='Pretty print values')
-        parser.add_argument('--add_data', default='ownership', help='Comma-delimited set of types of data to add')
+        parser.add_argument('--add_data', default='ownership,address_info', help='Comma-delimited set of types of data to add')
 
     def init_metadata(self, options):
         """
@@ -52,10 +52,13 @@ class Command(BaseCommand):
         self.surveys = Survey.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('parcel_id')
         self.answers = SurveyAnswer.objects.using(self.using_db).all()
 
-        if self.data_types.get('ownership', False):
+        if self.data_types.get('ownership', False) or self.data_types.get('address_info', False):
             survey_ids = { survey.parcel_id for survey in self.surveys }
             parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_ids))
             self.parcels = { parcel.pnum: parcel for parcel in parcels_tmp }
+
+            public_property_tmp = PublicPropertyData.objects.using(self.using_db).all()
+            self.public_property = { public_property.parcelno: public_property for public_property in public_property_tmp }
 
     def get_fieldnames(self):
         """
@@ -64,7 +67,9 @@ class Command(BaseCommand):
 
         field_names = [ 'parcel', 'surveyor', 'common_name', 'note', 'status', 'created_at' ] + [ question.question_id for question in self.questions ]
         if self.data_types.get('ownership', False):
-            field_names.extend( [ 'owner name', 'owner address', 'owner city', 'owner state', 'owner zip' ] )
+            field_names.extend( [ 'owner name', 'owner address', 'owner city', 'owner state', 'owner zip', 'publicly owned' ] )
+        if self.data_types.get('address_info', False):
+            field_names.extend( [ 'street address' ] )
 
         return field_names
 
@@ -107,14 +112,18 @@ class Command(BaseCommand):
         if self.data_types.get('ownership', False):
             parcel = self.parcels.get(survey.parcel_id, None)
             if parcel:
-                owner_name = parcel.ownername1
-                if parcel.ownername2:
-                    owner_name = owner_name + ' - ' + parcel.ownername2
-                answer_data['owner name'] = owner_name
-                answer_data['owner address'] = parcel.ownerstreetaddr
-                answer_data['owner city'] = parcel.ownercity
-                answer_data['owner state'] = parcel.ownerstate
-                answer_data['owner zip'] = parcel.ownerzip
+                if self.data_types.get('ownership', False):
+                    owner_name = parcel.ownername1
+                    if parcel.ownername2:
+                        owner_name = owner_name + ' - ' + parcel.ownername2
+                    answer_data['owner name'] = owner_name
+                    answer_data['owner address'] = parcel.ownerstreetaddr
+                    answer_data['owner city'] = parcel.ownercity
+                    answer_data['owner state'] = parcel.ownerstate
+                    answer_data['owner zip'] = parcel.ownerzip
+                    answer_data['publicly owned'] = 'y' if self.public_property.get(survey.parcel_id) else 'n'
+                if self.data_types.get('address_info', False):
+                    answer_data['street address'] = parcel.propstreetcombined
 
         return answer_data
 
