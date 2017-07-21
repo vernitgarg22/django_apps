@@ -36,7 +36,7 @@ class Command(BaseCommand):
         first_line = True
         files={}
 
-        with open(csv_file_path, newline='') as csvfile:
+        with open(file_path, newline='') as csvfile:
             datareader = csv.reader(csvfile, quotechar='|')
             for row in datareader:
 
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                     parcel_id = clean_string(row[7])
                     created_at = datetime.strptime(clean_string(row[5]), "%Y:%m:%d %H:%M:%S")
                     path = clean_string(row[0])
-                    subdir = path.split('/')[3]
+                    subdir = path.split('/')[-2]
                     latitude = clean_decimal(row[3])
                     longitude = clean_decimal(row[2])
                     altitude = clean_decimal(row[4])
