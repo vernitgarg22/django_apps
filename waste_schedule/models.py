@@ -228,16 +228,6 @@ class ScheduleDetail(models.Model):
         return routes
 
     @staticmethod
-    def get_waste_route_ids(date, service_type = TRASH):
-        """
-        Returns comma-delimited list of route ids
-        pertaining to routes getting serviced on the particular date
-        """
-
-        routes = ScheduleDetail.get_waste_routes(date, service_type)
-        return ',' + ''.join( [ str(route_id) + ',' for route_id in list(routes.keys()) ] )
-
-    @staticmethod
     def get_schedule_changes(route_id, date):
         """
         Returns schedule details pertaining to the given route and date
