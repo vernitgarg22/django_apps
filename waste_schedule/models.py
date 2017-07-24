@@ -1,11 +1,9 @@
+import re
 import requests
-from datetime import date
 from enum import Enum
 
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.core import validators
-from django.core.validators import validate_comma_separated_integer_list
 
 from waste_wizard.models import WasteItem
 from cod_utils import util
@@ -76,7 +74,7 @@ class ScheduleDetail(models.Model):
     normal_day = models.DateField('Normal day of service', db_index=True, null=True, blank=True)
     new_day = models.DateField('Rescheduled day of service', db_index=True, null=True, blank=True)
     note = models.CharField('Note', max_length = 256, null=True, blank=True)
-    waste_area_ids = models.CharField('Waste area(s) effected', max_length = 1028, null=True, blank=True, validators=[validate_comma_separated_integer_list])
+    waste_area_ids = models.CharField('Waste area(s) effected', max_length = 1028, null=True, blank=True)
 
     @property
     def sort_value(self):
@@ -99,8 +97,8 @@ class ScheduleDetail(models.Model):
     def clean(self):
 
         # validate the waste area ids (but allow empty string)
-        if self.waste_area_ids:
-            validators.validate_comma_separated_integer_list(self.waste_area_ids)
+        if self.waste_area_ids and not (re.search(r'^[0-9,][0-9,]*$', self.waste_area_ids)):
+            raise ValidationError({'waste_area_ids': "Must be comma-separated list of numbers"})
 
         # every detail must have either a normal date or a new date (required for sorting)
         if not self.normal_day and not self.new_day:
@@ -137,20 +135,6 @@ class ScheduleDetail(models.Model):
         if kwargs.get('null_waste_area_ids'):
             self.waste_area_ids = None
             del kwargs['null_waste_area_ids']
-
-        # if admin did not specify waste area ids, look them up for trash service
-        # and add in recycling & bulk to the detail note so the admin will know about any
-        # conflicts with recycling or bulk pickup
-        elif not self.waste_area_ids and self.detail_type == 'schedule':
-            self.waste_area_ids = self.get_waste_route_ids(self.normal_day)
-
-            recycling_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.RECYCLING)
-            bulk_ids = self.get_waste_route_ids(self.normal_day, ScheduleDetail.BULK)
-
-            if not self.note:
-                self.note = ''
-
-            self.note = self.note + "{0} (other service conflicts: recycling for {1} and bulk/hazardous/yard waste for {2})".format(self.note or '', recycling_ids, bulk_ids)
 
         # clean up waste_area_ids
         self.waste_area_ids = util.clean_comma_delimited_string(self.waste_area_ids)

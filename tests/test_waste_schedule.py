@@ -23,8 +23,8 @@ def cleanup_model(model):
 def cleanup_db():
     cleanup_model(ScheduleDetail)
 
-def make_schedule_detail(detail_type='schedule', service_type='trash', normal_day=None, new_day=None):
-    detail = ScheduleDetail(detail_type=detail_type, service_type=service_type, normal_day=normal_day, new_day=new_day)
+def make_schedule_detail(detail_type='schedule', service_type='trash', normal_day=None, new_day=None, waste_area_ids=None):
+    detail = ScheduleDetail(detail_type=detail_type, service_type=service_type, normal_day=normal_day, new_day=new_day, waste_area_ids=waste_area_ids)
     detail.clean()
     detail.save()
     return detail
@@ -315,10 +315,10 @@ class WasteScheduleTests(TestCase):
     def test_get_schedule_details_citywide_reschedule(self):
 
         c = Client()
-        make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.TRASH, normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
+        make_schedule_detail(detail_type='schedule', service_type=ScheduleDetail.TRASH, normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2), waste_area_ids=',0,1,14,')
         response = c.get("/waste_schedule/details/0/?today=20170501")
         self.assertTrue(response.status_code == 200)
-        expected = {'details': [{'note': ' (other service conflicts: recycling for ,1,27, and bulk/hazardous/yard waste for ,1,29,)', 'service': 'trash', 'normalDay': '2017-05-01T00:00:00', 'wasteAreaIds': ',0,1,14,', 'newDay': '2017-05-02T00:00:00', 'description': '', 'type': 'schedule'}], 'next_pickups': {'trash': {'next_pickup': '2017-05-02T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'recycling': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'bulk': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}}}
+        expected = {'details': [{'note': None, 'service': 'trash', 'normalDay': '2017-05-01T00:00:00', 'wasteAreaIds': ',0,1,14,', 'newDay': '2017-05-02T00:00:00', 'description': '', 'type': 'schedule'}], 'next_pickups': {'trash': {'next_pickup': '2017-05-02T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'recycling': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}, 'bulk': {'next_pickup': '2017-05-08T00:00:00', 'week': 'b', 'route': 0, 'day': 'monday', 'contractor': 'gfl'}}}
         self.assertDictEqual(expected, response.data, "Waste schedule reschedules services around schedule changes")
 
     def test_schedule_detail_mgr_init(self):
