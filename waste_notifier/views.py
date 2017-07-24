@@ -128,9 +128,6 @@ def confirm_notifications(request):
     return response
 
 
-# TODO redo this endpoint with ScheduleDetailMgr
-
-
 @api_view(['POST'])
 def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
     """

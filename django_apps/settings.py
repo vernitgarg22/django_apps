@@ -19,15 +19,6 @@ from django.core.exceptions import ImproperlyConfigured
 
 # TODO move stuff that is shared between django_apps.settings and tests.test_settings into a shared location
 
-# TODO upgrade to django 1.11
-# https://docs.djangoproject.com/en/1.11/howto/upgrade-version/
-# http://django.readthedocs.io/en/latest/howto/upgrade-version.html
-
-# TODO start using django-pyodbc-azure to connect to sql-server
-# https://github.com/michiya/django-pyodbc-azure
-# https://docs.microsoft.com/en-us/sql/relational-databases/native-client/sql-server-native-client
-# https://github.com/mkleehammer/pyodbc/wiki/Connecting-to-SQL-Server-from-Windows
-
 
 DJANGO_HOME = os.environ['DJANGO_HOME']
 
@@ -229,12 +220,3 @@ class DjangoAppsRouter(object):
             return False
         if model_name:
             return DjangoAppsRouter.get_db(model_name)
-
-
-# TODO remove this?
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
-    }
-}
