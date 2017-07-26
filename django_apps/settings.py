@@ -213,7 +213,8 @@ class DjangoAppsRouter(object):
         return DjangoAppsRouter.get_db(model)
 
     def allow_relation(self, obj1, obj2, **hints):
-        return DjangoAppsRouter.get_db(model)
+        # TODO always return True?
+        return True
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         if db in [ 'blight_tickets', 'eql', 'tidemark' ]:
