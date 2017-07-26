@@ -158,6 +158,7 @@ class SurveyQuestion(models.Model):
     required_by_answer = models.CharField('Required by answer', max_length=64, blank=True, default='', unique=False, help_text='Specific answer pattern that makes this required')
     answer_trigger = models.CharField('Answer trigger', max_length=16, blank=True, default='', unique=False, help_text="Required action for a given answer. e.g., 'n'")
     answer_trigger_action = models.CharField('Trigger action', max_length=16, blank=True, default='', unique=False, help_text="Action to take if a trigger goes off. e.g., 'stop'")
+    scoring_type = models.CharField('Way to score the answers for the question', max_length=16, blank=True, default='', unique=False)
 
     def is_valid(self, answer):
         """
@@ -186,6 +187,7 @@ class SurveyQuestionAvailAnswer(models.Model):
     survey_question = models.ForeignKey(SurveyQuestion)
     value = models.CharField('Answer Value', max_length=64, unique=False, help_text="Answer value as stored in database")
     text = models.CharField('Human-readable Answer', max_length=128, unique=False, help_text="Human-readable version of answer")
+    weight = models.IntegerField('Answer Weight', unique=False, default=0)
 
     def survey_question_question_id(self):
         return self.survey_question.question_id
