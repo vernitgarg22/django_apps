@@ -1,10 +1,9 @@
 import csv
-import re
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from photo_survey.models import PublicPropertyData, Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer
+from photo_survey.models import PublicPropertyData, Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer, ImageMetadata
 from assessments.models import ParcelMaster
 
 from cod_utils.util import split_csv
@@ -15,12 +14,16 @@ class Command(BaseCommand):
         Use this to export survey answers to csv, e.g.,
         python manage.py export_survey_answers survey_template_id """
 
+
+    USING_DB='photo_survey'
+
     def add_arguments(self, parser):
         parser.add_argument('survey_template_id', type=str, help='Identifies the survey type')
         parser.add_argument('--pretty_print', default='y', help='Pretty print values?')
         parser.add_argument('--remove_dupes', default='y', help='Only return most-recent survey for each parcel?')
         parser.add_argument('--add_data', default='ownership,address_info', help='Comma-delimited set of types of data to add')
         parser.add_argument('--calc_score', default='y', help='Calculate a score for each survey?')
+        parser.add_argument('--add_streetview_link', default='y', help='Add a link to mapillary streetview?')
 
     def init_metadata(self, options):
         """
@@ -31,19 +34,19 @@ class Command(BaseCommand):
         self.pretty_print = options['pretty_print'] == 'y'
         self.remove_dupes = options['remove_dupes'] == 'y'
         self.calc_score = options['calc_score'] == 'y'
+        self.add_streetview_link = options['add_streetview_link'] == 'y'
         tmp = options.get('add_data', '')
         self.data_types = { data_type: True for data_type in tmp.split(',') }
         self.survey_template_id = options['survey_template_id']
 
         # Now finish initializing everything
-        self.using_db='photo_survey'
-        self.questions = SurveyQuestion.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('question_number')
+        self.questions = SurveyQuestion.objects.using(self.USING_DB).filter(survey_template_id=self.survey_template_id).order_by('question_number')
         now = timezone.now()
         self.out_file = now.strftime("%Y%m%d_%H%M%S.csv")
         self.num_exported = 0
 
         if self.pretty_print:
-            avail_answers_tmp = SurveyQuestionAvailAnswer.objects.using(self.using_db).filter(survey_question__survey_template_id=self.survey_template_id)
+            avail_answers_tmp = SurveyQuestionAvailAnswer.objects.using(self.USING_DB).filter(survey_question__survey_template_id=self.survey_template_id)
 
             self.avail_answers = { avail_answer.survey_question.question_id: {} for avail_answer in avail_answers_tmp }
             for avail_answer in avail_answers_tmp:
@@ -54,19 +57,19 @@ class Command(BaseCommand):
         Retrieve all the survey answers.
         """
 
-        self.surveys = Survey.objects.using(self.using_db).filter(survey_template_id=self.survey_template_id).order_by('id')
+        self.surveys = Survey.objects.using(self.USING_DB).filter(survey_template_id=self.survey_template_id).order_by('id')
         if self.remove_dupes:
             survey_map = { survey.parcel_id: survey for survey in self.surveys }
             self.surveys = survey_map.values()
 
-        self.answers = SurveyAnswer.objects.using(self.using_db).all()
+        self.answers = SurveyAnswer.objects.using(self.USING_DB).all()
 
         if self.data_types.get('ownership', False) or self.data_types.get('address_info', False):
             survey_ids = { survey.parcel_id for survey in self.surveys }
             parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_ids))
             self.parcels = { parcel.pnum: parcel for parcel in parcels_tmp }
 
-            public_property_tmp = PublicPropertyData.objects.using(self.using_db).all()
+            public_property_tmp = PublicPropertyData.objects.using(self.USING_DB).all()
             self.public_property = { public_property.parcelno: public_property for public_property in public_property_tmp }
 
     def get_fieldnames(self):
@@ -81,6 +84,8 @@ class Command(BaseCommand):
             field_names.extend( [ 'street address' ] )
         if self.calc_score:
             field_names.extend( [ 'score' ] )
+        if self.add_streetview_link:
+            field_names.extend( [ 'streetview' ] )
         return field_names
 
     def prettify_answers(self, answer_data):
@@ -104,7 +109,7 @@ class Command(BaseCommand):
         """
 
         curr_answers = [ answer.answer for answer in answers[question.question_id] ]
-        if len(curr_answers) == 1 and re.fullmatch('[a-z,]+', curr_answers[0]):
+        if len(curr_answers) == 1 and ',' in curr_answers[0]:
             return split_csv(curr_answers[0])
         else:
             return curr_answers
@@ -144,6 +149,21 @@ class Command(BaseCommand):
                 score = curr_score
 
         return score
+
+    @staticmethod
+    def get_streetview_link(survey):
+        """
+        Returns a link to one of the mapillary 'streetview' images that was used to create the survey.
+        """
+
+        img_meta = ImageMetadata.objects.using(Command.USING_DB).filter(parcel_id=survey.parcel_id).first()
+        if not img_meta:
+            return None
+
+        # TODO might be smart to make this a method on the survey object... except we may need to optimize this
+        # by retrieving all the image_metadata objects when we first retrieve all the surveys?
+
+        return "https://www.mapillary.com/app/?lat={0}&lng={1}&z=17&pKey={2}&focus=photo".format(img_meta.latitude, img_meta.longitude, survey.image_url)
 
     def get_answerdata(self, survey):
         """
@@ -186,6 +206,12 @@ class Command(BaseCommand):
         # Calculate a score for each survey?
         if self.calc_score:
             answer_data['score'] = self.calculate_survey_score(survey)
+
+        # Add a streetview link for each survey?
+        if self.add_streetview_link:
+            link = self.get_streetview_link(survey)
+            if link:
+                answer_data['streetview'] = link
 
         return answer_data
 
