@@ -8,6 +8,9 @@ from twilio.request_validator import RequestValidator
 from twilio.rest import Client
 
 
+import pdb
+
+
 class MsgHandler():
     """
     Validates requests received from twilio
@@ -54,13 +57,40 @@ class MsgHandler():
         client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
         if MsgHandler.DRY_RUN or dry_run_param:
             return False
-        else:
-            client.messages.create(
+
+        try:
+            message = client.messages.create(
                 to = "+1" + phone_number,
                 from_ = MsgHandler.get_phone_sender(),
                 body = text,
             )
-            return True
+            return message.status != 'failed'
+        except:
+            print("Error received sending twilio msg to number {}".format(phone_number))
+            return False
+
+    def send_admin_alert(self, text, dry_run_param = False):
+        """
+        Alert admins via twilio rest client
+        """
+
+        # TODO put this in config file
+        admin_numbers = ['9178428901']
+
+        client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
+        if dry_run_param:
+            return False
+
+        for number in admin_numbers:
+            try:
+                client.messages.create(
+                    to = "+1" + number,
+                    from_ = MsgHandler.get_phone_sender(),
+                    body = text,
+                )
+            except:
+                print("Error received sending twilio msg")
+                return False
 
 
 class SlackMsgHandler():
