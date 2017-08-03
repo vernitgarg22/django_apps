@@ -10,10 +10,9 @@ class SurveyAdmin(admin.ModelAdmin):
     ]
     # inlines = [ChoiceInline]
     list_display = ('survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status')
-    list_filter = ['survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status']
+    list_filter = ['survey_type__survey_template_id', 'user_id', 'parcel_id', 'common_name', 'note', 'image_url', 'status']
     list_editable = ['note', 'status']
     search_fields = ['survey_template_id', 'user_id', 'parcel_id', 'note', 'status']
-    ordering = ['survey_template_id', 'parcel_id', 'common_name', 'status']
 
 admin.site.register(Survey, SurveyAdmin)
 
@@ -25,10 +24,9 @@ class SurveyQuestionAdmin(admin.ModelAdmin):
     ]
     # inlines = [ChoiceInline]
     list_display = ('survey_template_id', 'question_id', 'question_number', 'question_text', 'valid_answers', 'required_by', 'required_by_answer', 'answer_trigger', 'answer_trigger_action', 'scoring_type')
-    list_filter = ['survey_template_id']
+    list_filter = ['survey_type__survey_template_id']
     list_editable = ['question_id', 'question_number', 'question_text', 'valid_answers', 'required_by', 'required_by_answer', 'answer_trigger', 'answer_trigger_action', 'scoring_type']
     search_fields = ['survey_template_id', 'question_id', 'question_text']
-    ordering = ['survey_template_id', 'question_number']
 
 admin.site.register(SurveyQuestion, SurveyQuestionAdmin)
 

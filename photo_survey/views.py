@@ -5,6 +5,7 @@ import requests
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.db.models import Count
 
@@ -16,7 +17,7 @@ from rest_framework.response import Response
 from cod_utils.cod_logger import CODLogger
 
 from photo_survey.models import Image, ImageMetadata
-from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer
+from photo_survey.models import ParcelMetadata, SurveyType, Survey, SurveyQuestion, SurveyAnswer
 from photo_survey.models import PublicPropertyData
 
 from assessments.models import ParcelMaster
@@ -25,11 +26,11 @@ from cod_utils.util import date_json
 
 
 def get_survey_data(survey):
-    answers = [ { survey_answer.question_id: survey_answer.answer } for survey_answer in survey.survey_answers ]
+    answers = [ { survey_answer.question_id: survey_answer.answer } for survey_answer in survey.surveyanswer_set.all() ]
     return {
         "id": survey.id,
         "survey_template": survey.survey_template_id,
-        "parcel_id": survey.parcel_id,
+        "parcel_id": survey.parcel.parcel_id,
         "created_at": date_json(survey.created_at),
         "surveyor": {
             "id": survey.user.id,
@@ -109,8 +110,8 @@ def get_survey_count(request, parcel_id):
 
     parcel_id = clean_parcel_id(parcel_id)
 
-    surveys = Survey.objects.filter(parcel_id=parcel_id)
-    content = { "count": len(surveys) }
+    count = Survey.objects.filter(parcel__parcel_id=parcel_id).count()
+    content = { "count": count }
 
     return Response(content)
 
@@ -130,12 +131,12 @@ def get_metadata(request, parcel_id):
     # e.g., jpegtran -progressive image_raw.jpg small.jpg
 
     images = []
-    image_metadata = ImageMetadata.objects.filter(parcel_id=parcel_id)
+    image_metadata = ImageMetadata.objects.filter(parcel__parcel_id=parcel_id)
     for img_meta in image_metadata:
         url = request.build_absolute_uri(location='/data/photo_survey/images/' + img_meta.image.file_path)
         images.append(url)
 
-    surveys = [ survey.id for survey in Survey.objects.filter(parcel_id=parcel_id) ]
+    surveys = [ survey.id for survey in Survey.objects.filter(parcel__parcel_id=parcel_id) ]
 
     # Is this parcel publicly owned?
     # TODO: make sure the dataset for this eventually 'goes live' (currently we load it
@@ -172,7 +173,7 @@ def get_latest_survey(request, parcel_id):
 
     parcel_id = clean_parcel_id(parcel_id)
 
-    survey = Survey.objects.filter(parcel_id=parcel_id).last()
+    survey = Survey.objects.filter(parcel__parcel_id=parcel_id).last()
 
     content = get_survey_data(survey) if survey else {}
 
@@ -192,11 +193,14 @@ def is_answer_required(question, answers):
 
 
 def check_parcels(parcel_ids):
+    """
+    Returns json mapping each parcel_id to number of surveys that exist currently for that parcel.
+    """
 
     survey_info = { parcel_id: 0 for parcel_id in parcel_ids }
     if parcel_ids:
 
-        survey_counts = Survey.objects.filter(parcel_id__in=parcel_ids).annotate(count=Count('parcel_id'))
+        survey_counts = ParcelMetadata.objects.filter(parcel_id__in=parcel_ids).annotate(count=Count('survey'))
         for survey_count in survey_counts:
             survey_info[survey_count.parcel_id] = survey_count.count
 
@@ -249,7 +253,7 @@ def post_survey(request, parcel_id):
         return Response({ "invalid parcel id":  parcel_id }, status=status.HTTP_400_BAD_REQUEST)
 
     # What are our questions and answers?
-    questions = SurveyQuestion.objects.filter(survey_template_id=survey_template_id).order_by('question_number')
+    questions = SurveyQuestion.objects.filter(survey_type__survey_template_id=survey_template_id).order_by('question_number')
     if not questions:
         return Response({ "invalid survey":  data['survey_id']}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -278,15 +282,20 @@ def post_survey(request, parcel_id):
     if answer_errors:
         return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
-    survey = Survey(survey_template_id=survey_template_id, user_id=str(user.id), parcel_id=parcel_id,
+    parcel = ParcelMetadata.objects.get(parcel_id=parcel_id)
+
+    # Create the survey
+    survey_type = SurveyType.objects.get(survey_template_id=survey_template_id)
+    survey = Survey(survey_type=survey_type, user_id=str(user.id), parcel=parcel,
                 common_name=data.get('common_name', ''), note=data.get('note', ''), status=data.get('status', ''), image_url=data.get('image_url', ''))
     survey.save()
 
     # Save all the answers
-    for answer in (a for a in answers.values() if a['answer']):
-        answer = SurveyAnswer(**answer)
-        answer.survey = survey
-        answer.save()
+    for survey_question in questions:
+        answer = answers.get(survey_question.question_id)
+        if answer and answer['answer']:
+            survey_answer = SurveyAnswer(survey=survey, survey_question=survey_question, answer=answer['answer'], note=answer.get('answer', None))
+            survey_answer.save()
 
     # Indicate number of surveys present for each parcel id in the request
     parcel_info = check_parcels(data.get('parcel_ids', []))
@@ -303,9 +312,8 @@ def get_status(request):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    parcel_counts = Survey.objects.values("parcel_id").annotate(count=Count("parcel_id"))
-
-    content = { parcel_count['parcel_id']: parcel_count['count'] for parcel_count in parcel_counts }
+    parcel_counts = ParcelMetadata.objects.all().annotate(count=Count('survey'))
+    content = { parcel_count.parcel_id : parcel_count.count for parcel_count in parcel_counts }
 
     return Response(content)
 

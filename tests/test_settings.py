@@ -169,8 +169,10 @@ class DjangoAppsRouter(object):
         "CaseMain": "tidemark",
         "Image": "photo_survey",
         "ImageMetadata": "photo_survey",
+        "ParcelMetadata": "photo_survey",
         "PublicPropertyData": "photo_survey",
         "Survey": "photo_survey",
+        "SurveyType": "photo_survey",
         "SurveyQuestion": "photo_survey",
         "SurveyAnswer": "photo_survey",
         "SurveyQuestionAvailAnswer": "photo_survey",
@@ -183,8 +185,10 @@ class DjangoAppsRouter(object):
         "WasteItem": "waste_collection_dev",
         "Image": "photo_survey_dev",
         "ImageMetadata": "photo_survey_dev",
+        "ParcelMetadata": "photo_survey_dev",
         "PublicPropertyData": "photo_survey_dev",
         "Survey": "photo_survey_dev",
+        "SurveyType": "photo_survey_dev",
         "SurveyQuestion": "photo_survey_dev",
         "SurveyAnswer": "photo_survey_dev",
         "SurveyQuestionAvailAnswer": "photo_survey_dev",
@@ -207,7 +211,8 @@ class DjangoAppsRouter(object):
         return DjangoAppsRouter.get_db(model)
 
     def allow_relation(self, obj1, obj2, **hints):
-        return DjangoAppsRouter.get_db(model)    # pragma: no cover
+        # TODO always return True?
+        return True
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         if model_name:

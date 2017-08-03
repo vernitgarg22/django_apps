@@ -14,7 +14,7 @@ from django.test import TestCase
 import tests.disabled
 
 from photo_survey.models import Image, ImageMetadata
-from photo_survey.models import Survey, SurveyQuestion, SurveyAnswer, SurveyQuestionAvailAnswer
+from photo_survey.models import ParcelMetadata, Survey, SurveyType, SurveyQuestion, SurveyAnswer, SurveyQuestionAvailAnswer
 from assessments.models import ParcelMaster
 
 from cod_utils.util import date_json
@@ -29,10 +29,13 @@ def cleanup_model(model, using=None):
     else:
         model.objects.all().delete()
 
-def init_parcel_master(parcel_id = 'testparcelid'):
+def init_parcel_data(parcel_id = 'testparcelid'):
     data = {'resb_priceground': 29.04669, 'resb_occ': 0, 'cib_effage': 0, 'resb_depr': 38, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_floorarea': 0.0, 'resb_value': 37325.0, 'cib_numcib': 0, 'resb_style': 'SINGLE FAMILY', 'cib_calcvalue': 0.0, 'cib_pricefloor': 0.0, 'resb_heat': 2, 'resb_calcvalue': 106948.421875, 'resb_nbed': 0, 'resb_exterior': 3, 'ownerstate': 'MI', 'ownercity': 'DETROIT', 'resb_pricefloor': 13.31134, 'resb_gartype': 1, 'resb_yearbuilt': 1914, 'resb_garagearea': 504, 'resb_groundarea': 1285, 'resb_fireplaces': 1, 'resb_styhgt': 5, 'resb_basementarea': 1110, 'resb_bldgclass': 2, 'cib_yearbuilt': 0, 'ownername2': '', 'relatedpnum': '', 'resb_avestyht': 2.1821, 'resb_plusminus': 0, 'cib_bldgclass': 0, 'pnum': parcel_id, 'resb_effage': 52, 'resb_fullbaths': 2, 'resb_floorarea': 2804, 'cib_occ': 0, 'cibunits': 0, 'resb_halfbaths': 1, 'ownerstreetaddr': '7840 VAN DYKE PL', 'cibbedrooms': 0, 'ownerzip': '48214', 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'xstreetname_1': 'SEYBURN', 'xstreetname_0': 'VAN DYKE', 'resb_numresb': 1, 'cib_stories': 0, 'cib_value': 0.0}
     pm = ParcelMaster(**data)
     pm.save()
+
+    ParcelMetadata.objects.get_or_create(parcel_id=parcel_id)[0].save()
+
     return pm
 
 def cleanup_db():
@@ -41,30 +44,43 @@ def cleanup_db():
     cleanup_model(SurveyQuestion)
     cleanup_model(SurveyAnswer)
     cleanup_model(Survey)
+    cleanup_model(SurveyType)
+    cleanup_model(ParcelMetadata)
     cleanup_model(ParcelMaster, 'default')
     cleanup_model(Token)
     cleanup_model(User, using='photo_survey')
 
-def build_image_data():
+def build_image_data(parcel_id='test_parcel_id'):
+
+    parcel, created = ParcelMetadata.objects.get_or_create(parcel_id=parcel_id)
+    parcel.save()
+
     image = Image(file_path='demoimage1.jpg')
     image.save()
 
-    image_metadata = ImageMetadata(image=image, parcel_id='testparcelid', created_at=timezone.now(), latitude=0, longitude=0, altitude=0, note='test image')
+    image_metadata = ImageMetadata(image=image, parcel=parcel, created_at=timezone.now(), latitude=0, longitude=0, altitude=0, note='test image')
     image_metadata.save()
 
 def create_user(email='lennon@thebeatles.com', password='johnpassword'):
     # Note: we are using email for username
-    return User.objects.db_manager('photo_survey').create_user(email, email, password)
+    user = User.objects.using('photo_survey').filter(email=email).first()
+    if not user:
+        user = User.objects.db_manager('photo_survey').create_user(email, email, password)
+    return user
 
 # TODO rename these
 def build_survey_template():
+
+    survey_type = SurveyType(survey_template_id='default')
+    survey_type.save()
+
     data = [
-        { "survey_template_id": "default", "question_id": "parcel_id", "question_number": 1, "question_text": "Location information", "valid_answers": ".*", "required_by": "y" },
-        { "survey_template_id": "default", "question_id": "needs_intervention", "question_number": 2, "question_text": "Does this parcel need intervention?", "valid_answers": "y|n", "required_by": "y", "answer_trigger": "n", "answer_trigger_action": "exit" },
-        { "survey_template_id": "default", "question_id": "lot_or_structure", "question_number": 3, "question_text": "Is the blighted parcel a lot or structure?", "valid_answers": "lot|structure", "required_by": "needs_intervention", "required_by_answer": "y" },
-        { "survey_template_id": "default", "question_id": "structure_with_blight", "question_number": 4, "question_text": "Structure with Blight", "valid_answers": "[a-c,]", "required_by": "lot_or_structure", "required_by_answer": "structure" },
-        { "survey_template_id": "default", "question_id": "elements_of_structure", "question_number": 5, "question_text": "Elements of the Blighted Structure", "valid_answers": "[a-o,]+", "required_by": "lot_or_structure", "required_by_answer": "structure" },
-        { "survey_template_id": "default", "question_id": "elements_of_lot", "question_number": 6, "question_text": "Elements of the Blighted Lot", "valid_answers": "[a-m,]+", "required_by": "lot_or_structure", "required_by_answer": "lot" },
+        { "survey_type": survey_type, "question_id": "parcel_id", "question_number": 1, "question_text": "Location information", "valid_answers": ".*", "required_by": "y" },
+        { "survey_type": survey_type, "question_id": "needs_intervention", "question_number": 2, "question_text": "Does this parcel need intervention?", "valid_answers": "y|n", "required_by": "y", "answer_trigger": "n", "answer_trigger_action": "exit" },
+        { "survey_type": survey_type, "question_id": "lot_or_structure", "question_number": 3, "question_text": "Is the blighted parcel a lot or structure?", "valid_answers": "lot|structure", "required_by": "needs_intervention", "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "structure_with_blight", "question_number": 4, "question_text": "Structure with Blight", "valid_answers": "[a-c,]", "required_by": "lot_or_structure", "required_by_answer": "structure" },
+        { "survey_type": survey_type, "question_id": "elements_of_structure", "question_number": 5, "question_text": "Elements of the Blighted Structure", "valid_answers": "[a-o,]+", "required_by": "lot_or_structure", "required_by_answer": "structure" },
+        { "survey_type": survey_type, "question_id": "elements_of_lot", "question_number": 6, "question_text": "Elements of the Blighted Lot", "valid_answers": "[a-m,]+", "required_by": "lot_or_structure", "required_by_answer": "lot" },
     ]
 
     for row in data:
@@ -72,24 +88,31 @@ def build_survey_template():
         template.save()
 
 def build_survey_template_combined():
+
+    parcel, created = ParcelMetadata.objects.get_or_create(parcel_id='testparcelid')
+    parcel.save()
+
+    survey_type = SurveyType(survey_template_id='default_combined')
+    survey_type.save()
+
     data = [
-        { "survey_template_id": "default_combined", "question_id": "is_structure_on_site",         "question_number": 1,  "question_text": "Is there a structure on site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
-        { "survey_template_id": "default_combined", "question_id": "is_structure_occupied",        "question_number": 2,  "question_text": "Is the structure occupied?",                                 "valid_answers": "[a-d]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
-        { "survey_template_id": "default_combined", "question_id": "site_use_type",                "question_number": 3,  "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
-        { "survey_template_id": "default_combined", "question_id": "num_residential_units",        "question_number": 4,  "question_text": "How many residential units?",                                "valid_answers": "[a-d]",   "required_by": "site_use_type",             "required_by_answer": "a" },
-        { "survey_template_id": "default_combined", "question_id": "residence_type",               "question_number": 5,  "question_text": "What type of residences?",                                   "valid_answers": "[a-c]",   "required_by": "site_use_type",             "required_by_answer": "a" },
-        { "survey_template_id": "default_combined", "question_id": "commercial_occupants_type",    "question_number": 6,  "question_text": "What type of commercial occupant(s)?",                       "valid_answers": "[a-h]",   "required_by": "site_use_type",             "required_by_answer": "b|c" },
-        { "survey_template_id": "default_combined", "question_id": "industrial_occupants_type",    "question_number": 7,  "question_text": "What type of industrial occupant(s)?",                       "valid_answers": "[a-d]",   "required_by": "site_use_type",             "required_by_answer": "d" },
-        { "survey_template_id": "default_combined", "question_id": "institutional_occupants_type", "question_number": 8,  "question_text": "What type of institutional occupant(s)?",                    "valid_answers": "[a-h]",   "required_by": "site_use_type",             "required_by_answer": "e" },
-        { "survey_template_id": "default_combined", "question_id": "structure_condition",          "question_number": 9,  "question_text": "What is the condition of the structure?",                    "valid_answers": "[a-d]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
-        { "survey_template_id": "default_combined", "question_id": "is_structure_fire_damaged",    "question_number": 10, "question_text": "Is the structure fire damaged?",                             "valid_answers": "y|n",     "required_by": "is_structure_on_site",      "required_by_answer": "y" },
-        { "survey_template_id": "default_combined", "question_id": "fire_damage_level",            "question_number": 11, "question_text": "What is the level of fire damage?",                          "valid_answers": "[a-c]",   "required_by": "is_structure_fire_damaged", "required_by_answer": "y" },
-        { "survey_template_id": "default_combined", "question_id": "is_structure_secure",          "question_number": 12, "question_text": "Is the building secure or open to trespass?",                "valid_answers": "y|n",     "required_by": "is_structure_on_site",      "required_by_answer": "y" },
-        { "survey_template_id": "default_combined", "question_id": "site_use",                     "question_number": 13, "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "",                          "required_by_answer": "" },
-        { "survey_template_id": "default_combined", "question_id": "is_lot_maintained",            "question_number": 14, "question_text": "Is the lot maintained?",                                     "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
-        { "survey_template_id": "default_combined", "question_id": "is_dumping_on_site",           "question_number": 15, "question_text": "Is there dumping on the site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
-        { "survey_template_id": "default_combined", "question_id": "blighted_lot_elements",        "question_number": 16, "question_text": "Elements of the blighted lot (select all that apply)",       "valid_answers": "[a-m,]+", "required_by": "n" },
-        { "survey_template_id": "default_combined", "question_id": "blighted_structure_elements",  "question_number": 17, "question_text": "Elements of the blighted structure (select all that apply)", "valid_answers": "[a-o,]+", "required_by": "n" },
+        { "survey_type": survey_type, "question_id": "is_structure_on_site",         "question_number": 1,  "question_text": "Is there a structure on site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "is_structure_occupied",        "question_number": 2,  "question_text": "Is the structure occupied?",                                 "valid_answers": "[a-d]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "site_use_type",                "question_number": 3,  "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "num_residential_units",        "question_number": 4,  "question_text": "How many residential units?",                                "valid_answers": "[a-d]",   "required_by": "site_use_type",             "required_by_answer": "a" },
+        { "survey_type": survey_type, "question_id": "residence_type",               "question_number": 5,  "question_text": "What type of residences?",                                   "valid_answers": "[a-c]",   "required_by": "site_use_type",             "required_by_answer": "a" },
+        { "survey_type": survey_type, "question_id": "commercial_occupants_type",    "question_number": 6,  "question_text": "What type of commercial occupant(s)?",                       "valid_answers": "[a-h]",   "required_by": "site_use_type",             "required_by_answer": "b|c" },
+        { "survey_type": survey_type, "question_id": "industrial_occupants_type",    "question_number": 7,  "question_text": "What type of industrial occupant(s)?",                       "valid_answers": "[a-d]",   "required_by": "site_use_type",             "required_by_answer": "d" },
+        { "survey_type": survey_type, "question_id": "institutional_occupants_type", "question_number": 8,  "question_text": "What type of institutional occupant(s)?",                    "valid_answers": "[a-h]",   "required_by": "site_use_type",             "required_by_answer": "e" },
+        { "survey_type": survey_type, "question_id": "structure_condition",          "question_number": 9,  "question_text": "What is the condition of the structure?",                    "valid_answers": "[a-d]",   "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "is_structure_fire_damaged",    "question_number": 10, "question_text": "Is the structure fire damaged?",                             "valid_answers": "y|n",     "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "fire_damage_level",            "question_number": 11, "question_text": "What is the level of fire damage?",                          "valid_answers": "[a-c]",   "required_by": "is_structure_fire_damaged", "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "is_structure_secure",          "question_number": 12, "question_text": "Is the building secure or open to trespass?",                "valid_answers": "y|n",     "required_by": "is_structure_on_site",      "required_by_answer": "y" },
+        { "survey_type": survey_type, "question_id": "site_use",                     "question_number": 13, "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "",                          "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "is_lot_maintained",            "question_number": 14, "question_text": "Is the lot maintained?",                                     "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "is_dumping_on_site",           "question_number": 15, "question_text": "Is there dumping on the site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "blighted_lot_elements",        "question_number": 16, "question_text": "Elements of the blighted lot (select all that apply)",       "valid_answers": "[a-m,]+", "required_by": "n" },
+        { "survey_type": survey_type, "question_id": "blighted_structure_elements",  "question_number": 17, "question_text": "Elements of the blighted structure (select all that apply)", "valid_answers": "[a-o,]+", "required_by": "n" },
     ]
 
     for row in data:
@@ -257,6 +280,16 @@ def get_combined_survey_answers():
         ]
     }
 
+def create_survey(parcel_id = 'testparcelid'):
+
+    parcel = ParcelMetadata(parcel_id=parcel_id)
+    parcel.save()
+    survey_type = SurveyType(survey_template_id='default_combined')
+    survey_type.save()
+    survey = Survey(parcel=parcel, survey_type=survey_type)
+    survey.save()
+    return survey
+
 
 class PhotoSurveyAuthTests(TestCase):
 
@@ -314,14 +347,23 @@ class PhotoSurveyAuthTests(TestCase):
 
 class PhotoSurveyUtilTests(TestCase):
 
-    def test_answer_not_required(self):
-        question = SurveyQuestion(survey_template_id='test', question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
-        self.assertFalse(photo_survey.views.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
+    def setUp(self):
+        cleanup_db()
 
+    def test_answer_not_required(self):
+
+        survey_type = SurveyType(survey_template_id='test')
+        survey_type.save()
+
+        question = SurveyQuestion(survey_type=survey_type, question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
+        self.assertFalse(photo_survey.views.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
 
     def test_avail_answer_question_id(self):
 
-        survey_question = SurveyQuestion(survey_template_id='template', question_id='sample_question', question_number=1, question_text='Question Text')
+        survey_type = SurveyType(survey_template_id='test')
+        survey_type.save()
+
+        survey_question = SurveyQuestion(survey_type=survey_type, question_id='sample_question', question_number=1, question_text='Question Text')
         survey_question.save()
 
         avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='value', text='Human readable question')
@@ -334,7 +376,6 @@ class PhotoSurveyTests(TestCase):
 
     def setUp(self):
         cleanup_db()
-        build_image_data()
         self.maxDiff = None
 
     def get_auth_client(self):
@@ -354,7 +395,7 @@ class PhotoSurveyTests(TestCase):
     def test_get_survey_count(self):
         c = Client()
 
-        Survey(parcel_id='testparcelid').save()
+        create_survey()
 
         response = c.get('/photo_survey/count/testparcelid/')
         self.assertEqual(response.status_code, 200)
@@ -364,8 +405,9 @@ class PhotoSurveyTests(TestCase):
 
         c = Client()
 
-        survey = Survey(parcel_id='testparcelid')
-        survey.save()
+        survey = create_survey('testparcelid')
+
+        build_image_data('testparcelid')
 
         response = c.get('/photo_survey/testparcelid/')
         self.assertEqual(response.status_code, 200)
@@ -412,7 +454,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -422,7 +464,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_combined(self):
 
         build_survey_template_combined()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -433,7 +475,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_parcel_ok(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -443,7 +485,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_lot_bad(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -453,7 +495,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_structure_bad(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -473,7 +515,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_unauthorized(self):
 
         build_survey_template_combined()
-        init_parcel_master()
+        init_parcel_data()
 
         c = Client()
 
@@ -483,7 +525,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_json_auth_token(self):
 
         build_survey_template_combined()
-        init_parcel_master()
+        init_parcel_data()
 
         c = Client()
         create_user()
@@ -499,7 +541,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_not_secure(self):
 
         build_survey_template_combined()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -509,7 +551,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_invalid_data(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -523,7 +565,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_missing_data(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -536,7 +578,7 @@ class PhotoSurveyTests(TestCase):
 
     def test_invalid_survey_template(self):
 
-        init_parcel_master()
+        init_parcel_data()
         survey_answers = get_default_survey_answers()
 
         c = self.get_auth_client()
@@ -548,7 +590,7 @@ class PhotoSurveyTests(TestCase):
     def test_invalid_question_ids(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
@@ -562,7 +604,7 @@ class PhotoSurveyTests(TestCase):
     def test_post_survey_structure_edgar(self):
 
         build_survey_template()
-        init_parcel_master()
+        init_parcel_data()
 
         c = self.get_auth_client()
 
