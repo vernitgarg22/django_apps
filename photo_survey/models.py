@@ -32,10 +32,8 @@ class Survey(models.Model):
 
     app_label = 'photo_survey'
 
-    # survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
     survey_type = models.ForeignKey(SurveyType)
     user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
-    # parcel_id = models.CharField('Parcel id', max_length=32, unique=False, db_index=True)
     parcel = models.ForeignKey(ParcelMetadata)
     created_at = models.DateTimeField('Time when survey was made', null=True, default=None)
     common_name = models.CharField("Parcel common name", max_length=1024)
@@ -114,7 +112,6 @@ class SurveyQuestion(models.Model):
 
     app_label = 'photo_survey'
 
-    # survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
     survey_type = models.ForeignKey(SurveyType)
     question_id = models.CharField('Question identifier', max_length=64)
     question_number = models.PositiveIntegerField('Question number', unique=False)
@@ -179,7 +176,6 @@ class SurveyAnswer(models.Model):
 
     survey = models.ForeignKey(Survey)
     survey_question = models.ForeignKey(SurveyQuestion)
-    # question_id = models.CharField('Question identifier', max_length=64)
     answer = models.CharField("Answer", max_length=1024)
     note = models.CharField("Note", max_length=1024, blank=True, unique=False)
 
@@ -216,17 +212,12 @@ class ImageMetadata(models.Model):
 
     app_label = 'photo_survey'
 
-    # parcel_id = models.CharField('Path to image file', max_length=32, unique=False, db_index=True)
     image = models.ForeignKey(Image)
     parcel = models.ForeignKey(ParcelMetadata)
     created_at = models.DateTimeField('Time when image was created')
     latitude = models.FloatField('Image latitude')
     longitude = models.FloatField('Image longitude')
     altitude = models.FloatField('Image altitude')
-    # house_number = models.IntegerField('House number', unique=False, null=True, blank=True)
-    # street_name = models.CharField('Street name', max_length=128, null=True, blank=True, unique=False)
-    # street_type = models.CharField('Street type', max_length=32, null=True, blank=True, unique=False)
-    # zipcode = models.CharField('zipcode', max_length=16, blank=True, null=True, unique=False)
     common_name = models.CharField('Common name', max_length=128, null=True, blank=True, unique=False)
     note = models.CharField('Image note', max_length=128, null=True, blank=True)
 
