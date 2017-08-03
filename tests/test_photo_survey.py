@@ -39,10 +39,10 @@ def init_parcel_data(parcel_id = 'testparcelid'):
     return pm
 
 def cleanup_db():
-    cleanup_model(Image)
     cleanup_model(ImageMetadata)
-    cleanup_model(SurveyQuestion)
+    cleanup_model(Image)
     cleanup_model(SurveyAnswer)
+    cleanup_model(SurveyQuestion)
     cleanup_model(Survey)
     cleanup_model(SurveyType)
     cleanup_model(ParcelMetadata)

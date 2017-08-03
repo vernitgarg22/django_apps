@@ -53,10 +53,6 @@ class Survey(models.Model):
         return self.survey_type.survey_template_id
 
     @property
-    def parcel_id(self):
-        return self.parcel.parcel_id
-
-    @property
     def user(self):
         """
         Return the surveyor (user) who created the survey
