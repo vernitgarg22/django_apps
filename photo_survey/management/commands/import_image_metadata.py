@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 
-from photo_survey.models import Image, ImageMetadata
+from photo_survey.models import Image, ImageMetadata, ParcelMetadata
 
 
 def clean_string(buffer):
@@ -24,15 +24,17 @@ def clean_decimal(buffer):
 class Command(BaseCommand):
     help = """
         Use this to import image metadata from a csv file, e.g.,
-        python manage.py import_image_metadata file_path
-        python manage.py import_image_metadata survey_20170720.csv"""
+        python manage.py import_image_metadata file_path database
+        python manage.py import_image_metadata survey_20170720.csv photo_survey_dev"""
 
     def add_arguments(self, parser):
         parser.add_argument('file_path', type=str, help="Path to the csv file containing the image metadata")
+        parser.add_argument('database', type=str, help="Name of the database to save data to")
 
     def handle(self, *args, **options):
 
         file_path = options['file_path']
+        database = options['database']
         first_line = True
         files={}
 
@@ -68,6 +70,12 @@ class Command(BaseCommand):
 
                     # print(parcel_id + ' - ' + file_path)
 
+                    parcel = ParcelMetadata.objects.filter(parcel_id=parcel_id).first()
+                    if not parcel:
+                        parcel = ParcelMetadata(parcel_id=parcel_id, common_name=common_name, 
+                                        house_number=house_number, street_name=street_name, street_type=street_type, zipcode=zipcode)
+                        parcel.save(using=database)
+
                     if not files.get(file_path):
 
                         prev_meta = ImageMetadata.objects.filter(image__file_path=file_path)
@@ -78,17 +86,16 @@ class Command(BaseCommand):
                             img_meta.latitude=latitude;
                             img_meta.longitude=longitude;
                             img_meta.altitude=altitude
-                            img_meta.save(force_update=True)
+                            img_meta.save(using=database, force_update=True)
 
                         else:
 
                             img = Image(file_path=file_path)
-                            img.save()
+                            img.save(using=database)
 
-                            img_meta = ImageMetadata(image=img, parcel_id=parcel_id, created_at=created_at, 
-                                            house_number=house_number, street_name=street_name, street_type=street_type, zipcode=zipcode, common_name=common_name, 
+                            img_meta = ImageMetadata(image=img, parcel=parcel, created_at=created_at, 
                                             latitude=latitude, longitude=longitude, altitude=altitude)
-                            img_meta.save()
+                            img_meta.save(using=database)
 
                         files[file_path] = True
 

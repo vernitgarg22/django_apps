@@ -11,10 +11,14 @@ class ParcelMetadata(models.Model):
     """
 
     parcel_id = models.CharField('Parcel ID', max_length=32, unique=True, db_index=True)
+    common_name = models.CharField('Common name', max_length=128, null=True, blank=True, unique=False)
     house_number = models.IntegerField('House number', unique=False, null=True, blank=True)
     street_name = models.CharField('Street name', max_length=128, null=True, blank=True, unique=False)
     street_type = models.CharField('Street type', max_length=32, null=True, blank=True, unique=False)
     zipcode = models.CharField('zipcode', max_length=16, blank=True, null=True, unique=False)
+
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
+        return self.parcel_id
 
 
 class SurveyType(models.Model):
@@ -24,6 +28,9 @@ class SurveyType(models.Model):
 
     survey_template_id = models.CharField('Survey name or ID', max_length=32, unique=False, db_index=True)
 
+    def __str__(self):    # pragma: no cover  (this is really just for debugging)
+        return self.survey_template_id
+
 
 class Survey(models.Model):
     """
@@ -32,9 +39,9 @@ class Survey(models.Model):
 
     app_label = 'photo_survey'
 
-    survey_type = models.ForeignKey(SurveyType)
+    survey_type = models.ForeignKey(SurveyType, on_delete=models.PROTECT)
     user_id = models.CharField('User ID', max_length=64, unique=False, db_index=True)
-    parcel = models.ForeignKey(ParcelMetadata)
+    parcel = models.ForeignKey(ParcelMetadata, on_delete=models.PROTECT)
     created_at = models.DateTimeField('Time when survey was made', null=True, default=None)
     common_name = models.CharField("Parcel common name", max_length=1024)
     note = models.CharField("Note", max_length=1024)
@@ -44,6 +51,10 @@ class Survey(models.Model):
     @property
     def survey_template_id(self):
         return self.survey_type.survey_template_id
+
+    @property
+    def parcel_id(self):
+        return self.parcel.parcel_id
 
     @property
     def user(self):
@@ -112,7 +123,7 @@ class SurveyQuestion(models.Model):
 
     app_label = 'photo_survey'
 
-    survey_type = models.ForeignKey(SurveyType)
+    survey_type = models.ForeignKey(SurveyType, on_delete=models.PROTECT)
     question_id = models.CharField('Question identifier', max_length=64)
     question_number = models.PositiveIntegerField('Question number', unique=False)
     question_text = models.CharField('Question', max_length=256, unique=False, help_text='The actual human-readable question itself')
@@ -153,7 +164,7 @@ class SurveyQuestionAvailAnswer(models.Model):
 
     app_label = 'photo_survey'
 
-    survey_question = models.ForeignKey(SurveyQuestion)
+    survey_question = models.ForeignKey(SurveyQuestion, on_delete=models.PROTECT)
     value = models.CharField('Answer Value', max_length=64, unique=False, help_text="Answer value as stored in database")
     text = models.CharField('Human-readable Answer', max_length=128, unique=False, help_text="Human-readable version of answer")
     weight = models.IntegerField('Answer Weight', unique=False, default=0)
@@ -174,8 +185,8 @@ class SurveyAnswer(models.Model):
 
     app_label = 'photo_survey'
 
-    survey = models.ForeignKey(Survey)
-    survey_question = models.ForeignKey(SurveyQuestion)
+    survey = models.ForeignKey(Survey, on_delete=models.PROTECT)
+    survey_question = models.ForeignKey(SurveyQuestion, on_delete=models.PROTECT)
     answer = models.CharField("Answer", max_length=1024)
     note = models.CharField("Note", max_length=1024, blank=True, unique=False)
 
@@ -212,14 +223,13 @@ class ImageMetadata(models.Model):
 
     app_label = 'photo_survey'
 
-    image = models.ForeignKey(Image)
-    parcel = models.ForeignKey(ParcelMetadata)
+    image = models.ForeignKey(Image, on_delete=models.PROTECT)
+    parcel = models.ForeignKey(ParcelMetadata, on_delete=models.PROTECT)
     created_at = models.DateTimeField('Time when image was created')
     latitude = models.FloatField('Image latitude')
     longitude = models.FloatField('Image longitude')
     altitude = models.FloatField('Image altitude')
-    common_name = models.CharField('Common name', max_length=128, null=True, blank=True, unique=False)
-    note = models.CharField('Image note', max_length=128, null=True, blank=True)
+    note = models.CharField('Image note (optional)', max_length=128, null=True, blank=True)
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
         desc = str(self.image)
