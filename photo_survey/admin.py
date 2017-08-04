@@ -1,6 +1,21 @@
 from django.contrib import admin
 
-from .models import Survey, SurveyQuestion, SurveyQuestionAvailAnswer
+from .models import Survey, SurveyType, SurveyQuestion, SurveyQuestionAvailAnswer
+
+
+class SurveyTypeAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None, {'fields': ['survey_template_id']}),
+        # ('Destination', {'fields': ['destination'], 'classes': ['collapse']}),
+    ]
+    # inlines = [ChoiceInline]
+    list_display = ['survey_template_id']
+    list_display_links = ['survey_template_id']
+    list_filter = []
+    # list_editable = ['survey_template_id']
+    search_fields = []
+
+admin.site.register(SurveyType, SurveyTypeAdmin)
 
 
 class SurveyAdmin(admin.ModelAdmin):
