@@ -77,7 +77,7 @@ class Survey(models.Model):
         TODO: remove this method and use ForeignKey()
         """
 
-        return SurveyQuestion.objects.filter(survey_template_id=self.survey_template_id).order_by('question_number')
+        return self.survey_type.surveyquestion_set.all().order_by('question_number')
 
     # @property
     # def survey_answers(self):

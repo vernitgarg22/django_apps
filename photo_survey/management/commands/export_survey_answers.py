@@ -3,7 +3,7 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from photo_survey.models import PublicPropertyData, Survey, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer, ImageMetadata
+from photo_survey.models import PublicPropertyData, Survey, SurveyType, SurveyAnswer, SurveyQuestion, SurveyQuestionAvailAnswer, ImageMetadata
 from assessments.models import ParcelMaster
 
 from cod_utils.util import split_csv
@@ -40,13 +40,14 @@ class Command(BaseCommand):
         self.survey_template_id = options['survey_template_id']
 
         # Now finish initializing everything
-        self.questions = SurveyQuestion.objects.using(self.USING_DB).filter(survey_template_id=self.survey_template_id).order_by('question_number')
+        self.questions = SurveyQuestion.objects.using(self.USING_DB).filter(survey_type__survey_template_id=self.survey_template_id).order_by('question_number')
         now = timezone.now()
         self.out_file = now.strftime("%Y%m%d_%H%M%S.csv")
         self.num_exported = 0
 
         if self.pretty_print:
-            avail_answers_tmp = SurveyQuestionAvailAnswer.objects.using(self.USING_DB).filter(survey_question__survey_template_id=self.survey_template_id)
+
+            avail_answers_tmp = SurveyQuestionAvailAnswer.objects.using(self.USING_DB).filter(survey_question__survey_type__survey_template_id=self.survey_template_id)
 
             self.avail_answers = { avail_answer.survey_question.question_id: {} for avail_answer in avail_answers_tmp }
             for avail_answer in avail_answers_tmp:
@@ -57,7 +58,7 @@ class Command(BaseCommand):
         Retrieve all the survey answers.
         """
 
-        self.surveys = Survey.objects.using(self.USING_DB).filter(survey_template_id=self.survey_template_id).order_by('id')
+        self.surveys = Survey.objects.using(self.USING_DB).filter(survey_type__survey_template_id=self.survey_template_id).order_by('id')
         if self.remove_dupes:
             survey_map = { survey.parcel_id: survey for survey in self.surveys }
             self.surveys = survey_map.values()
@@ -65,8 +66,8 @@ class Command(BaseCommand):
         self.answers = SurveyAnswer.objects.using(self.USING_DB).all()
 
         if self.data_types.get('ownership', False) or self.data_types.get('address_info', False):
-            survey_ids = { survey.parcel_id for survey in self.surveys }
-            parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_ids))
+            survey_parcel_ids = { survey.parcel.parcel_id for survey in self.surveys }
+            parcels_tmp = ParcelMaster.objects.filter(pnum__in=list(survey_parcel_ids))
             self.parcels = { parcel.pnum: parcel for parcel in parcels_tmp }
 
             public_property_tmp = PublicPropertyData.objects.using(self.USING_DB).all()
@@ -123,7 +124,7 @@ class Command(BaseCommand):
         MAX_SCORE = 5
 
         questions = survey.survey_questions
-        answers_tmp = SurveyAnswer.objects.filter(survey_id=survey.id)
+        answers_tmp = SurveyAnswer.objects.using(Command.USING_DB).filter(survey_id=survey.id)
 
         question_answers = { question.question_id: [ answer for answer in answers_tmp if answer.question_id == question.question_id ] for question in questions }
 
@@ -156,7 +157,7 @@ class Command(BaseCommand):
         Returns a link to one of the mapillary 'streetview' images that was used to create the survey.
         """
 
-        img_meta = ImageMetadata.objects.using(Command.USING_DB).filter(parcel_id=survey.parcel_id).first()
+        img_meta = ImageMetadata.objects.using(Command.USING_DB).filter(parcel__parcel_id=survey.parcel.parcel_id).first()
         if not img_meta:
             return None
 
