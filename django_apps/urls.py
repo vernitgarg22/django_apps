@@ -12,7 +12,7 @@ import waste_schedule.views
 
 # To change this see 
 # http://stackoverflow.com/questions/4938491/django-admin-change-header-django-administration-text
-admin.site.site_header = 'Waste Admin'
+admin.site.site_header = 'System Admin'
 
 
 urlpatterns = [
