@@ -176,7 +176,7 @@ class Command(BaseCommand):
             return None
 
         # Get basic information about the survey itself
-        answer_data = { 'parcel': survey.parcel_id, 'surveyor': survey.user.username, 'common_name': survey.common_name, 'note': survey.note, 'status': survey.status, 'created_at': survey.created_at }
+        answer_data = { 'parcel': survey.parcel.parcel_id, 'surveyor': survey.user.username, 'common_name': survey.common_name, 'note': survey.note, 'status': survey.status, 'created_at': survey.created_at }
 
         # Get the answers
         answer_data_tmp = { answer.question_id: answer.answer for answer in curr_answers }
