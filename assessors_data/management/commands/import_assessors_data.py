@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from assessors_data.models import Whd01Parcl2017
+from assessors_data.models import MttTrackerExport2017, Whd01Parcl2017
 
 
 def clean_string(buffer):
@@ -22,8 +22,9 @@ def clean_string(buffer):
 class Command(BaseCommand):
     help = """
         Use this to import image assessors data into warehousedb1, e.g.,
-        python manage.py import_assessors_data <csv_file>
-        python manage.py import_assessors_data MTT_TRACKEREXPORT2018.csv"""
+        python manage.py import_assessors_data <database> <csv_file>
+        python manage.py import_assessors_data finassessorprod MTT_TRACKEREXPORT2018.csv
+        python manage.py import_assessors_data warehousedb1 MTT_TRACKEREXPORT2018.csv"""
 
     index = 0
 
@@ -32,6 +33,7 @@ class Command(BaseCommand):
         self.stdout.flush()
 
     def add_arguments(self, parser):
+        parser.add_argument('database', type=str, help="Database to import the database into")
         parser.add_argument('file_path', type=str, help="Path to the csv file containing the assessors data")
 
     def get_value(self, row, klass=str):
@@ -53,6 +55,9 @@ class Command(BaseCommand):
                 return klass(value)
         except:
             return None
+
+    def get_data_model(self):
+        return Whd01Parcl2017 if self.use_warehousedb else MttTrackerExport2017
 
     def parse_row(self, row):
 
@@ -145,7 +150,9 @@ class Command(BaseCommand):
         parcelreadonly_salefiledate = self.get_value(row, datetime)
         parcelreadonly_mostrecenttransferpercent = self.get_value(row, Decimal)
 
-        parcel_data = Whd01Parcl2017(parcels_pnum=parcels_pnum,
+        klass = self.get_data_model()
+
+        parcel_data = klass(parcels_pnum=parcels_pnum,
             parcelmaster_ownername1=parcelmaster_ownername1,
             parcelmaster_ownername2=parcelmaster_ownername2,
             parcelmaster_ownercareof=parcelmaster_ownercareof,
@@ -229,14 +236,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        if options['database'] not in [ 'finassessorprod', 'warehousedb1' ]:
+            raise CommandError("Database {} is invalid".format())
+
+        self.database = options['database']
+        self.use_warehousedb = self.database == 'warehousedb1'
+
         file_path = options['file_path']
-        self.database = 'warehousedb'
         first_line = True
         files={}
 
         with open(file_path, newline='') as csvfile:
 
-            Whd01Parcl2017.objects.using(self.database).all().delete()
+            klass = self.get_data_model()
+            klass.objects.using(self.database).all().delete()
             self.row_count = 0
             self.errors = 0
 
@@ -250,13 +263,13 @@ class Command(BaseCommand):
                 else:
                     row_data.append(self.parse_row(row))
                     if len(row_data) == BATCHSIZE:
-                        Whd01Parcl2017.objects.using(self.database).bulk_create(row_data)
+                        klass.objects.using(self.database).bulk_create(row_data)
                         self.row_count = self.row_count + len(row_data)
-                        self.trace("{} rows exported".format(self.row_count))
+                        self.trace("{} rows imported".format(self.row_count))
                         row_data = []
 
             if row_data:
-                Whd01Parcl2017.objects.using(self.database).bulk_create(row_data)
+                klass.objects.using(self.database).bulk_create(row_data)
                 self.row_count = self.row_count + len(row_data)
 
-            self.trace("Finished:  {} rows exported".format(self.row_count))
+            self.trace("Finished:  {} rows imported".format(self.row_count))
