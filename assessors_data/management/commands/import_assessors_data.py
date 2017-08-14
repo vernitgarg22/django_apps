@@ -54,7 +54,7 @@ class Command(BaseCommand):
         except:
             return None
 
-    def import_row(self, row):
+    def parse_row(self, row):
 
         self.index = 0
 
@@ -225,18 +225,7 @@ class Command(BaseCommand):
             parcelreadonly_salefiledate=parcelreadonly_salefiledate,
             parcelreadonly_mostrecenttransferpercent=parcelreadonly_mostrecenttransferpercent)
 
-        try:
-            parcel_data.save(using=self.database)
-            self.row_count = self.row_count + 1
-
-            if self.row_count % 100 == 0:
-                self.trace("{} rows exported".format(self.row_count))
-        except ValidationError:
-            # pdb.set_trace()
-            self.errors = self.errors + 1
-        # except:
-        #     pdb.set_trace()
-        #     self.errors = self.errors + 1
+        return parcel_data
 
     def handle(self, *args, **options):
 
@@ -252,9 +241,17 @@ class Command(BaseCommand):
             self.errors = 0
 
             datareader = csv.reader(csvfile, delimiter=',', quotechar='"')
+            row_data = []
+            BATCHSIZE = 1000
             for row in datareader:
 
                 if first_line:
                     first_line = False
                 else:
-                    self.import_row(row)
+                    row_data.append(self.parse_row(row))
+                    if len(row_data) == BATCHSIZE:
+                        Whd01Parcl2017.objects.using(self.database).bulk_create(row_data)
+                        row_data = []
+                        self.row_count = self.row_count + BATCHSIZE
+                        self.trace("{} rows exported".format(self.row_count))
+
