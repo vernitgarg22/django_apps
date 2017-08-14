@@ -242,7 +242,7 @@ class Command(BaseCommand):
 
             datareader = csv.reader(csvfile, delimiter=',', quotechar='"')
             row_data = []
-            BATCHSIZE = 1000
+            BATCHSIZE = 2500
             for row in datareader:
 
                 if first_line:
@@ -251,7 +251,12 @@ class Command(BaseCommand):
                     row_data.append(self.parse_row(row))
                     if len(row_data) == BATCHSIZE:
                         Whd01Parcl2017.objects.using(self.database).bulk_create(row_data)
-                        row_data = []
-                        self.row_count = self.row_count + BATCHSIZE
+                        self.row_count = self.row_count + len(row_data)
                         self.trace("{} rows exported".format(self.row_count))
+                        row_data = []
 
+            if row_data:
+                Whd01Parcl2017.objects.using(self.database).bulk_create(row_data)
+                self.row_count = self.row_count + len(row_data)
+
+            self.trace("Finished:  {} rows exported".format(self.row_count))
