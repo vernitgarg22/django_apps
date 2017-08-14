@@ -4,11 +4,9 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
 from assessors_data.models import Whd01Parcl2017
-
-
-import pdb
 
 
 def clean_string(buffer):
@@ -38,7 +36,6 @@ class Command(BaseCommand):
 
     def get_value(self, row, klass=str):
         value = clean_string(row[self.index])
-        # self.trace("value is: " + value)
         self.index = self.index + 1
         if not value:
             return None
@@ -50,7 +47,8 @@ class Command(BaseCommand):
 
         try:
             if klass == datetime:
-                return datetime.strptime(value, "%m/%d/%Y")
+                dt = datetime.strptime(value, "%m/%d/%Y")
+                return timezone.make_aware(dt)
             else:
                 return klass(value)
         except:
@@ -60,10 +58,7 @@ class Command(BaseCommand):
 
         self.index = 0
 
-        # pdb.set_trace()
-
         parcels_pnum = self.get_value(row)
-        # self.trace(parcels_pnum)
         parcelmaster_ownername1 = self.get_value(row)
         parcelmaster_ownername2 = self.get_value(row)
         parcelmaster_ownercareof = self.get_value(row)
@@ -257,13 +252,9 @@ class Command(BaseCommand):
             self.errors = 0
 
             datareader = csv.reader(csvfile, delimiter=',', quotechar='"')
-            skip = 0
             for row in datareader:
 
                 if first_line:
                     first_line = False
                 else:
-                    if skip == 0:
-                        self.import_row(row)
-                    else:
-                        skip = skip - 1
+                    self.import_row(row)
