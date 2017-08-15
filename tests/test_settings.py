@@ -178,7 +178,8 @@ class DjangoAppsRouter(object):
         "SurveyAnswer": "photo_survey",
         "SurveyQuestionAvailAnswer": "photo_survey",
         "Tblztickets": "blight_tickets",
-        "Whd01Parcl2017": "assessors_data",
+        "Whd01Parcl2017": "warehousedb",
+        "MttTrackerExport2017": "finassessorprod",
     }
 
     ModelDBMapDev = {
