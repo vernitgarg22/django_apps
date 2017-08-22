@@ -1520,6 +1520,9 @@ class DnngoXblogArticles(models.Model):
     per_allusers = models.SmallIntegerField(db_column='Per_AllUsers')  # Field name made lowercase.
     per_roles = models.TextField(db_column='Per_Roles', blank=True, null=True)  # Field name made lowercase.
 
+    def __str__(self):
+        return str(self.id) + ' - ' + self.title
+
     class Meta:
         managed = False
         db_table = 'DNNGo_xBlog_Articles'
@@ -2623,6 +2626,9 @@ class Htmltext(models.Model):
     summary = models.TextField(db_column='Summary', blank=True, null=True)  # Field name made lowercase.
     publishdate = models.DateTimeField(db_column='PublishDate', blank=True, null=True)  # Field name made lowercase.
 
+    def __str__(self):
+        return str(itemid)
+
     class Meta:
         managed = False
         db_table = 'HtmlText'
@@ -3190,6 +3196,9 @@ class Modules(models.Model):
     contentitemid = models.ForeignKey(Contentitems, models.DO_NOTHING, db_column='ContentItemID', blank=True, null=True)  # Field name made lowercase.
     isshareable = models.BooleanField(db_column='IsShareable')  # Field name made lowercase.
     isshareableviewonly = models.BooleanField(db_column='IsShareableViewOnly')  # Field name made lowercase.
+
+    def __str__(self):
+        return str(self.moduleid)
 
     class Meta:
         managed = False

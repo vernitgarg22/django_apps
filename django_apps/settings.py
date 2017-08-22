@@ -82,6 +82,8 @@ INSTALLED_APPS = (
     'assessments',
     'assessors_data',
     'blight_tickets',
+    'cod_utils',
+    'dnninternet',
     'photo_survey',
     'waste_schedule',
     'waste_notifier',

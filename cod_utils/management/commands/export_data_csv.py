@@ -3,6 +3,7 @@ import re
 from pydoc import locate
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import models
 from django.utils import timezone
 
 from photo_survey.models import Survey
@@ -38,6 +39,9 @@ class Command(BaseCommand):
 
         value = obj.__getattribute__(field.name)
 
+        if isinstance(value, models.Model):
+            value = value.pk
+
         if type(value) == str:
             value = re.sub(r'[\r\n]', ' ', value)
             value = re.sub(r'&lt;', '<', value)
@@ -64,7 +68,8 @@ class Command(BaseCommand):
 
         objects = klass.objects.using(database).all()
 
-        with open("data.csv", 'w', newline='') as csvfile:
+        filename = database + '_' + model + '.csv'
+        with open(filename, 'w', newline='') as csvfile:
 
             writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(Command.get_header(klass))
