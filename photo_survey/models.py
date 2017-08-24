@@ -79,24 +79,24 @@ class Survey(models.Model):
 
         return self.survey_type.surveyquestion_set.all().order_by('question_number')
 
-    # @property
-    # def survey_answers(self):
-    #     """
-    #     Returns the answers belonging to the survey.
-    #     TODO: remove this method and use ForeignKey()
-    #     """
+    @property
+    def survey_answers(self):
+        """
+        Returns the answers belonging to the survey.
+        TODO: remove this method and use ForeignKey()
+        """
 
-    #     questions = self.survey_questions
+        questions = self.survey_questions
 
-    #     answers_dict = { answer.question_id : answer for answer in SurveyAnswer.objects.filter(survey_id=self.id) }
+        answers_dict = { answer.question_id : answer for answer in SurveyAnswer.objects.filter(survey_id=self.id) }
 
-    #     answers = []
-    #     for question in questions:
-    #         answer = answers_dict.get(question.question_id)
-    #         if answer:
-    #             answers.append(answer)
+        answers = []
+        for question in questions:
+            answer = answers_dict.get(question.question_id)
+            if answer:
+                answers.append(answer)
 
-    #     return answers
+        return answers
 
     ordering = ['survey_template_id', 'parcel_id', 'common_name', 'status']
 

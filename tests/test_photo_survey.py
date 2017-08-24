@@ -674,7 +674,7 @@ def build_survey_bridging_neighborhoods_template():
 
 def get_bridging_neighborhoods_survey_answers():
     return {
-        "email": "karlos@test.com",
+        "username": "karlos",
         "answers": [
             {
                 "question_id": "street_address",
@@ -708,18 +708,31 @@ class BridgingNeighborhoodsTests(TestCase):
         response = c.post('/photo_survey/bridging_neighborhoods/favorites/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/bridging_neighborhoods/ stores resident's desired house")
         self.assertEqual(response.data['parcel_survey_info'], { 'testparcelid': 1 }, "/photo_survey/bridging_neighborhoods/ returns info about existing house surveys")
-        self.assertEqual(User.objects.using('photo_survey').first().email, 'karlos@test.com')
+        self.assertEqual(User.objects.using('photo_survey').first().username, 'karlos')
 
-    def test_user_likes_house_missing_email(self):
+    def test_user_likes_house_missing_username(self):
 
         init_parcel_data()
         build_parcel_bridging_neighborhoods()
         build_survey_bridging_neighborhoods_template()
 
         data = get_bridging_neighborhoods_survey_answers()
-        del data['email']
+        del data['username']
 
         c = Client()
 
         response = c.post('/photo_survey/bridging_neighborhoods/favorites/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
-        self.assertEqual(response.status_code, 401, "/photo_survey/bridging_neighborhoods/ requires email for resident")
+        self.assertEqual(response.status_code, 401, "/photo_survey/bridging_neighborhoods/ requires username for resident")
+
+    def test_get_user_likes(self):
+
+        # run another test just to create a user and survey
+        self.test_user_likes_house()
+
+        c = Client()
+
+        expected = {'favorites': {'testparcelid': {'node_id': '99', 'street_address': '1104 Military Street'}}}
+
+        response = c.get('/photo_survey/bridging_neighborhoods/karlos/favorites/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(expected, response.data, "/photo_survey/count/<parce id>/ returns current favorites for given user")

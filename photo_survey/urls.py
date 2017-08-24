@@ -26,4 +26,5 @@ urlpatterns = [
 
     # endpoints specific to bridging neighborhoods
     url(r'^bridging_neighborhoods/favorites/(?P<parcel_id>[-\w\_\.]+)/$', views.BridgingNeighborhoodsView.as_view(), name='bridging_neighborhoods'),
+    url(r'^bridging_neighborhoods/(?P<username>[-\w\_\.]+)/favorites/$', views.BridgingNeighborhoodsView.as_view(), name='bridging_neighborhoods'),
 ]

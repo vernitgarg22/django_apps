@@ -330,14 +330,10 @@ class BridgingNeighborhoodsView(SurveyorView):
         """
 
         user = None
-        if not data.get('email'):
+        if not data.get('username'):
             return None
 
-        email = data['email']
-
-        user = User.objects.db_manager('photo_survey').create_user(email, email, email)
-        # user.first_name = first_name
-        # user.last_name = last_name
+        user = User.objects.db_manager('photo_survey').create_user(data['username'])
         user.save()
 
         return user
@@ -348,6 +344,35 @@ class BridgingNeighborhoodsView(SurveyorView):
         """
 
         return "bridging_neighborhoods"
+
+    def describe_favorite(self, survey):
+        """
+        Returns dict of information about this survey.
+        """
+
+        return { survey_answer.survey_question.question_id : survey_answer.answer for survey_answer in survey.survey_answers }
+
+    def get(self, request, username, format=None):
+        """
+        Returns list of parcels (houses) a resident is interested in.
+        """
+
+        CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+        if not request.is_secure():
+            return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+        # data = json.loads(request.body.decode('utf-8'))
+        # username = data['username']
+
+        users = User.objects.using('photo_survey').filter(username = username)
+        if not users:
+            return Response({"User not found": username}, status=status.HTTP_404_NOT_FOUND)
+
+        surveys = Survey.objects.filter(user_id = users[0].id)
+        favorites = { survey.parcel.parcel_id : self.describe_favorite(survey) for survey in surveys }
+
+        return Response({ "favorites": favorites })
 
 
 @api_view(['GET'])
