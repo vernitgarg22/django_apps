@@ -362,9 +362,6 @@ class BridgingNeighborhoodsView(SurveyorView):
         if not request.is_secure():
             return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
-        # data = json.loads(request.body.decode('utf-8'))
-        # username = data['username']
-
         users = User.objects.using('photo_survey').filter(username = username)
         if not users:
             return Response({"User not found": username}, status=status.HTTP_404_NOT_FOUND)
