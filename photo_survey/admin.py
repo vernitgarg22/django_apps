@@ -42,6 +42,7 @@ class SurveyQuestionAdmin(admin.ModelAdmin):
     list_filter = ['survey_type__survey_template_id']
     list_editable = ['question_id', 'question_number', 'question_text', 'valid_answers', 'required_by', 'required_by_answer', 'answer_trigger', 'answer_trigger_action', 'scoring_type']
     search_fields = ['survey_type', 'question_id', 'question_text']
+    ordering = ['survey_type_id', 'question_number']
 
 admin.site.register(SurveyQuestion, SurveyQuestionAdmin)
 

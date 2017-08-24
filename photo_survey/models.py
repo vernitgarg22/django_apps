@@ -134,8 +134,6 @@ class SurveyQuestion(models.Model):
     def survey_template_id(self):
         return survey_type.survey_template_id
 
-    ordering = ['survey_template_id', 'question_number']
-
     def is_valid(self, answer):
         """
         Return True if answer is valid
