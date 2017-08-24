@@ -708,6 +708,7 @@ class BridgingNeighborhoodsTests(TestCase):
         response = c.post('/photo_survey/bridging_neighborhoods/favorites/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 201, "/photo_survey/bridging_neighborhoods/ stores resident's desired house")
         self.assertEqual(response.data['parcel_survey_info'], { 'testparcelid': 1 }, "/photo_survey/bridging_neighborhoods/ returns info about existing house surveys")
+        self.assertEqual(User.objects.using('photo_survey').first().email, 'karlos@test.com')
 
     def test_user_likes_house_missing_email(self):
 
