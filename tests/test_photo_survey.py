@@ -356,7 +356,7 @@ class PhotoSurveyUtilTests(TestCase):
         survey_type.save()
 
         question = SurveyQuestion(survey_type=survey_type, question_id='optional_info', question_number=1, question_text='Any extra info?', valid_answers='.*', required_by='n')
-        self.assertFalse(photo_survey.views.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
+        self.assertFalse(photo_survey.views.SurveyorView.is_answer_required(question, { "question_id": "optional_info", "answer": "" }), "is_answer_required() identifies optional answers")
 
     def test_avail_answer_question_id(self):
 

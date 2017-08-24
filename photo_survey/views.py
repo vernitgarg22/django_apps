@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from cod_utils.cod_logger import CODLogger
 
@@ -180,127 +181,146 @@ def get_latest_survey(request, parcel_id):
     return Response(content)
 
 
-def is_answer_required(question, answers):
-    """
-    Returns True if the answer is required
-    """
-    if question.required_by == 'n':
-        return False
-    if question.required_by and question.required_by_answer:
-        previous_answer = answers.get(question.required_by, {}).get('answer')
-        return previous_answer and re.fullmatch(question.required_by_answer, previous_answer)
-    return True
+class SurveyorView(APIView):
+
+    @staticmethod
+    def is_answer_required(question, answers):
+        """
+        Returns True if the answer is required
+        """
+
+        if question.required_by == 'n':
+            return False
+        if question.required_by and question.required_by_answer:
+            previous_answer = answers.get(question.required_by, {}).get('answer')
+            return previous_answer and re.fullmatch(question.required_by_answer, previous_answer)
+        return True
+
+    def get_surveyor(self, request, data):
+        """
+        Return the user to associate with the survey.
+        """
+
+        user = None
+        if request.user and request.user.is_authenticated():
+            user = request.user
+        else:
+            # TODO remove this once we get mod_wsgi passing the authorization header through properly
+            buf = data.get("auth_token", "")
+            tokens = Token.objects.using("photo_survey").filter(key=buf)
+            if tokens:
+                user = tokens[0].user
+
+        return user
+
+    def get_survey_template_id(self, data):
+        """
+        Return survey template id - identifies the survey type to use.
+        """
+
+        return data['survey_id']
+
+    def check_parcels(self, parcel_ids):
+        """
+        Returns json mapping each parcel_id to number of surveys that exist currently for that parcel.
+        """
+
+        survey_info = { parcel_id: 0 for parcel_id in parcel_ids }
+        if parcel_ids:
+
+            survey_counts = ParcelMetadata.objects.filter(parcel_id__in=parcel_ids).annotate(count=Count('survey'))
+            for survey_count in survey_counts:
+                survey_info[survey_count.parcel_id] = survey_count.count
+
+        return survey_info
+
+    def post(self, request, parcel_id, format=None):
+        """
+        Post results of a field survey
+        """
+
+        CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+        if not request.is_secure():
+            return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
 
-def check_parcels(parcel_ids):
-    """
-    Returns json mapping each parcel_id to number of surveys that exist currently for that parcel.
-    """
 
-    survey_info = { parcel_id: 0 for parcel_id in parcel_ids }
-    if parcel_ids:
-
-        survey_counts = ParcelMetadata.objects.filter(parcel_id__in=parcel_ids).annotate(count=Count('survey'))
-        for survey_count in survey_counts:
-            survey_info[survey_count.parcel_id] = survey_count.count
-
-    return survey_info
-
-
-@api_view(['POST'])
-def post_survey(request, parcel_id):
-    """
-    Post results of a field survey
-    """
-
-    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
-
-    if not request.is_secure():
-        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
-
-
-
-    # TODO remove this once we get mod_wsgi passing the authorization header through properly
-    auth_meta = request.META.get('HTTP_AUTHORIZATION')
-    if auth_meta:
-        print(auth_meta)
-    else:
-        print('saw no http auth meta')
-
-
-
-    data = json.loads(request.body.decode('utf-8'))
-
-    user = None
-    if request.user and request.user.is_authenticated():
-        user = request.user
-    else:
         # TODO remove this once we get mod_wsgi passing the authorization header through properly
-        buf = data.get("auth_token", "")
-        tokens = Token.objects.using("photo_survey").filter(key=buf)
-        if tokens:
-            user = tokens[0].user
+        auth_meta = request.META.get('HTTP_AUTHORIZATION')
+        if auth_meta:
+            print(auth_meta)
+        else:
+            print('saw no http auth meta')
 
-    if user == None:
-        return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
 
-    survey_template_id = data['survey_id']
-    parcel_id = clean_parcel_id(parcel_id)
-    answer_errors = {}
 
-    # Is the parcel id valid?
-    if not ParcelMaster.objects.filter(pnum__iexact=parcel_id).exists():
-        return Response({ "invalid parcel id":  parcel_id }, status=status.HTTP_400_BAD_REQUEST)
+        data = json.loads(request.body.decode('utf-8'))
 
-    # What are our questions and answers?
-    questions = SurveyQuestion.objects.filter(survey_type__survey_template_id=survey_template_id).order_by('question_number')
-    if not questions:
-        return Response({ "invalid survey":  data['survey_id']}, status=status.HTTP_400_BAD_REQUEST)
+        # What user is posting this?
+        user = self.get_surveyor(request, data)
 
-    answers = { answer['question_id']: answer for answer in data['answers'] }
+        if user == None:
+            return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Report any answers that did not match a question_id
-    question_ids = { question.question_id for question in questions }
-    orphaned_answers = { key for key in answers.keys() if key not in question_ids }
-    if orphaned_answers:
-        return Response({ "invalid question ids": list(orphaned_answers) }, status=status.HTTP_400_BAD_REQUEST)
+        survey_template_id = data['survey_id']
+        survey_template_id = self.get_survey_template_id(data)
+        parcel_id = clean_parcel_id(parcel_id)
+        answer_errors = {}
 
-    # Validate each answer
-    for question in questions:
-        answer = answers.get(question.question_id)
-        if answer and answer.get('answer'):
-            if not question.is_valid(answer['answer']):
-                answer_errors[question.question_id] = "question answer is invalid"
-            elif question.answer_trigger and question.answer_trigger_action:
-                # TODO clean this up - add 'skip to question' feature
-                if re.fullmatch(question.answer_trigger, answer['answer']) and question.answer_trigger_action == 'exit':
-                    break
-        elif is_answer_required(question, answers):
-            answer_errors[question.question_id] = "question answer is required"
+        # Is the parcel id valid?
+        if not ParcelMaster.objects.filter(pnum__iexact=parcel_id).exists():
+            return Response({ "invalid parcel id":  parcel_id }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Report invalid content?
-    if answer_errors:
-        return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
+        # What are our questions and answers?
+        questions = SurveyQuestion.objects.filter(survey_type__survey_template_id=survey_template_id).order_by('question_number')
+        if not questions:
+            return Response({ "invalid survey":  data['survey_id']}, status=status.HTTP_400_BAD_REQUEST)
 
-    parcel = ParcelMetadata.objects.get(parcel_id=parcel_id)
+        answers = { answer['question_id']: answer for answer in data['answers'] }
 
-    # Create the survey
-    survey_type = SurveyType.objects.get(survey_template_id=survey_template_id)
-    survey = Survey(survey_type=survey_type, user_id=str(user.id), parcel=parcel,
-                common_name=data.get('common_name', ''), note=data.get('note', ''), status=data.get('status', ''), image_url=data.get('image_url', ''))
-    survey.save()
+        # Report any answers that did not match a question_id
+        question_ids = { question.question_id for question in questions }
+        orphaned_answers = { key for key in answers.keys() if key not in question_ids }
+        if orphaned_answers:
+            return Response({ "invalid question ids": list(orphaned_answers) }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Save all the answers
-    for survey_question in questions:
-        answer = answers.get(survey_question.question_id)
-        if answer and answer['answer']:
-            survey_answer = SurveyAnswer(survey=survey, survey_question=survey_question, answer=answer['answer'], note=answer.get('answer', None))
-            survey_answer.save()
+        # Validate each answer
+        for question in questions:
+            answer = answers.get(question.question_id)
+            if answer and answer.get('answer'):
+                if not question.is_valid(answer['answer']):
+                    answer_errors[question.question_id] = "question answer is invalid"
+                elif question.answer_trigger and question.answer_trigger_action:
+                    # TODO clean this up - add 'skip to question' feature
+                    if re.fullmatch(question.answer_trigger, answer['answer']) and question.answer_trigger_action == 'exit':
+                        break
+            elif SurveyorView.is_answer_required(question, answers):
+                answer_errors[question.question_id] = "question answer is required"
 
-    # Indicate number of surveys present for each parcel id in the request
-    parcel_info = check_parcels(data.get('parcel_ids', []))
+        # Report invalid content?
+        if answer_errors:
+            return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response({ "answers": answers, "parcel_survey_info": parcel_info }, status=status.HTTP_201_CREATED)
+        parcel = ParcelMetadata.objects.get(parcel_id=parcel_id)
+
+        # Create the survey
+        survey_type = SurveyType.objects.get(survey_template_id=survey_template_id)
+        survey = Survey(survey_type=survey_type, user_id=str(user.id), parcel=parcel,
+                    common_name=data.get('common_name', ''), note=data.get('note', ''), status=data.get('status', ''), image_url=data.get('image_url', ''))
+        survey.save()
+
+        # Save all the answers
+        for survey_question in questions:
+            answer = answers.get(survey_question.question_id)
+            if answer and answer['answer']:
+                survey_answer = SurveyAnswer(survey=survey, survey_question=survey_question, answer=answer['answer'], note=answer.get('answer', None))
+                survey_answer.save()
+
+        # Indicate number of surveys present for each parcel id in the request
+        parcel_info = self.check_parcels(data.get('parcel_ids', []))
+
+        return Response({ "answers": answers, "parcel_survey_info": parcel_info }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
