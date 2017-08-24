@@ -333,7 +333,7 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(subscriber.status, 'active')
         self.assertTrue(subscriber.last_status_update != None and subscriber.last_status_update != '')
 
-    @skip('Looking for better way to block invalid callers')
+    @skip('Looking for better way to block invalid callers')    # pragma: no cover because currently skipped
     def test_subscribe_invalid_client(self):
 
         # Force block_client to block us

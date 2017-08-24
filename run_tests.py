@@ -19,6 +19,7 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_blight_tickets"]
     # test_labels = ["tests.test_commands"]
     # test_labels = ["tests.test_photo_survey"]
+    # test_labels = ["tests.test_photo_survey.BridgingNeighborhoodsTests"]
     # test_labels = ["tests.test_waste_schedule"]
     # test_labels = ["tests.test_waste_schedule.WasteScheduleTests.test_get_schedule_details_citywide_reschedule"]
     # test_labels = ["tests.test_waste_notifier"]

@@ -652,3 +652,73 @@ class PhotoSurveyTests(TestCase):
 
         survey = Survey.objects.first()
         self.assertEqual(survey.user.email, 'lennon@thebeatles.com')
+
+
+def build_parcel_bridging_neighborhoods():
+    parcel, created = ParcelMetadata.objects.get_or_create(parcel_id='testparcelid')
+    parcel.save()
+
+def build_survey_bridging_neighborhoods_template():
+
+    survey_type = SurveyType(survey_template_id='bridging_neighborhoods')
+    survey_type.save()
+
+    data = [
+        { "survey_type": survey_type, "question_id": "street_address", "question_number": 1,  "question_text": "What is the street address?", "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "node_id",        "question_number": 2,  "question_text": "What is the drupal node id?", "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
+    ]
+
+    for row in data:
+        template = SurveyQuestion(**row)
+        template.save()
+
+def get_bridging_neighborhoods_survey_answers():
+    return {
+        "email": "karlos@test.com",
+        "answers": [
+            {
+                "question_id": "street_address",
+                "answer": "1104 Military Street"
+            },
+            {
+                "question_id": "node_id",
+                "answer": "99"
+            }
+        ],
+        "parcel_ids": ['testparcelid']
+    }
+
+
+class BridgingNeighborhoodsTests(TestCase):
+
+    def setUp(self):
+        cleanup_db()
+        self.maxDiff = None
+
+    def test_user_likes_house(self):
+
+        init_parcel_data()
+        build_parcel_bridging_neighborhoods()
+        build_survey_bridging_neighborhoods_template()
+
+        data = get_bridging_neighborhoods_survey_answers()
+
+        c = Client()
+
+        response = c.post('/photo_survey/bridging_neighborhoods/favorites/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 201, "/photo_survey/bridging_neighborhoods/ stores resident's desired house")
+        self.assertEqual(response.data['parcel_survey_info'], { 'testparcelid': 1 }, "/photo_survey/bridging_neighborhoods/ returns info about existing house surveys")
+
+    def test_user_likes_house_missing_email(self):
+
+        init_parcel_data()
+        build_parcel_bridging_neighborhoods()
+        build_survey_bridging_neighborhoods_template()
+
+        data = get_bridging_neighborhoods_survey_answers()
+        del data['email']
+
+        c = Client()
+
+        response = c.post('/photo_survey/bridging_neighborhoods/favorites/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 401, "/photo_survey/bridging_neighborhoods/ requires email for resident")

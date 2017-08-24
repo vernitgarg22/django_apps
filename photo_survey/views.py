@@ -263,7 +263,6 @@ class SurveyorView(APIView):
         if user == None:
             return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
 
-        survey_template_id = data['survey_id']
         survey_template_id = self.get_survey_template_id(data)
         parcel_id = clean_parcel_id(parcel_id)
         answer_errors = {}
@@ -321,6 +320,34 @@ class SurveyorView(APIView):
         parcel_info = self.check_parcels(data.get('parcel_ids', []))
 
         return Response({ "answers": answers, "parcel_survey_info": parcel_info }, status=status.HTTP_201_CREATED)
+
+
+class BridgingNeighborhoodsView(SurveyorView):
+
+    def get_surveyor(self, request, data):
+        """
+        Return the bridging neighborhoods resident to associate with the survey.
+        """
+
+        user = None
+        if not data.get('email'):
+            return None
+
+        email = data['email']
+
+        user = User.objects.db_manager('photo_survey').create_user(email, email, email)
+        # user.first_name = first_name
+        # user.last_name = last_name
+        user.save()
+
+        return user
+
+    def get_survey_template_id(self, data):
+        """
+        Return the one and only survey template id for bridging neighborhoods.
+        """
+
+        return "bridging_neighborhoods"
 
 
 @api_view(['GET'])
