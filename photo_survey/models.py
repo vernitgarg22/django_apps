@@ -132,7 +132,7 @@ class SurveyQuestion(models.Model):
 
     @property
     def survey_template_id(self):
-        return survey_type.survey_template_id
+        return self.survey_type.survey_template_id
 
     def is_valid(self, answer):
         """

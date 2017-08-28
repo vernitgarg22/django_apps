@@ -42,6 +42,7 @@ def cleanup_db():
     cleanup_model(ImageMetadata)
     cleanup_model(Image)
     cleanup_model(SurveyAnswer)
+    cleanup_model(SurveyQuestionAvailAnswer)
     cleanup_model(SurveyQuestion)
     cleanup_model(Survey)
     cleanup_model(SurveyType)
@@ -370,6 +371,18 @@ class PhotoSurveyUtilTests(TestCase):
         avail_answer.save()
 
         self.assertEqual(avail_answer.survey_question_question_id(), survey_question.question_id)
+
+    def test_survey_template_id(self):
+
+        survey = create_survey()
+
+        survey_type = SurveyType(survey_template_id='template_id')
+        survey_type.save()
+
+        survey_question = SurveyQuestion(survey_type=survey_type, question_id='qid', question_number=1, question_text='Question')
+        survey_question.save()
+
+        self.assertEqual(survey_question.survey_template_id, 'template_id')
 
 
 class PhotoSurveyTests(TestCase):
