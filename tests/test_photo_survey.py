@@ -735,4 +735,19 @@ class BridgingNeighborhoodsTests(TestCase):
 
         response = c.get('/photo_survey/bridging_neighborhoods/karlos/favorites/', secure=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(expected, response.data, "/photo_survey/count/<parce id>/ returns current favorites for given user")
+        self.assertEqual(expected, response.data, "/photo_survey/bridging_neighborhoods/<username>/favorites/ returns current favorites for given user")
+
+    def test_get_user_likes_not_secure(self):
+
+        c = Client()
+
+        response = c.get('/photo_survey/bridging_neighborhoods/karlos/favorites/', secure=False)
+        self.assertEqual(response.status_code, 403)
+
+
+    def test_get_user_likes_user_not_found(self):
+
+        c = Client()
+
+        response = c.get('/photo_survey/bridging_neighborhoods/invalid/favorites/', secure=True)
+        self.assertEqual(response.status_code, 404)
