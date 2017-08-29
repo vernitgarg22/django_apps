@@ -1,5 +1,6 @@
 import csv
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
@@ -15,7 +16,7 @@ class Command(BaseCommand):
         python manage.py export_survey_answers survey_template_id """
 
 
-    USING_DB='photo_survey'
+    USING_DB='photo_survey' if not settings.RUNNING_UNITTESTS else 'photo_survey_dev'
 
     def add_arguments(self, parser):
         parser.add_argument('survey_template_id', type=str, help='Identifies the survey type')

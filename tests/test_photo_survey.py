@@ -114,11 +114,366 @@ def build_survey_template_combined():
         { "survey_type": survey_type, "question_id": "is_dumping_on_site",           "question_number": 15, "question_text": "Is there dumping on the site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
         { "survey_type": survey_type, "question_id": "blighted_lot_elements",        "question_number": 16, "question_text": "Elements of the blighted lot (select all that apply)",       "valid_answers": "[a-m,]+", "required_by": "n" },
         { "survey_type": survey_type, "question_id": "blighted_structure_elements",  "question_number": 17, "question_text": "Elements of the blighted structure (select all that apply)", "valid_answers": "[a-o,]+", "required_by": "n" },
+        # { "survey_type": survey_type, "question_id": "sidewalk_condition",           "question_number": 18, "question_text": "Is the sidewalk/curb: (select all that apply)",              "valid_answers": "[a-d,]+", "required_by": "" },
     ]
 
+    survey_questions = []
+
     for row in data:
-        template = SurveyQuestion(**row)
-        template.save()
+        survey_question = SurveyQuestion(**row)
+        survey_question.save()
+        survey_questions.append(survey_question)
+
+    survey_question = survey_questions[0]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='y', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='n', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[1]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[2]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='e', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='f', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[3]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[4]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[5]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='e', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='f', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='g', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='h', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[6]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[7]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='e', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='f', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='g', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='h', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[8]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[9]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='y', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='n', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[10]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[11]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='y', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='n', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[12]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='e', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='f', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[13]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='y', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='n', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[14]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='y', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='n', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[15]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='e', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='f', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='g', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='h', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='i', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='j', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='k', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='l', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='m', text='', weight=0)
+    avail_answer.save()
+
+    survey_question = survey_questions[16]
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='e', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='f', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='g', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='h', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='i', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='j', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='k', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='l', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='m', text='', weight=0)
+    avail_answer.save()
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='o', text='', weight=0)
+    avail_answer.save()
+
+    # survey_question = survey_questions[17]
+    # avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    # avail_answer.save()
+    # avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    # avail_answer.save()
+    # avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    # avail_answer.save()
+    # avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
+    # avail_answer.save()
+
+# value   text    survey_question_id  Weight
+# 0
+# y   Yes 7   0
+# n   No  7   0
+
+# 1
+# a   Occupied    8   0
+# b   Unoccupied  8   0
+# c   Partially Occupied  8   0
+# d   Possibly Unoccupied 8   0
+
+# 2
+# a   Residential 9   0
+# b   Commercial  9   0
+# c   Mixed-use   9   0
+# d   Industrial  9   0
+# e   Institutional   9   0
+# f   Unknown 9   0
+
+# 3
+# a   Garage or shed  10  0
+# b   Single Family   10  0
+# c   Multi-Family    10  0
+# d   Apartments  10  0
+
+# 4
+# a   Single Family   11  0
+# b   Multi-Family    11  0
+# c   Apartments  11  0
+
+# 5
+# a   Restaurant / Bar    12  0
+# b   Grocery 12  0
+# c   Retail  12  0
+# d   Service 12  0
+# e   Offices 12  0
+# f   Entertainment   12  0
+# g   Multi-Occupant  12  0
+# h   Other   12  0
+
+# 6
+# a   Industrial  13  0
+# b   Warehouses  13  0
+# c   Multi-Occupant  13  0
+# d   Other   13  0
+
+# 7
+# a   Schools 14  0
+# b   Religious   14  0
+# c   Public Safety   14  0
+# d   Health  14  0
+# e   Recreation  14  0
+# f   Government  14  0
+# g   Non-Profit/Charity  14  0
+# h   Other   14  0
+
+# 8
+# a   Good    15  0
+# b   Fair    15  1
+# c   Poor    15  3
+# d   Suggest Demolition  15  5
+
+# 9
+# y   Yes 16  0
+# n   No  16  0
+
+# 10
+# a   Minor   17  1
+# b   Major   17  3
+# c   Collapsed   17  5
+
+# 11
+# y   Secured 18  0
+# n   Open to Trespass    18  2
+
+# 12
+# a   Vacant Lot  19  0
+# b   Parking Lot 19  0
+# c   Park    19  0
+# d   Garden  19  0
+# e   Other   19  0
+# f   Attached Lot    19  0
+
+# 13
+# y   Yes 20  0
+# n   No  20  2
+
+# 14
+# y   Yes 21  0
+# n   No  21  0
+
+# 15
+# a   Active billboard    22  1
+# b   Inactive billboard  22  1
+# c   Lot is accessible   22  0
+# d   Blighted signs  22  1
+# e   Graffiti    22  1
+# f   Overgrown   22  1
+# g   Cement piles    22  1
+# h   Large dirt piles    22  1
+# i   Tires illegally dumped  22  1
+# j   Broken/abandoned fences 22  1
+# k   Abandoned cars (2 or less)  22  1
+# l   Abandoned cars (3 or more)  22  2
+# m   Other   22  1
+
+# 16
+# a   Needs Demo  23  5
+# b   Needs Board Up  23  3
+# c   Structure is accessible 23  0
+# d   Active billboard    23  1
+# e   Inactive billboard  23  1
+# f   Blighted signs/awnings  23  1
+# g   Graffiti, etc   23  1
+# h   Overgrown   23  1
+# i   Cement piles    23  1
+# j   Large Dirt piles    23  1
+# k   Tires illegaly dumped   23  1
+# l   Broken/abandoned fences 23  1
+# m   Abandoned cars (2 or less)  23  1
+# n   Abandoned cars (3 or more)  23  2
+# o   Other   23  1
+
+# 17
+# a   Cracked 24  0
+# b   Uneven over 1.5"    24  0
+# c   Missing 24  0
+# d   Appears in good condition   24  0
+
+
+
+
 
 def get_default_survey_answers():
     return {

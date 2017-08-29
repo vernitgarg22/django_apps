@@ -4,6 +4,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.test import TestCase
 from django.utils.six import StringIO
 
+from tests.test_photo_survey import PhotoSurveyTests
+
 
 class SendMessageTest(TestCase):
     def test_command_output(self):
@@ -29,3 +31,15 @@ class AddUserTest(TestCase):
 
         with self.assertRaises(CommandError, msg="add_user should not let duplicate user be added") as error:
             call_command('add_user', 'bob', 'smith', 'bob.smith@test.com', 'password', stdout=out)
+
+
+class ExportSurveyAnswersTest(TestCase):
+
+    def test_output(self):
+
+        out = StringIO()
+
+        # Run a different test just to get a survey submitted
+        PhotoSurveyTests().test_post_survey_combined()
+
+        call_command('export_survey_answers', 'default_combined', stdout=out)
