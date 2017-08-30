@@ -70,11 +70,3 @@ def get_parcel_descriptions():
             desc = col
         descriptions[col] = desc
     return descriptions
-
-
-def clean_pnum(pnum):
-    """
-    urls with dots are problematic: substitute underscores for dots in the url
-    (and replace underscores with dots here)
-    """
-    return pnum.replace('_', '.')

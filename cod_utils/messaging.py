@@ -8,9 +8,6 @@ from twilio.request_validator import RequestValidator
 from twilio.rest import Client
 
 
-import pdb
-
-
 class MsgHandler():
     """
     Validates requests received from twilio

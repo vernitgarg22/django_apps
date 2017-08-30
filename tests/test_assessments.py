@@ -57,9 +57,6 @@ class AssessmentsTests(TestCase):
         cleanup_db()
         self.maxDiff = None
 
-    def test_clean_pnum(self):
-        self.assertEqual(util.clean_pnum('1245.1234'), '1245.1234', "clean_pnum() replaces periods with underscores")
-
     def test_clean_parcel_val(self):
         self.assertEqual(util.clean_parcel_val(" foo "), "foo", "clean_parcel_val() strips trailing and leading white space")
 

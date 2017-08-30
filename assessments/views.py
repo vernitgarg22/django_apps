@@ -19,6 +19,7 @@ from assessments.models import Parcel, CaseMain
 from assessments import util
 
 from cod_utils.cod_logger import CODLogger
+from cod_utils.util import get_parcel_id
 
 
 def get_parcels(parcels):
@@ -56,9 +57,7 @@ def get_sales_property(request, pnum=None, years_back=None, format=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    # urls with dots are problematic: substitute underscores for dots in the url
-    # (and replace underscores with dots here)
-    pnum = pnum.replace('_', '.')
+    pnum = get_parcel_id(request.path, 2)
 
     # Search for parcels with the given parcel num
     # pnum = request.path_info.split('/')[2]
@@ -132,7 +131,7 @@ def get_parcel(request, pnum=None, format=None):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # clean up the pnum
-    pnum = util.clean_pnum(pnum)
+    pnum = get_parcel_id(request.path, 3)
 
     # excecute the search
     parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)

@@ -113,4 +113,7 @@ def get_parcel_id(path, offset):
     because it treats them as format delimiters - e.g., "http://<host>/path.json")
     """
 
-    return path.split('/')[offset]
+    parcel_id = path.split('/')[offset]
+
+    # Some callers replace '.' with '_'
+    return parcel_id.replace('_', '.')

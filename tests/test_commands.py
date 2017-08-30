@@ -1,3 +1,5 @@
+import os, re
+
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
@@ -43,3 +45,8 @@ class ExportSurveyAnswersTest(TestCase):
         PhotoSurveyTests().test_post_survey_combined()
 
         call_command('export_survey_answers', 'default_combined', stdout=out)
+
+        output = out.getvalue()
+        match = re.search(r' to .*\.csv', output)
+        filename = output[match.start() + 4 : match.end()]
+        os.remove(filename)
