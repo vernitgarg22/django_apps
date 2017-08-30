@@ -104,3 +104,13 @@ def clean_comma_delimited_string(string):
 
     tmp = [ str(val) + ',' for val in sorted(set(string.split(','))) if val ]
     return ',' + ''.join(tmp)
+
+
+def get_parcel_id(path, offset):
+    """
+    Parse out a parcel id from the path and return it. (This is necessary because a 
+    lot of parcel ids contain a dot, and urls with dots are problematic in django
+    because it treats them as format delimiters - e.g., "http://<host>/path.json")
+    """
+
+    return path.split('/')[offset]

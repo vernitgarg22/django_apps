@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cod_utils.cod_logger import CODLogger
+from cod_utils.util import get_parcel_id
 
 from photo_survey.models import Image, ImageMetadata
 from photo_survey.models import ParcelMetadata, SurveyType, Survey, SurveyQuestion, SurveyAnswer
@@ -92,15 +93,6 @@ def get_auth_token(request):
     return Response({ "token": token.key }, status=status.HTTP_201_CREATED)
 
 
-# TODO remove this, if possible?
-def clean_parcel_id(parcel_id):
-    """
-    Urls with dots are problematic: substitute underscores for dots in the url
-    (and replace underscores with dots here)
-    """
-    return parcel_id.replace('_', '.')
-
-
 @api_view(['GET'])
 def get_survey_count(request, parcel_id):
     """
@@ -109,7 +101,7 @@ def get_survey_count(request, parcel_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    parcel_id = clean_parcel_id(parcel_id)
+    parcel_id = get_parcel_id(request.path, 3)
 
     count = Survey.objects.filter(parcel__parcel_id=parcel_id).count()
     content = { "count": count }
@@ -125,7 +117,7 @@ def get_metadata(request, parcel_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    parcel_id = clean_parcel_id(parcel_id)
+    parcel_id = get_parcel_id(request.path, 2)
 
     # TODO possibly optimize the images on the disk?
     # https://hugogiraudel.com/2013/07/29/optimizing-with-bash/
@@ -172,7 +164,7 @@ def get_latest_survey(request, parcel_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    parcel_id = clean_parcel_id(parcel_id)
+    parcel_id = get_parcel_id(request.path, 4)
 
     survey = Survey.objects.filter(parcel__parcel_id=parcel_id).last()
 
@@ -220,6 +212,13 @@ class SurveyorView(APIView):
 
         return data['survey_id']
 
+    def get_parcel_id_offset(self):
+        """
+        Return offset within path of parcel id.
+        """
+
+        return 3
+
     def check_parcels(self, parcel_ids):
         """
         Returns json mapping each parcel_id to number of surveys that exist currently for that parcel.
@@ -264,7 +263,7 @@ class SurveyorView(APIView):
             return Response({ "error": "user not authorized" }, status=status.HTTP_401_UNAUTHORIZED)
 
         survey_template_id = self.get_survey_template_id(data)
-        parcel_id = clean_parcel_id(parcel_id)
+        parcel_id = get_parcel_id(request.path, self.get_parcel_id_offset())
         answer_errors = {}
 
         # Is the parcel id valid?
@@ -344,6 +343,13 @@ class BridgingNeighborhoodsView(SurveyorView):
         """
 
         return "bridging_neighborhoods"
+
+    def get_parcel_id_offset(self):
+        """
+        Return offset within path of parcel id.
+        """
+
+        return 4
 
     def describe_favorite(self, survey):
         """
