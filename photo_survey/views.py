@@ -332,8 +332,14 @@ class BridgingNeighborhoodsView(SurveyorView):
         if not data.get('username'):
             return None
 
-        user = User.objects.db_manager('photo_survey').create_user(data['username'])
-        user.save()
+        username = data['username']
+
+        users = User.objects.using('photo_survey').filter(username = username)
+        if users:
+            user = users[0]
+        else:
+            user = User.objects.db_manager('photo_survey').create_user(username)
+            user.save()
 
         return user
 
