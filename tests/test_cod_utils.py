@@ -3,6 +3,8 @@ from datetime import datetime
 from datetime import timedelta
 import pytz
 
+from django.conf import settings
+
 from django.test import Client
 from django.test import TestCase, RequestFactory
 
@@ -128,3 +130,8 @@ class CODUtilsMsgHandlerTests(TestCase):
         MsgHandler.DRY_RUN = False
         sent = MsgHandler().send_text("5005550006", "testing", dry_run_param = True)
         self.assertFalse(sent, "MsgHandler sends no texts when dry_run_param is True")
+
+    def test_send_admin_alert(self):
+        MsgHandler.DRY_RUN = False
+        sent = MsgHandler().send_admin_alert("testing")
+        self.assertTrue(sent, "MsgHandler sends an admin alert")

@@ -62,7 +62,7 @@ class MsgHandler():
                 body = text,
             )
             return message.status != 'failed'
-        except:
+        except:    # pragma: no cover
             print("Error received sending twilio msg to number {}".format(phone_number))
             return False
 
@@ -71,23 +71,28 @@ class MsgHandler():
         Alert admins via twilio rest client
         """
 
-        # TODO put this in config file
-        admin_numbers = ['9178428901']
+        admin_numbers = settings.AUTO_LOADED_DATA['ADMIN_PHONE_NUMBERS']
 
         client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if dry_run_param:
+        if dry_run_param:    # pragma: no cover
             return False
+
+        success = True
 
         for number in admin_numbers:
             try:
-                client.messages.create(
+                message = client.messages.create(
                     to = "+1" + number,
                     from_ = MsgHandler.get_phone_sender(),
                     body = text,
                 )
-            except:
+                if message.status == 'failed':    # pragma: no cover
+                    success = FALSE
+            except:    # pragma: no cover
                 print("Error received sending twilio msg")
                 return False
+
+        return success
 
 
 class SlackMsgHandler():
