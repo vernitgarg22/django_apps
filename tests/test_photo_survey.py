@@ -1149,3 +1149,14 @@ class BridgingNeighborhoodsTests(TestCase):
         self.assertEqual(response.status_code, 204)
         favorites = Survey.objects.filter(survey_type__survey_template_id='bridging_neighborhoods').filter(parcel__parcel_id='testparcelid').exclude(status='deleted')
         self.assertFalse(favorites, "delete /photo_survey/bridging_neighborhoods/ marks resident's desired house deleted")
+
+    def test_delete_user_like_not_found(self):
+
+        # run another test just to create a user and survey
+        self.test_user_likes_house()
+
+        c = Client()
+
+        response = c.delete('/photo_survey/bridging_neighborhoods/favorites/invalid/', secure=True)
+
+        self.assertEqual(response.status_code, 404)
