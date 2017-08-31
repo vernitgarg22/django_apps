@@ -103,7 +103,7 @@ def get_survey_count(request, parcel_id):
 
     parcel_id = get_parcel_id(request.path, 3)
 
-    count = Survey.objects.filter(parcel__parcel_id=parcel_id).count()
+    count = Survey.objects.filter(parcel__parcel_id=parcel_id).exclude(status='deleted').count()
     content = { "count": count }
 
     return Response(content)
@@ -129,7 +129,7 @@ def get_metadata(request, parcel_id):
         url = request.build_absolute_uri(location='/data/photo_survey/images/' + img_meta.image.file_path)
         images.append(url)
 
-    surveys = [ survey.id for survey in Survey.objects.filter(parcel__parcel_id=parcel_id) ]
+    surveys = [ survey.id for survey in Survey.objects.filter(parcel__parcel_id=parcel_id).exclude(status='deleted') ]
 
     # Is this parcel publicly owned?
     # TODO: make sure the dataset for this eventually 'goes live' (currently we load it
@@ -143,12 +143,12 @@ def get_metadata(request, parcel_id):
 @api_view(['GET'])
 def get_survey(request, survey_id):
     """
-    Get photos and survey data for the given parcel
+    Get photos and survey data for the given parcel.
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    surveys = Survey.objects.filter(id=int(survey_id))
+    surveys = Survey.objects.filter(id=int(survey_id)).exclude(status='deleted')
     if not surveys:
          return Response({"survey not found": survey_id}, status=status.HTTP_404_NOT_FOUND)
 
@@ -166,7 +166,7 @@ def get_latest_survey(request, parcel_id):
 
     parcel_id = get_parcel_id(request.path, 4)
 
-    survey = Survey.objects.filter(parcel__parcel_id=parcel_id).last()
+    survey = Survey.objects.filter(parcel__parcel_id=parcel_id).exclude(status='deleted').last()
 
     content = get_survey_data(survey) if survey else {}
 
@@ -378,10 +378,25 @@ class BridgingNeighborhoodsView(SurveyorView):
         if not users:
             return Response({"User not found": username}, status=status.HTTP_404_NOT_FOUND)
 
-        surveys = Survey.objects.filter(user_id = users[0].id)
+        surveys = Survey.objects.filter(user_id = users[0].id).exclude(status='deleted')
         favorites = { survey.parcel.parcel_id : self.describe_favorite(survey) for survey in surveys }
 
         return Response({ "favorites": favorites })
+
+    def delete(self, request, parcel_id, format=None):
+        """
+        Do a soft-delete on a user's favorite.
+        """
+
+        favorites = Survey.objects.filter(survey_type__survey_template_id='bridging_neighborhoods').filter(parcel__parcel_id=parcel_id)
+        if not favorites:
+            return Response({"favorite not found": parcel_id}, status=status.HTTP_404_NOT_FOUND)
+
+        for favorite in favorites:
+            favorite.status = 'deleted'
+            favorite.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
