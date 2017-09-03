@@ -9,6 +9,9 @@ from django.utils import timezone
 from assessors_data.models import MttTrackerExport2017, Whd01Parcl2017
 
 
+import pdb
+
+
 def clean_string(buffer):
     """
     Trim quotes from start and end of string
@@ -64,173 +67,123 @@ class Command(BaseCommand):
         self.index = 0
 
         parcels_pnum = self.get_value(row)
-        parcelmaster_ownername1 = self.get_value(row)
-        parcelmaster_ownername2 = self.get_value(row)
-        parcelmaster_ownercareof = self.get_value(row)
+        parcels_ecftbl = self.get_value(row)
         parcelmaster_propstreetcombined = self.get_value(row)
-        parcelmaster_propstreetname = self.get_value(row)
         parcelmaster_propaddrnum = self.get_value(row, Decimal)
         parcelmaster_propaddrdirect = self.get_value(row)
-        parcelmaster_unitorapt = self.get_value(row)
+        parcelmaster_propstreetname = self.get_value(row)
         parcelmaster_propzip = self.get_value(row, Decimal)
-
-        parcels_usernum = self.get_value(row, Decimal)
-        parcels_mapnum = self.get_value(row, Decimal)
-        parcels_exemptcode = self.get_value(row)
-        parcels_ecftbl = self.get_value(row)
-        parcelreadonly_adjass_0_3 = self.get_value(row, Decimal)
-        parcelreadonly_ass_0 = self.get_value(row, Decimal)
-        parcelreadonly_adjtax_0_3 = self.get_value(row, Decimal)
-        parcelreadonly_tax_0 = self.get_value(row, Decimal)
-        parcelreadonly_curclassstr = self.get_value(row)
-        parcels_homestead = self.get_value(row, Decimal)
-
-        parcels_cft_string = self.get_value(row)
-        parcelmaster_relatedpnum = self.get_value(row)
-        parcelmaster_lastsaledate = self.get_value(row, datetime)
-        parcelmaster_lastsaleprice = self.get_value(row, Decimal)
-        parcelreadonly_legaldescription = self.get_value(row)
-        parcels_homedate = self.get_value(row)
-        parcelmaster_mttpending_string = self.get_value(row)
         parcelmaster_taxpayname = self.get_value(row)
-        parcelmaster_taxpaystreetname = self.get_value(row)
-        parcelmaster_taxpaystate = self.get_value(row)
-
         parcelmaster_taxpayname2 = self.get_value(row)
+        parcelMaster_taxpaystreetaddr = self.get_value(row)
+
         parcelmaster_taxpaycity = self.get_value(row)
+        parcelmaster_taxpaystate = self.get_value(row)
         parcelmaster_taxpayzip = self.get_value(row)
         parcels_propclass = self.get_value(row, Decimal)
         parcels_oldprop = self.get_value(row, Decimal)
         parcels_propstatus = self.get_value(row)
-        parcels_prevexemptcode = self.get_value(row)
-        parcelreadonly_spactcategory = self.get_value(row)
-        parcels_mborsev = self.get_value(row, Decimal)
-        parcelreadonly_mborsev_1 = self.get_value(row, Decimal)
+        parcelmaster_exempt = self.get_value(row)
+        parcelmaster_prevexempt = self.get_value(row)
+        parcels_specialactscode = self.get_value(row)
+        memoryfieldstable_assessmentyear = self.get_value(row, Decimal)
 
-        parcelreadonly_mborsev_2 = self.get_value(row, Decimal)
-        parcels_mbortax = self.get_value(row, Decimal)
-        parcelreadonly_adjtax_0_2 = self.get_value(row, Decimal)
-        parcelreadonly_adjtax_1_3 = self.get_value(row, Decimal)
-        parcelreadonly_listnumber_0_0 = self.get_value(row)
-        parcelreadonly_listnumber_1_0 = self.get_value(row)
-        parcelreadonly_listnumber_2_0 = self.get_value(row)
+        memoryfieldstable_previousassessmentyear = self.get_value(row, Decimal)
+        parcelreadonly_mborass1 = self.get_value(row, Decimal)
+        parcelreadonly_mborass2 = self.get_value(row, Decimal)
+        parcelreadonly_mborsev1 = self.get_value(row, Decimal)
+        parcelreadonly_mborsev2 = self.get_value(row, Decimal)
+        parcelreadonly_mbortax1 = self.get_value(row, Decimal)
+        parcelreadonly_mbortax2 = self.get_value(row, Decimal)
+        parcelmaster_specialnote = self.get_value(row)
         parcels_usecode = self.get_value(row)
-        parcels_ncom = self.get_value(row, Decimal)
-        parcels_newnhouse = self.get_value(row, Decimal)
-
-        parcelmaster_resb_yearbuilt = self.get_value(row, Decimal)
-        parcelmaster_resb_floorarea = self.get_value(row, Decimal)
-        parcelmaster_cib_yearbuilt = self.get_value(row, Decimal)
         parcelmaster_vacant = self.get_value(row, Decimal)
-        parcelmaster_resb_groundarea = self.get_value(row, Decimal)
-        parcelmaster_frontage = self.get_value(row, Decimal)
-        parcelmaster_landvalue = self.get_value(row, Decimal)
-        parcelmaster_totalacres = self.get_value(row, Decimal)
-        parcelmaster_resb_pricefloor = self.get_value(row, Decimal)
-        parcelmaster_avdepth = self.get_value(row, Decimal)
 
+        parcelmaster_lastsaleprice = self.get_value(row, Decimal)
+        parcelmaster_lastsaledate = self.get_value(row, datetime)
+        parcelmaster_cib_numcib = self.get_value(row, Decimal)
+        parcelmaster_cib_yearbuilt = self.get_value(row, Decimal)
+        parcelmaster_cib_floorarea = self.get_value(row, Decimal)
+        parcelmaster_resb_numresb = self.get_value(row, Decimal)
+        parcelmaster_resb_yearbuilt = self.get_value(row, Decimal)
+        parcelmaster_resb_groundarea = self.get_value(row, Decimal)
+        parcelmaster_totalacres = self.get_value(row, Decimal)
+        parcels_squarefootage = self.get_value(row, Decimal)
+
+        parcelmaster_frontage = self.get_value(row, Decimal)
+        parcelmaster_avdepth = self.get_value(row, Decimal)
+        parcelmaster_landvalue = self.get_value(row, Decimal)
         parcelmaster_landmap = self.get_value(row, Decimal)
         parcelmaster_namechgdate = self.get_value(row, datetime)
-        parcelreadonly_adj_pet_dock_0_0 = self.get_value(row)
-        parcelmaster_xstreetname_0 = self.get_value(row)
-        parcelmaster_xstreetname_1 = self.get_value(row)
+        parcelmaster_relatedpnum = self.get_value(row)
         parcelmaster_xcord = self.get_value(row, Decimal)
         parcelmaster_ycord = self.get_value(row, Decimal)
-        parcelreadonly_ecftabledesc = self.get_value(row)
-        parcelmaster_sub = self.get_value(row)
-        parcelmaster_parcelhaslegal = self.get_value(row, Decimal)
+        parcels_mapnum = self.get_value(row, Decimal)
+        neighborhoods_neighcode = self.get_value(row, Decimal)
 
-        parcelmaster_lot = self.get_value(row)
-        parcelreadonly_lastsaleliberpage = self.get_value(row)
-        parcelmaster_liberpage2 = self.get_value(row)
-        parcels_secunitmapnum = self.get_value(row)
-        parcelmaster_mttprogress_0 = self.get_value(row)
-        parcelmaster_mttyears_0 = self.get_value(row, Decimal)
-        parcelmaster_lastadjustedsaleprice = self.get_value(row, Decimal)
-        parcelreadonly_salefiledate = self.get_value(row, datetime)
-        parcelreadonly_mostrecenttransferpercent = self.get_value(row, Decimal)
+        parcelmaster_block = self.get_value(row, Decimal)
+        parcelmaster_sub = self.get_value(row, Decimal)
+        parcelmaster_liberpage = self.get_value(row, Decimal)
+        parcelreadonly_legaldescription = self.get_value(row)
+        parcels_usernum = self.get_value(row, Decimal)
 
         klass = self.get_data_model()
 
         parcel_data = klass(parcels_pnum=parcels_pnum,
-            parcelmaster_ownername1=parcelmaster_ownername1,
-            parcelmaster_ownername2=parcelmaster_ownername2,
-            parcelmaster_ownercareof=parcelmaster_ownercareof,
+            parcels_ecftbl=parcels_ecftbl,
             parcelmaster_propstreetcombined=parcelmaster_propstreetcombined,
-            parcelmaster_propstreetname=parcelmaster_propstreetname,
             parcelmaster_propaddrnum=parcelmaster_propaddrnum,
             parcelmaster_propaddrdirect=parcelmaster_propaddrdirect,
-            parcelmaster_unitorapt=parcelmaster_unitorapt,
+            parcelmaster_propstreetname=parcelmaster_propstreetname,
             parcelmaster_propzip=parcelmaster_propzip,
-            parcels_usernum=parcels_usernum,
-            parcels_mapnum=parcels_mapnum,
-            parcels_exemptcode=parcels_exemptcode,
-            parcels_ecftbl=parcels_ecftbl,
-            parcelreadonly_adjass_0_3=parcelreadonly_adjass_0_3,
-            parcelreadonly_ass_0=parcelreadonly_ass_0,
-            parcelreadonly_adjtax_0_3=parcelreadonly_adjtax_0_3,
-            parcelreadonly_tax_0=parcelreadonly_tax_0,
-            parcelreadonly_curclassstr=parcelreadonly_curclassstr,
-            parcels_homestead=parcels_homestead,
-            parcels_cft_string=parcels_cft_string,
-            parcelmaster_relatedpnum=parcelmaster_relatedpnum,
-            parcelmaster_lastsaledate=parcelmaster_lastsaledate,
-            parcelmaster_lastsaleprice=parcelmaster_lastsaleprice,
-            parcelreadonly_legaldescription=parcelreadonly_legaldescription,
-            parcels_homedate=parcels_homedate,
-            parcelmaster_mttpending_string=parcelmaster_mttpending_string,
             parcelmaster_taxpayname=parcelmaster_taxpayname,
-            parcelmaster_taxpaystreetname=parcelmaster_taxpaystreetname,
-            parcelmaster_taxpaystate=parcelmaster_taxpaystate,
             parcelmaster_taxpayname2=parcelmaster_taxpayname2,
+            parcelMaster_taxpaystreetaddr=parcelMaster_taxpaystreetaddr,
             parcelmaster_taxpaycity=parcelmaster_taxpaycity,
+            parcelmaster_taxpaystate=parcelmaster_taxpaystate,
             parcelmaster_taxpayzip=parcelmaster_taxpayzip,
             parcels_propclass=parcels_propclass,
             parcels_oldprop=parcels_oldprop,
             parcels_propstatus=parcels_propstatus,
-            parcels_prevexemptcode=parcels_prevexemptcode,
-            parcelreadonly_spactcategory=parcelreadonly_spactcategory,
-            parcels_mborsev=parcels_mborsev,
-            parcelreadonly_mborsev_1=parcelreadonly_mborsev_1,
-            parcelreadonly_mborsev_2=parcelreadonly_mborsev_2,
-            parcels_mbortax=parcels_mbortax,
-            parcelreadonly_adjtax_0_2=parcelreadonly_adjtax_0_2,
-            parcelreadonly_adjtax_1_3=parcelreadonly_adjtax_1_3,
-            parcelreadonly_listnumber_0_0=parcelreadonly_listnumber_0_0,
-            parcelreadonly_listnumber_1_0=parcelreadonly_listnumber_1_0,
-            parcelreadonly_listnumber_2_0=parcelreadonly_listnumber_2_0,
+            parcelmaster_exempt=parcelmaster_exempt,
+            parcelmaster_prevexempt=parcelmaster_prevexempt,
+            parcels_specialactscode=parcels_specialactscode,
+            memoryfieldstable_assessmentyear=memoryfieldstable_assessmentyear,
+            memoryfieldstable_previousassessmentyear=memoryfieldstable_previousassessmentyear,
+            parcelreadonly_mborass1=parcelreadonly_mborass1,
+            parcelreadonly_mborass2=parcelreadonly_mborass2,
+            parcelreadonly_mborsev1=parcelreadonly_mborsev1,
+            parcelreadonly_mborsev2=parcelreadonly_mborsev2,
+            parcelreadonly_mbortax1=parcelreadonly_mbortax1,
+            parcelreadonly_mbortax2=parcelreadonly_mbortax2,
+            parcelmaster_specialnote=parcelmaster_specialnote,
             parcels_usecode=parcels_usecode,
-            parcels_ncom=parcels_ncom,
-            parcels_newnhouse=parcels_newnhouse,
-            parcelmaster_resb_yearbuilt=parcelmaster_resb_yearbuilt,
-            parcelmaster_resb_floorarea=parcelmaster_resb_floorarea,
-            parcelmaster_cib_yearbuilt=parcelmaster_cib_yearbuilt,
             parcelmaster_vacant=parcelmaster_vacant,
+            parcelmaster_lastsaleprice=parcelmaster_lastsaleprice,
+            parcelmaster_lastsaledate=parcelmaster_lastsaledate,
+            parcelmaster_cib_numcib=parcelmaster_cib_numcib,
+            parcelmaster_cib_yearbuilt=parcelmaster_cib_yearbuilt,
+            parcelmaster_cib_floorarea=parcelmaster_cib_floorarea,
+            parcelmaster_resb_numresb=parcelmaster_resb_numresb,
+            parcelmaster_resb_yearbuilt=parcelmaster_resb_yearbuilt,
             parcelmaster_resb_groundarea=parcelmaster_resb_groundarea,
-            parcelmaster_frontage=parcelmaster_frontage,
-            parcelmaster_landvalue=parcelmaster_landvalue,
             parcelmaster_totalacres=parcelmaster_totalacres,
-            parcelmaster_resb_pricefloor=parcelmaster_resb_pricefloor,
+            parcels_squarefootage=parcels_squarefootage,
+            parcelmaster_frontage=parcelmaster_frontage,
             parcelmaster_avdepth=parcelmaster_avdepth,
+            parcelmaster_landvalue=parcelmaster_landvalue,
             parcelmaster_landmap=parcelmaster_landmap,
             parcelmaster_namechgdate=parcelmaster_namechgdate,
-            parcelreadonly_adj_pet_dock_0_0=parcelreadonly_adj_pet_dock_0_0,
-            parcelmaster_xstreetname_0=parcelmaster_xstreetname_0,
-            parcelmaster_xstreetname_1=parcelmaster_xstreetname_1,
+            parcelmaster_relatedpnum=parcelmaster_relatedpnum,
             parcelmaster_xcord=parcelmaster_xcord,
             parcelmaster_ycord=parcelmaster_ycord,
-            parcelreadonly_ecftabledesc=parcelreadonly_ecftabledesc,
+            parcels_mapnum=parcels_mapnum,
+            neighborhoods_neighcode=neighborhoods_neighcode,
+            parcelmaster_block=parcelmaster_block,
             parcelmaster_sub=parcelmaster_sub,
-            parcelmaster_parcelhaslegal=parcelmaster_parcelhaslegal,
-            parcelmaster_lot=parcelmaster_lot,
-            parcelreadonly_lastsaleliberpage=parcelreadonly_lastsaleliberpage,
-            parcelmaster_liberpage2=parcelmaster_liberpage2,
-            parcels_secunitmapnum=parcels_secunitmapnum,
-            parcelmaster_mttprogress_0=parcelmaster_mttprogress_0,
-            parcelmaster_mttyears_0=parcelmaster_mttyears_0,
-            parcelmaster_lastadjustedsaleprice=parcelmaster_lastadjustedsaleprice,
-            parcelreadonly_salefiledate=parcelreadonly_salefiledate,
-            parcelreadonly_mostrecenttransferpercent=parcelreadonly_mostrecenttransferpercent)
+            parcelmaster_liberpage=parcelmaster_liberpage,
+            parcelreadonly_legaldescription=parcelreadonly_legaldescription,
+            parcels_usernum=parcels_usernum)
 
         return parcel_data
 
@@ -253,7 +206,7 @@ class Command(BaseCommand):
             self.row_count = 0
             self.errors = 0
 
-            datareader = csv.reader(csvfile, delimiter=',', quotechar='"')
+            datareader = csv.reader(csvfile, delimiter='\t', quotechar='"')
             row_data = []
             BATCHSIZE = 2500
             for row in datareader:
@@ -261,8 +214,14 @@ class Command(BaseCommand):
                 if first_line:
                     first_line = False
                 else:
+
+                    # row = self.parse_row(row)
+                    # row.validate()
+                    # row.save()
+
                     row_data.append(self.parse_row(row))
                     if len(row_data) == BATCHSIZE:
+                        # pdb.set_trace()
                         klass.objects.using(self.database).bulk_create(row_data)
                         self.row_count = self.row_count + len(row_data)
                         self.trace("{} rows imported".format(self.row_count))
