@@ -153,10 +153,9 @@ class Whd01Parcl2017(AssessorsBase):
     # parcelreadonly_salefiledate = models.CharField(db_column='ParcelReadonly#salefiledate', max_length=255, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     # parcelreadonly_mostrecenttransferpercent = models.FloatField(db_column='ParcelReadonly#mostRecentTransferPercent', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
-            managed = False
-            db_table = 'WHD01_PARCL_2017'
+    class Meta:
+        managed = False
+        db_table = 'WHD01_PARCL_2017'
 
 
 class MttTrackerExport2017(AssessorsBase):
