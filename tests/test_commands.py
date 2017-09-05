@@ -1,4 +1,4 @@
-import os, re
+import csv, os, re
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -11,7 +11,7 @@ from cod_utils.util import get_local_time
 from assessments.models import ParcelMaster
 from photo_survey.models import Survey, Image, ImageMetadata, ParcelMetadata, PublicPropertyData
 
-from tests.test_photo_survey import PhotoSurveyTests
+from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
 
 
 class SendMessageTest(TestCase):
@@ -41,6 +41,9 @@ class AddUserTest(TestCase):
 
 
 class ExportSurveyAnswersTest(TestCase):
+
+    def setUp(self):
+        cleanup_db()
 
     def test_output(self):
 
@@ -73,3 +76,72 @@ class ExportSurveyAnswersTest(TestCase):
         match = re.search(r' to .*\.csv', output)
         filename = output[match.start() + 4 : match.end()]
         os.remove(filename)
+
+
+class ImportPhotoSurveyImagesTest(TestCase):
+
+    FILENAME = 'import_images.csv'
+
+    def setUp(self):
+        cleanup_db()
+
+    @staticmethod
+    def get_header():
+        """
+        Returns header row for image metadata csv file.
+        """
+
+        return [ "filepath","filename","longitude","latitude","altitude","gps_date","img_date","parcelno","house_numb","street_nam","street_typ","zipcode","common_nam" ]
+
+    @staticmethod
+    def get_image_data(image):
+        """
+        Returns data for an image.
+        """
+
+        img_meta = image.imagemetadata_set.first()
+        parcel = img_meta.parcel
+
+        return [ '/path/subdir/', 'file.png', -82.9988157, 42.351591, 50, '2017:09:05 13:15:00', 'ignored', parcel.parcel_id, 7840, "va dyke", "pl", "48214", "\"karl's house\"" ]
+
+    def create_csv(self):
+        """
+        Creates csv with test data for the import.
+        """
+
+        parcel = ParcelMetadata(parcel_id='testparcelid')
+        parcel.save()
+        image = Image(file_path='/path/file.png')
+        image.save()
+        img_meta = ImageMetadata(image=image, parcel=parcel, created_at=get_local_time(), latitude=42.351591, longitude=-82.9988157, altitude=50)
+        img_meta.save()
+
+        with open(self.FILENAME, 'w', newline='') as csvfile:
+
+            writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(self.get_header())
+            for image in Image.objects.all():
+                writer.writerow(self.get_image_data(image))
+
+    def test_import(self):
+
+        out = StringIO()
+
+        self.create_csv()
+        cleanup_db()
+
+        call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
+
+        os.remove(self.FILENAME)
+
+    def test_import_existing_metadata(self):
+
+        out = StringIO()
+
+        self.create_csv()
+        cleanup_db()
+
+        call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
+        call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
+
+        os.remove(self.FILENAME)
