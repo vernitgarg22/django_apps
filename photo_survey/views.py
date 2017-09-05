@@ -392,6 +392,13 @@ class BridgingNeighborhoodsView(SurveyorView):
         Do a soft-delete on a user's favorite.
         """
 
+        CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+        if not request.is_secure():
+            return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+        parcel_id = get_parcel_id(request.path, 5)
+
         users = User.objects.using('photo_survey').filter(username=username)
         if not users:
             return Response({"User not found": username}, status=status.HTTP_404_NOT_FOUND)
