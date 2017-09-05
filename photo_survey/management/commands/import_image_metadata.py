@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
 from photo_survey.models import Image, ImageMetadata, ParcelMetadata
 
@@ -53,7 +54,9 @@ class Command(BaseCommand):
 
                     filename = clean_string(row[1])
                     parcel_id = clean_string(row[7])
-                    created_at = datetime.strptime(clean_string(row[5]), "%Y:%m:%d %H:%M:%S")
+                    date_val = clean_string(row[5]) + " UTC"
+                    created_at = datetime.strptime(date_val, "%Y:%m:%d %H:%M:%S %Z")
+                    created_at = timezone.make_aware(created_at)
                     path = clean_string(row[0])
                     subdir = path.split('/')[-2]
                     latitude = clean_decimal(row[3])
@@ -70,7 +73,7 @@ class Command(BaseCommand):
 
                     # print(parcel_id + ' - ' + file_path)
 
-                    parcel = ParcelMetadata.objects.filter(parcel_id=parcel_id).first()
+                    parcel = ParcelMetadata.objects.using(database).filter(parcel_id=parcel_id).first()
                     if not parcel:
                         parcel = ParcelMetadata(parcel_id=parcel_id, common_name=common_name, 
                                         house_number=house_number, street_name=street_name, street_type=street_type, zipcode=zipcode)
@@ -78,13 +81,13 @@ class Command(BaseCommand):
 
                     if not files.get(file_path):
 
-                        prev_meta = ImageMetadata.objects.filter(image__file_path=file_path)
+                        prev_meta = ImageMetadata.objects.using(database).filter(image__file_path=file_path)
                         img_meta = None
                         if prev_meta:
 
                             img_meta = prev_meta[0]
-                            img_meta.latitude=latitude;
-                            img_meta.longitude=longitude;
+                            img_meta.latitude=latitude
+                            img_meta.longitude=longitude
                             img_meta.altitude=altitude
                             img_meta.save(using=database, force_update=True)
 
