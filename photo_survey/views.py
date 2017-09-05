@@ -387,12 +387,16 @@ class BridgingNeighborhoodsView(SurveyorView):
 
         return Response({ "favorites": favorites })
 
-    def delete(self, request, parcel_id, format=None):
+    def delete(self, request, username, parcel_id, format=None):
         """
         Do a soft-delete on a user's favorite.
         """
 
-        favorites = Survey.objects.filter(survey_type__survey_template_id='bridging_neighborhoods').filter(parcel__parcel_id=parcel_id)
+        users = User.objects.using('photo_survey').filter(username=username)
+        if not users:
+            return Response({"User not found": username}, status=status.HTTP_404_NOT_FOUND)
+
+        favorites = Survey.objects.filter(survey_type__survey_template_id='bridging_neighborhoods').filter(user_id = users[0].id).filter(parcel__parcel_id=parcel_id)
         if not favorites:
             return Response({"favorite not found": parcel_id}, status=status.HTTP_404_NOT_FOUND)
 
