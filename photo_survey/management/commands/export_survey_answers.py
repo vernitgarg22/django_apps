@@ -61,7 +61,7 @@ class Command(BaseCommand):
 
         self.surveys = Survey.objects.using(self.USING_DB).filter(survey_type__survey_template_id=self.survey_template_id).order_by('id')
         if self.remove_dupes:
-            survey_map = { survey.parcel_id: survey for survey in self.surveys }
+            survey_map = { survey.parcel.parcel_id: survey for survey in self.surveys }
             self.surveys = survey_map.values()
 
         self.answers = SurveyAnswer.objects.using(self.USING_DB).all()
@@ -137,7 +137,7 @@ class Command(BaseCommand):
 
             answer_weights = [ avail_answer.weight for avail_answer in question.surveyquestionavailanswer_set.all() if avail_answer.value in curr_answers ]
 
-            if len(curr_answers) != len(answer_weights):
+            if len(curr_answers) != len(answer_weights):    # pragma: no cover    - should never get here at all
                 raise Exception('# of answers and # of answer weights should be equal')
 
             if not answer_weights:
@@ -160,7 +160,7 @@ class Command(BaseCommand):
 
         img_meta = ImageMetadata.objects.using(Command.USING_DB).filter(parcel__parcel_id=survey.parcel.parcel_id).first()
         if not img_meta:
-            return None
+            return None     # pragma: no cover - should never get here
 
         # TODO might be smart to make this a method on the survey object... except we may need to optimize this
         # by retrieving all the image_metadata objects when we first retrieve all the surveys?
@@ -174,7 +174,7 @@ class Command(BaseCommand):
 
         curr_answers = [ answer for answer in self.answers if answer.survey_id == survey.id ]
         if not curr_answers:
-            return None
+            return None     # pragma: no cover - should never get here
 
         # Get basic information about the survey itself
         answer_data = { 'parcel': survey.parcel.parcel_id, 'surveyor': survey.user.username, 'common_name': survey.common_name, 'note': survey.note, 'status': survey.status, 'created_at': survey.created_at }
@@ -190,7 +190,7 @@ class Command(BaseCommand):
 
         # Get the ownership data?
         if self.data_types.get('ownership', False):
-            parcel = self.parcels.get(survey.parcel_id, None)
+            parcel = self.parcels.get(survey.parcel.parcel_id, None)
             if parcel:
                 if self.data_types.get('ownership', False):
                     owner_name = parcel.ownername1
@@ -201,7 +201,7 @@ class Command(BaseCommand):
                     answer_data['owner city'] = parcel.ownercity
                     answer_data['owner state'] = parcel.ownerstate
                     answer_data['owner zip'] = parcel.ownerzip
-                    answer_data['publicly owned'] = 'y' if self.public_property.get(survey.parcel_id) else 'n'
+                    answer_data['publicly owned'] = 'y' if self.public_property.get(survey.parcel.parcel_id) else 'n'
                 if self.data_types.get('address_info', False):
                     answer_data['street address'] = parcel.propstreetcombined
 
@@ -234,7 +234,7 @@ class Command(BaseCommand):
                     writer.writerow(answer_data)
                     self.num_exported = self.num_exported + 1
 
-                    if self.num_exported % 100 == 0:
+                    if self.num_exported % 100 == 0:    # pragma: no cover
                         self.stdout.write("{} rows exported ...".format(self.num_exported))
                         self.stdout.flush()
 

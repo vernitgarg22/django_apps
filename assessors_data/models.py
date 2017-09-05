@@ -63,7 +63,7 @@ class AssessorsBase(models.Model):
         abstract = True
 
 
-    def validate(self):
+    def validate(self):    # pragma: no cover (this is really just for debugging)
 
         for field in type(self)._meta.local_fields:
             value = self.__getattribute__(field.name)

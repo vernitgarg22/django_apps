@@ -112,8 +112,8 @@ def build_survey_template_combined():
         { "survey_type": survey_type, "question_id": "site_use",                     "question_number": 13, "question_text": "What is the site used for?",                                 "valid_answers": "[a-f]",   "required_by": "",                          "required_by_answer": "" },
         { "survey_type": survey_type, "question_id": "is_lot_maintained",            "question_number": 14, "question_text": "Is the lot maintained?",                                     "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
         { "survey_type": survey_type, "question_id": "is_dumping_on_site",           "question_number": 15, "question_text": "Is there dumping on the site?",                              "valid_answers": "y|n",     "required_by": "",                          "required_by_answer": "" },
-        { "survey_type": survey_type, "question_id": "blighted_lot_elements",        "question_number": 16, "question_text": "Elements of the blighted lot (select all that apply)",       "valid_answers": "[a-m,]+", "required_by": "n" },
-        { "survey_type": survey_type, "question_id": "blighted_structure_elements",  "question_number": 17, "question_text": "Elements of the blighted structure (select all that apply)", "valid_answers": "[a-o,]+", "required_by": "n" },
+        { "survey_type": survey_type, "question_id": "blighted_lot_elements",        "question_number": 16, "question_text": "Elements of the blighted lot (select all that apply)",       "valid_answers": "[a-m,]+", "required_by": "n",                         "scoring_type": "sum" },
+        { "survey_type": survey_type, "question_id": "blighted_structure_elements",  "question_number": 17, "question_text": "Elements of the blighted structure (select all that apply)", "valid_answers": "[a-o,]+", "required_by": "n",                         "scoring_type": "sum" },
         # { "survey_type": survey_type, "question_id": "sidewalk_condition",           "question_number": 18, "question_text": "Is the sidewalk/curb: (select all that apply)",              "valid_answers": "[a-d,]+", "required_by": "" },
     ]
 
@@ -275,11 +275,11 @@ def build_survey_template_combined():
     avail_answer.save()
 
     survey_question = survey_questions[15]
-    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='Active billboard', weight=1)
     avail_answer.save()
-    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='Inactive billboard', weight=1)
     avail_answer.save()
-    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='Lot is accessible', weight=0)
     avail_answer.save()
     avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
     avail_answer.save()
@@ -303,11 +303,11 @@ def build_survey_template_combined():
     avail_answer.save()
 
     survey_question = survey_questions[16]
-    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='', weight=0)
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='a', text='Needs Demo', weight=1)
     avail_answer.save()
-    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='', weight=0)
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='b', text='Needs Board Up', weight=1)
     avail_answer.save()
-    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='', weight=0)
+    avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='c', text='Structure is accessible', weight=0)
     avail_answer.save()
     avail_answer = SurveyQuestionAvailAnswer(survey_question=survey_question, value='d', text='', weight=0)
     avail_answer.save()
@@ -627,7 +627,7 @@ def get_combined_survey_answers():
             { "question_id": "site_use", "answer": "e" },
             { "question_id": "is_lot_maintained", "answer": "y" },
             { "question_id": "is_dumping_on_site", "answer": "n" },
-            { "question_id": "blighted_lot_elements", "answer": "" },
+            { "question_id": "blighted_lot_elements", "answer": "a,b,c" },
             { "question_id": "blighted_structure_elements", "answer": "" }
         ],
         "parcel_ids": [
@@ -790,7 +790,7 @@ class PhotoSurveyTests(TestCase):
 
         survey = Survey.objects.first()
 
-        expected = {'id': survey.id, 'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
+        expected = {'id': survey.id, 'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}, {'blighted_lot_elements': 'a,b,c'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
 
         response = c.get("/photo_survey/survey/data/{}/".format(survey.id))
         self.assertEqual(response.status_code, 200)
@@ -805,7 +805,7 @@ class PhotoSurveyTests(TestCase):
 
         survey = Survey.objects.first()
 
-        expected = {'id': survey.id, 'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
+        expected = {'id': survey.id, 'image_url': '', 'note': '', 'created_at': date_json(survey.created_at), 'answers': [{'is_structure_on_site': 'y'}, {'is_structure_occupied': 'a'}, {'site_use_type': 'b'}, {'commercial_occupants_type': 'a'}, {'structure_condition': 'b'}, {'is_structure_fire_damaged': 'n'}, {'is_structure_secure': 'y'}, {'site_use': 'e'}, {'is_lot_maintained': 'y'}, {'is_dumping_on_site': 'n'}, {'blighted_lot_elements': 'a,b,c'}], 'status': '', 'common_name': '', 'parcel_id': 'testparcelid', 'surveyor': {'username': 'lennon@thebeatles.com', 'id': survey.user.id, 'email': 'lennon@thebeatles.com'}, 'survey_template': 'default_combined'}
 
         response = c.get("/photo_survey/survey/latest/testparcelid/")
 
@@ -879,6 +879,18 @@ class PhotoSurveyTests(TestCase):
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 400, "/photo_survey/survey/ stores combined field survey answers")
         self.assertEqual({'invalid parcel id': 'testparcelid'}, response.data, "Parcel id is identified as invalid")
+
+    def test_post_survey_parcel_id_missing_meta(self):
+
+        build_survey_template_combined()
+        init_parcel_data()
+
+        ParcelMetadata.objects.all().delete()
+
+        c = self.get_auth_client()
+
+        response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 404, "/photo_survey/survey/ handles parcels with no parcel metadata")
 
     def test_post_survey_unauthorized(self):
 
@@ -1149,6 +1161,21 @@ class BridgingNeighborhoodsTests(TestCase):
         self.assertEqual(response.status_code, 204)
         favorites = Survey.objects.filter(survey_type__survey_template_id='bridging_neighborhoods').filter(parcel__parcel_id='testparcelid').exclude(status='deleted')
         self.assertFalse(favorites, "delete /photo_survey/<username>/bridging_neighborhoods/<parcelid> marks resident's desired house deleted")
+
+    def test_delete_user_like_not_secure(self):
+
+        c = Client()
+
+        response = c.delete('/photo_survey/bridging_neighborhoods/karlos/favorites/testparcelid/', secure=False)
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_user_like_user_not_found(self):
+
+        c = Client()
+
+        response = c.delete('/photo_survey/bridging_neighborhoods/invalid/favorites/testparcelid/', secure=True)
+        self.assertEqual(response.status_code, 404)
+
 
     def test_delete_user_like_not_found(self):
 
