@@ -78,7 +78,13 @@ class Command(BaseCommand):
                         parcel = ParcelMetadata(parcel_id=parcel_id, common_name=common_name, 
                                         house_number=house_number, street_name=street_name, street_type=street_type, zipcode=zipcode)
                         parcel.save(using=database)
-
+                    elif not parcel.street_name:
+                        parcel.common_name=common_name
+                        parcel.house_number=house_number
+                        parcel.street_name=street_name
+                        parcel.street_type=street_type
+                        parcel.zipcode=zipcode
+                        parcel.save(using=database)
                     if not files.get(file_path):
 
                         prev_meta = ImageMetadata.objects.using(database).filter(image__file_path=file_path)

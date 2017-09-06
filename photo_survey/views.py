@@ -300,11 +300,7 @@ class SurveyorView(APIView):
         if answer_errors:
             return Response(answer_errors, status=status.HTTP_400_BAD_REQUEST)
 
-        parcels = ParcelMetadata.objects.filter(parcel_id=parcel_id)
-        if not parcels:
-            return Response({"Parcel not found": parcel_id}, status=status.HTTP_404_NOT_FOUND)
-
-        parcel = parcels[0]
+        parcel, created = ParcelMetadata.objects.get_or_create(parcel_id=parcel_id)
 
         # Create the survey
         survey_type = SurveyType.objects.get(survey_template_id=survey_template_id)

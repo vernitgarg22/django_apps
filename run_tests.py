@@ -22,6 +22,7 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_photo_survey.BridgingNeighborhoodsTests"]
     # test_labels = ["tests.test_waste_schedule"]
     # test_labels = ["tests.test_waste_schedule.WasteScheduleTests.test_get_schedule_details_citywide_reschedule"]
+    # test_labels = ["tests.test_commands.ImportPhotoSurveyImagesTest.test_import_existing_parcel_metadata"]
     # test_labels = ["tests.test_waste_notifier"]
     # test_labels = ["tests.test_waste_wizard"]
     # test_labels = ["tests.test_waste_notifier.WasteNotifierTests.test_confirm_invalid_phone_number"]

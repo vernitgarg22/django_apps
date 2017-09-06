@@ -890,7 +890,7 @@ class PhotoSurveyTests(TestCase):
         c = self.get_auth_client()
 
         response = c.post('/photo_survey/survey/testparcelid/', json.dumps(get_combined_survey_answers()), secure=True, content_type="application/json")
-        self.assertEqual(response.status_code, 404, "/photo_survey/survey/ handles parcels with no parcel metadata")
+        self.assertEqual(response.status_code, 201, "/photo_survey/survey/ handles parcels with no parcel metadata")
 
     def test_post_survey_unauthorized(self):
 

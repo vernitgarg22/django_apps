@@ -145,3 +145,16 @@ class ImportPhotoSurveyImagesTest(TestCase):
         call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
 
         os.remove(self.FILENAME)
+
+    def test_import_existing_parcel_metadata(self):
+
+        out = StringIO()
+
+        self.create_csv()
+        parcel, created = ParcelMetadata.objects.using('photo_survey').get_or_create(parcel_id='testparcelid')
+        parcel.street_name = ''
+        parcel.save(using='photo_survey', force_update=True)
+
+        call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
+
+        os.remove(self.FILENAME)
