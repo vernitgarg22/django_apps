@@ -25,3 +25,21 @@
   * run unit tests from the root of django_apps:
 
     - `./run_coverage.py`
+
+# Steps to Deploy:
+
+  * commit and push your changes to the github remote repository
+
+  * VPN to server
+
+  * open git bash with administrator privileges
+
+  * in git bash, cd to $DJANGO_HOME
+
+  * execute to pull your changes from the remote repository:
+
+    - `git fetch; git pull`
+
+  * restart apache on the server:
+
+    - `c:/apache24/bin/httpd -k restart`
