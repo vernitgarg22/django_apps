@@ -1,6 +1,6 @@
 # django_apps
 
-# Steps to install:
+# Steps to Install:
 
   * make sure you have at least version 3.4 of python installed
 
@@ -10,7 +10,9 @@
 
     - `git clone https://github.com/CityOfDetroit/django_apps.git`
 
-  * set an environmntal variable named `$DJANGO_HOME` - the value of this variable should be the path to your local copy of django_apps, e.g., `c:/users/kaebnickk/django_apps`
+  * set an environmntal variable named `$DJANGO_HOME`
+
+    - the value of this variable should be the path to your local copy of django_apps, e.g., `c:/users/kaebnickk/django_apps`
 
   * use python's pip app to install required packages:
 
