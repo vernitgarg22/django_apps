@@ -1,6 +1,6 @@
 # django_apps
 
-# Codebase for City of Detroit DoIT web team APIs.  Implemented in Django Rest Framework.
+  Codebase for City of Detroit DoIT web team APIs.  Implemented in Django Rest Framework.
 
 # Steps to Install:
 
@@ -26,17 +26,15 @@
 
     - `./run_coverage.py`
 
-# Steps to Deploy:
+# Steps to Deploy to a Server:
 
-  * commit and push your changes to the github remote repository
+  * commit and push your changes to the github remote repository https://github.com/CityOfDetroit/django_apps.git
 
-  * VPN to server
+  * connect via VPN to the server
 
-  * open git bash with administrator privileges
+  * open git bash with administrator privileges (right click on 'git bash' and choose 'run as administrator')
 
-  * in git bash, cd to $DJANGO_HOME
-
-  * execute to pull your changes from the remote repository:
+  * in git bash, cd to $DJANGO_HOME and pull your changes from the remote repository:
 
     - `git fetch; git pull`
 
