@@ -41,3 +41,14 @@
   * restart apache on the server:
 
     - `c:/apache24/bin/httpd -k restart`
+
+# Useful custom django admin commands
+
+  These are commands that can be run via the django_apps codebase, with the same syntax as running a local debug server (`python manage.py runserver`) except that you substitute the name of the command for 'runserver' (note that to run these you should be in either DOS or git bash, in whatever directory $DJANGO_HOME points to):
+
+  * export_data_csv
+
+    - Exports all the data belonging to the given model, in the given database, to a csv file:
+
+        Usage is 'python manage.py export_data_csv <database> <model>''
+        e.g., `python manage.py export_data_csv photo_survey Survey`
