@@ -20,7 +20,7 @@ class AssessorsBase(models.Model):
     parcels_oldprop = models.CharField(db_column='"Parcels oldprop"', max_length=50, blank=True, null=True)
     parcels_propstatus = models.CharField(db_column='"Parcels propstatus"', max_length=50, blank=True, null=True)
     parcelmaster_exempt = models.CharField(db_column='"ParcelMaster exempt"', max_length=50, blank=True, null=True)
-    parcelmaster_prevexempt = models.CharField(db_column='"ParcelMaster prevexempt"', max_length=50, blank=True, null=True)
+    parcels_prevexemptcode = models.CharField(db_column='"Parcels prevexemptcode"', max_length=50, blank=True, null=True)
     parcels_specialactscode = models.CharField(db_column='"Parcels specialactscode"', max_length=50, blank=True, null=True)
     memoryfieldstable_assessmentyear = models.CharField(db_column='"MemoryFieldsTable assessmentYear"', max_length=50, blank=True, null=True)
     memoryfieldstable_previousassessmentyear = models.CharField(db_column='"MemoryFieldsTable previousAssessmentYear"', max_length=50, blank=True, null=True)
@@ -58,6 +58,7 @@ class AssessorsBase(models.Model):
     parcelmaster_liberpage = models.CharField(db_column='"ParcelMaster liberPage"', max_length=50, blank=True, null=True)
     parcelreadonly_legaldescription = models.CharField(db_column='"ParcelReadonly legalDescription"', max_length=32000, blank=True, null=True)
     parcels_usernum = models.CharField(db_column='"Parcels usernum"', max_length=50, blank=True, null=True)
+    parcelmaster_ownername1 = models.CharField(db_column='"ParcelMaster ownername1"', max_length=50, blank=True, null=True)
 
     class Meta:
         abstract = True

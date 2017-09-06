@@ -9,9 +9,6 @@ from django.utils import timezone
 from assessors_data.models import MttTrackerExport2017, Whd01Parcl2017
 
 
-import pdb
-
-
 def clean_string(buffer):
     """
     Trim quotes from start and end of string
@@ -84,7 +81,7 @@ class Command(BaseCommand):
         parcels_oldprop = self.get_value(row, Decimal)
         parcels_propstatus = self.get_value(row)
         parcelmaster_exempt = self.get_value(row)
-        parcelmaster_prevexempt = self.get_value(row)
+        parcels_prevexemptcode = self.get_value(row)
         parcels_specialactscode = self.get_value(row)
         memoryfieldstable_assessmentyear = self.get_value(row, Decimal)
 
@@ -126,6 +123,7 @@ class Command(BaseCommand):
         parcelmaster_liberpage = self.get_value(row, Decimal)
         parcelreadonly_legaldescription = self.get_value(row)
         parcels_usernum = self.get_value(row, Decimal)
+        parcelmaster_ownername1 = self.get_value(row)
 
         klass = self.get_data_model()
 
@@ -146,7 +144,7 @@ class Command(BaseCommand):
             parcels_oldprop=parcels_oldprop,
             parcels_propstatus=parcels_propstatus,
             parcelmaster_exempt=parcelmaster_exempt,
-            parcelmaster_prevexempt=parcelmaster_prevexempt,
+            parcels_prevexemptcode=parcels_prevexemptcode,
             parcels_specialactscode=parcels_specialactscode,
             memoryfieldstable_assessmentyear=memoryfieldstable_assessmentyear,
             memoryfieldstable_previousassessmentyear=memoryfieldstable_previousassessmentyear,
@@ -183,7 +181,8 @@ class Command(BaseCommand):
             parcelmaster_sub=parcelmaster_sub,
             parcelmaster_liberpage=parcelmaster_liberpage,
             parcelreadonly_legaldescription=parcelreadonly_legaldescription,
-            parcels_usernum=parcels_usernum)
+            parcels_usernum=parcels_usernum,
+            parcelmaster_ownername1=parcelmaster_ownername1)
 
         return parcel_data
 
@@ -221,7 +220,6 @@ class Command(BaseCommand):
 
                     row_data.append(self.parse_row(row))
                     if len(row_data) == BATCHSIZE:
-                        # pdb.set_trace()
                         klass.objects.using(self.database).bulk_create(row_data)
                         self.row_count = self.row_count + len(row_data)
                         self.trace("{} rows imported".format(self.row_count))
