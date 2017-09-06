@@ -1,5 +1,7 @@
 # django_apps
 
+# Codebase for City of Detroit DoIT web team APIs.  Implemented in Django Rest Framework.
+
 # Steps to Install:
 
   * make sure you have at least version 3.4 of python installed
@@ -13,6 +15,8 @@
   * set an environmntal variable named `$DJANGO_HOME`
 
     - the value of this variable should be the path to your local copy of django_apps, e.g., `c:/users/kaebnickk/django_apps`
+
+  * get a local copy of the machine-specific settings file (check with @karlk on how to do this)
 
   * use python's pip app to install required packages:
 
