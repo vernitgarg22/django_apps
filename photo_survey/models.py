@@ -1,6 +1,6 @@
 import re
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import models
 from django.utils import timezone
 
@@ -19,6 +19,18 @@ class ParcelMetadata(models.Model):
 
     def __str__(self):    # pragma: no cover  (this is really just for debugging)
         return self.parcel_id
+
+
+class Surveyor(User):
+    """
+    """
+
+    app_label = 'photo_survey'
+
+    class Meta:
+
+        proxy = True
+        db_table = 'auth_user'        
 
 
 class SurveyType(models.Model):

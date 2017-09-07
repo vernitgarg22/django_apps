@@ -1,6 +1,8 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 
-from .models import Survey, SurveyType, SurveyQuestion, SurveyQuestionAvailAnswer
+from .models import Survey, Surveyor, SurveyType, SurveyQuestion, SurveyQuestionAvailAnswer
 
 
 class SurveyTypeAdmin(admin.ModelAdmin):
@@ -65,3 +67,16 @@ class SurveyQuestionAvailAnswerAdmin(admin.ModelAdmin):
     ordering = ['id', 'value']
 
 admin.site.register(SurveyQuestionAvailAnswer, SurveyQuestionAvailAnswerAdmin)
+
+# Define a new User admin
+class SurveyorAdmin(UserAdmin):
+    """
+    Admin class to administer surveyors.
+    """
+
+    app_label = 'photo_survey'
+
+    list_display = ('username', 'email', 'first_name', 'last_name')
+    list_filter = ()
+
+admin.site.register(Surveyor, SurveyorAdmin)
