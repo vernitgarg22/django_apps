@@ -48,17 +48,17 @@
 
   * export_data_csv - Exports all the data belonging to the given model, in the given database, to a csv file:
 
-    - Usage is 'python manage.py export_data_csv <database> <model>''
+    - Usage: 'python manage.py export_data_csv <database> <model>''
     e.g., `python manage.py export_data_csv photo_survey Survey`
 
   * import_assessors_data - Imports assessors data into finassessorprod or warehousedb1.
 
-    - Usage is 'python manage.py import_assessors_data <database> <csv_file>
+    - Usage: 'python manage.py import_assessors_data <database> <csv_file>
     e.g., `python manage.py import_assessors_data finassessorprod MTT_TRACKEREXPORT2018.csv`
 
   * export_survey_answers - Exports photo_survey survey results to a csv file for a given type of survey.
 
-    - Usage is 'python manage.py export_survey_answers survey_template_id'
+    - Usage: 'python manage.py export_survey_answers survey_template_id'
     e.g., `python manage.py export_survey_answers default_combined`
 
     - optional parameters:
@@ -72,3 +72,13 @@
       `--calc_score=y|n` (Calculate a score for each survey? Default: 'y')
 
       `--add_streetview_link=y|n` (Add a link to mapillary streetview? Default: 'y')
+
+  * import_image_metadata - Import image metadata from a csv file into the photo survey database.
+
+    - Usage: 'python manage.py import_image_metadata <file_path> <database>'
+    e.g., `python manage.py import_image_metadata survey_20170720.csv photo_survey_dev`
+
+  * send_message - Sends a text message to a given phone number (useful for replying to waste notification feedback & questions).
+    
+    - Usage: 'python manage.py send_message <phone number> <text message>'
+    e.g., `python manage.py send_message '2125799232' 'Sample text message'`
