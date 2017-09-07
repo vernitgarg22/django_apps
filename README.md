@@ -48,7 +48,7 @@
 
   * export_data_csv - Exports all the data belonging to the given model, in the given database, to a csv file:
 
-    - Usage: 'python manage.py export_data_csv <database> <model>''<br/>
+    - Usage: 'python manage.py export_data_csv <database> <model>'<br/>
     e.g., `python manage.py export_data_csv photo_survey Survey`
 
   * import_assessors_data - Imports assessors data into finassessorprod or warehousedb1.

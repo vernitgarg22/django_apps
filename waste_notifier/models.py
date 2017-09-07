@@ -23,7 +23,7 @@ class Subscriber(models.Model):
 
     phone_number = models.CharField('Subscriber phone number', unique = True, max_length = 32)
     waste_area_ids = models.CharField('Subscriber Waste area(s)', max_length = 64)
-    status = models.CharField('Subscriber status (for soft deletes)', max_length = 32, choices=STATUS_CHOICES, default=DEFAULT_STATUS)
+    status = models.CharField('Subscriber status', max_length = 32, choices=STATUS_CHOICES, default=DEFAULT_STATUS)
     service_type = models.CharField('Service', max_length=32, default=ScheduleDetail.DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + ScheduleDetail.SERVICES_LIST + ')')
     last_status_update = models.DateTimeField('Time of last status change', blank=True, null=True)
     created_at = models.DateTimeField('Time of initial subscription', blank=True, null=True)
