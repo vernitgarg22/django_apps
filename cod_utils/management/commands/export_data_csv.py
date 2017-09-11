@@ -1,13 +1,11 @@
 import csv
+import importlib
 import re
 from pydoc import locate
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import models
 from django.utils import timezone
-
-from photo_survey.models import Survey
-from dnninternet.models import *
 
 
 class Command(BaseCommand):
@@ -20,8 +18,10 @@ class Command(BaseCommand):
         """
         Build command-line args.
         """
+        parser.add_argument('application', type=str, help='Application to extract data from')
         parser.add_argument('database', type=str, help='Database to extract data from')
         parser.add_argument('model', type=str, help='Model to extract')
+        parser.add_argument('output_file', type=str, help='File to output data to', default='')
 
     @staticmethod
     def get_header(klass):
@@ -59,16 +59,21 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        application = options['application']
         database = options['database']
         model = options['model']
 
-        klass = locate(database + '.models.' + model)
+        filename = database + '_' + model + '.csv'
+        filename = options.get('output_file', filename)
+
+        models = importlib.import_module('.models', application)
+        klass = locate(application + '.models.' + model)
         if not klass:
-            raise CommandError("Class {} not found".format(database + '.models.' + model))
+            raise CommandError("Class {} not found".format(application + '.models.' + model))
 
         objects = klass.objects.using(database).all()
 
-        filename = database + '_' + model + '.csv'
+        lines = 0
         with open(filename, 'w', newline='') as csvfile:
 
             writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -76,5 +81,8 @@ class Command(BaseCommand):
             for obj in objects:
                 try:
                     writer.writerow(self.get_data(obj))
+                    lines = lines + 1
                 except:
                     print('ignored a row for object {}'.format(obj))
+
+        return "Wrote {} lines to {}".format(lines, filename)

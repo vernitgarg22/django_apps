@@ -8,7 +8,7 @@ from django.utils.six import StringIO
 
 from cod_utils.util import get_local_time
 
-from assessments.models import ParcelMaster
+from assessments.models import ParcelMaster, Sales
 from photo_survey.models import Survey, Image, ImageMetadata, ParcelMetadata, PublicPropertyData
 
 from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
@@ -158,3 +158,19 @@ class ImportPhotoSurveyImagesTest(TestCase):
         call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
 
         os.remove(self.FILENAME)
+
+
+class ExportDataCSVTest(TestCase):
+
+    def test_export(self):
+
+        out = StringIO()
+
+        sales = Sales(pnum='testparcelid', saleprice=1.0)
+        sales.save()
+
+        call_command('export_data_csv', 'assessments', 'eql', 'Sales', 'deleteme.csv', stdout=out)
+
+        self.assertEqual(out.getvalue(), 'Wrote 1 lines to deleteme.csv\n')
+
+        os.remove('deleteme.csv')
