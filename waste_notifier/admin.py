@@ -15,6 +15,6 @@ class SubscriberAdmin(admin.ModelAdmin):
     list_filter = ['status', 'waste_area_ids', 'service_type', 'comment']
     list_editable = ['status', 'service_type', 'comment']
     search_fields = ['phone_number', 'waste_area_ids', 'status', 'service_type', 'comment']
-    ordering = ['service_type', 'status', 'waste_area_ids']
+    ordering = ['-last_status_update']
 
 admin.site.register(Subscriber, SubscriberAdmin)
