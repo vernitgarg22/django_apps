@@ -28,8 +28,10 @@ def subscribe_notifications(request):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # Only allow certain servers to call this endpoint
-#    if cod_utils.security.block_client(request):
-#        return Response("Invalid caller ip or host name: " + request.META.get('REMOTE_ADDR'), status=status.HTTP_403_FORBIDDEN)
+    if cod_utils.security.block_client(request):
+        remote_addr = request.META.get('REMOTE_ADDR')
+        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # update existing subscriber or create new one from data
     subscriber, error = Subscriber.update_or_create_from_dict(request.data)
@@ -138,7 +140,9 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
 
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):
-        return Response("Invalid caller ip or host name: " + request.META.get('REMOTE_ADDR'), status=status.HTTP_403_FORBIDDEN)
+        remote_addr = request.META.get('REMOTE_ADDR')
+        MsgHandler().send_admin_alert("Address {} was blocked from sending waste alerts".format(remote_addr))
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # Throw error if there is an unrecognized query param
     for param in request.query_params.keys():

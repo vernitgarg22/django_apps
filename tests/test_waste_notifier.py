@@ -333,17 +333,16 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(subscriber.status, 'active')
         self.assertTrue(subscriber.last_status_update != None and subscriber.last_status_update != '')
 
-    @skip('Looking for better way to block invalid callers')    # pragma: no cover because currently skipped
     def test_subscribe_invalid_client(self):
 
         # Force block_client to block us
-        cod_utils.security.API_CLIENT_WHITELIST.remove("127.0.0.1")
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
 
         c = Client()
 
         response = c.post('/waste_notifier/subscribe/', { "From": "5005550006", "Body": "oops" } )
         self.assertEqual(response.status_code, 403, "/waste_notifier/subscribe/ blocks invalid callers")
-        cod_utils.security.API_CLIENT_WHITELIST.append("127.0.0.1")
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
 
     def test_subscribe_invalid_form(self):
 
@@ -684,13 +683,13 @@ class WasteNotifierTests(TestCase):
     def test_send_invalid_caller(self):
 
         # Force block_client to block us
-        cod_utils.security.API_CLIENT_WHITELIST.remove("127.0.0.1")
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
 
         c = Client()
         response = c.post('/waste_notifier/send/')
         self.assertEqual(response.status_code, 403, "/waste_notifier/send/ blocks invalid callers")
 
-        cod_utils.security.API_CLIENT_WHITELIST.append("127.0.0.1")
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
 
     def test_send_invalid_query_param(self):
 

@@ -64,11 +64,11 @@ class CODUtilsTests(TestCase):
 
     def test_block_client(self):
         # Force block_client to block us
-        security.API_CLIENT_WHITELIST.remove("127.0.0.1")
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
         request = self.factory.request()
         blocked = security.block_client(request)
         self.assertTrue(blocked, "block_client() flags invalid callers")
-        security.API_CLIENT_WHITELIST.append("127.0.0.1")
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
 
     def test_clean_list(self):
         values = [
