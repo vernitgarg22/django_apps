@@ -134,6 +134,21 @@ class ImportPhotoSurveyImagesTest(TestCase):
 
         os.remove(self.FILENAME)
 
+    def test_import_missing_parcelmetadata(self):
+
+        out = StringIO()
+
+        self.create_csv()
+        cleanup_db()
+
+        parcel = ParcelMetadata.objects.using('photo_survey').first()
+        parcel.parcel_id = 'removed'
+        parcel.save(using='photo_survey')
+
+        call_command('import_image_metadata', self.FILENAME, 'photo_survey', stdout=out)
+
+        os.remove(self.FILENAME)    
+
     def test_import_existing_metadata(self):
 
         out = StringIO()
@@ -166,10 +181,16 @@ class ExportDataCSVTest(TestCase):
 
         out = StringIO()
 
-        sales = Sales(pnum='testparcelid', saleprice=1.0)
-        sales.save()
+        cleanup_db()
 
-        call_command('export_data_csv', 'assessments', 'eql', 'Sales', 'deleteme.csv', stdout=out)
+        # flesh out images
+        parcel, created = ParcelMetadata.objects.using('photo_survey').get_or_create(parcel_id='testparcelid')
+        image = Image(file_path='/path/file.png')
+        image.save(using='photo_survey')
+        img_meta = ImageMetadata(image=image, parcel=parcel, created_at=get_local_time(), latitude=42.351591, longitude=-82.9988157, altitude=50, note='Note')
+        img_meta.save(using='photo_survey')
+
+        call_command('export_data_csv', 'photo_survey', 'photo_survey', 'ImageMetadata', 'deleteme.csv', stdout=out)
 
         self.assertEqual(out.getvalue(), 'Wrote 1 lines to deleteme.csv\n')
 

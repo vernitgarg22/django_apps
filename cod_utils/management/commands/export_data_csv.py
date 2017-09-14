@@ -31,13 +31,16 @@ class Command(BaseCommand):
 
         return [ field.name for field in klass._meta.local_fields ]
 
-    @staticmethod
-    def get_data_value(obj, field):
+    def get_data_value(self, obj, field):
         """
         Extract the value for 'field' from the object.
         """
 
-        value = obj.__getattribute__(field.name)
+        if type(field) == models.ForeignKey:
+            klass = field.related_model()
+            value = type(klass).objects.using(self.database).get(id=obj.pk)
+        else:
+            value = obj.__getattribute__(field.name)
 
         if isinstance(value, models.Model):
             value = value.pk
@@ -48,30 +51,29 @@ class Command(BaseCommand):
             value = re.sub(r'&gt;', '>', value)
         return value
 
-    @staticmethod
-    def get_data(obj):
+    def get_data(self, obj):
         """
         Extract all django model fields from the object and return as list.
         """
 
         fields = type(obj)._meta.local_fields
-        return [ Command.get_data_value(obj, field) for field in fields ]
+        return [ self.get_data_value(obj, field) for field in fields ]
 
     def handle(self, *args, **options):
 
-        application = options['application']
-        database = options['database']
+        self.application = options['application']
+        self.database = options['database']
         model = options['model']
 
-        filename = database + '_' + model + '.csv'
+        filename = self.database + '_' + model + '.csv'
         filename = options.get('output_file', filename)
 
-        models = importlib.import_module('.models', application)
-        klass = locate(application + '.models.' + model)
-        if not klass:
-            raise CommandError("Class {} not found".format(application + '.models.' + model))
+        models = importlib.import_module('.models', self.application)
+        klass = locate(self.application + '.models.' + model)
+        if not klass:    # pragma: no cover (should never get here)
+            raise CommandError("Class {} not found".format(self.application + '.models.' + model))
 
-        objects = klass.objects.using(database).all()
+        objects = klass.objects.using(self.database).all()
 
         lines = 0
         with open(filename, 'w', newline='') as csvfile:
@@ -82,7 +84,7 @@ class Command(BaseCommand):
                 try:
                     writer.writerow(self.get_data(obj))
                     lines = lines + 1
-                except:
+                except:    # pragma: no cover (should never get here)
                     print('ignored a row for object {}'.format(obj))
 
         return "Wrote {} lines to {}".format(lines, filename)
