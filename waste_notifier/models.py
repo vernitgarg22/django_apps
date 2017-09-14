@@ -168,15 +168,3 @@ class Subscriber(models.Model):
         subscriber.save()
 
         return subscriber, None
-
-
-# TODO test and deploy this
-# class SubscriberMessage(models.Model):
-
-#     subscriber = models.ForeignKey(Subscriber, on_delete = django.db.models.deletion.DO_NOTHING)
-#     message = models.CharField("Subscriber message", max_length=1024)
-#     received_at = models.DateTimeField('Time when message was received', blank=True, null=True)
-#     comment = models.CharField('Internal use only', max_length=128, blank=True, null=True)
-#     priority = models.CharField('Message priority (internal)', max_length=16, blank=True, null=True)
-#     response = models.CharField("CoD response", max_length=1024)
-#     response_sent_at = models.DateTimeField('Time when response was sent', blank=True, null=True)

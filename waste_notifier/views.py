@@ -206,7 +206,6 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
         MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
 
     # send out notifications about any schedule changes
-    # TODO temporarily disable schedule detail notifications
     for subscribers_services_detail in subscribers_services_details:
         for subscriber in subscribers_services_detail.get_subscribers():
 

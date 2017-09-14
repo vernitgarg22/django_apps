@@ -81,7 +81,6 @@ class WasteScheduleInitTests(TestCase):
             util.BiWeekType.from_str(' ')
 
 
-# TODO organize tests better - maybe put related tests into subdirectories under /tests ?
 class WeekRouteInfoTests(TestCase):
 
     def setUp(self):
