@@ -1046,6 +1046,7 @@ def build_survey_bridging_neighborhoods_template():
     data = [
         { "survey_type": survey_type, "question_id": "street_address", "question_number": 1,  "question_text": "What is the street address?", "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
         { "survey_type": survey_type, "question_id": "node_id",        "question_number": 2,  "question_text": "What is the drupal node id?", "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "rating",         "question_number": 3,  "question_text": "What is the house rating?",   "valid_answers": "[0-4]", "required_by": "", "required_by_answer": "" },
     ]
 
     for row in data:
@@ -1063,6 +1064,10 @@ def get_bridging_neighborhoods_survey_answers():
             {
                 "question_id": "node_id",
                 "answer": "99"
+            },
+            {
+                "question_id": "rating",
+                "answer": "1"
             }
         ],
         "parcel_ids": ['testparcelid']
@@ -1128,7 +1133,7 @@ class BridgingNeighborhoodsTests(TestCase):
 
         c = Client()
 
-        expected = {'favorites': {'testparcelid': {'node_id': '99', 'street_address': '1104 Military Street'}}}
+        expected = {'favorites': {'testparcelid': {'node_id': '99', 'street_address': '1104 Military Street', 'rating': '1'}}}
 
         response = c.get('/photo_survey/bridging_neighborhoods/karlos/favorites/', secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1186,3 +1191,16 @@ class BridgingNeighborhoodsTests(TestCase):
 
         response = c.delete('/photo_survey/bridging_neighborhoods/karlos/favorites/invalid/', secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_user_changes_rating(self):
+
+        # run another test just to create a user and survey
+        self.test_user_likes_house()
+
+        c = Client()
+
+        data = get_bridging_neighborhoods_survey_answers()
+        data['answers'][2]['answer'] = '2'
+
+        response = c.post('/photo_survey/bridging_neighborhoods/favorites/testparcelid/', json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 201)

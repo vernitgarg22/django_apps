@@ -23,6 +23,7 @@ class ParcelMetadata(models.Model):
 
 class Surveyor(User):
     """
+    Subclass User model just to control model-database routing easier.
     """
 
     app_label = 'photo_survey'
@@ -30,7 +31,20 @@ class Surveyor(User):
     class Meta:
 
         proxy = True
-        db_table = 'auth_user'        
+        db_table = 'auth_user'
+
+
+class SurveyorGroup(Group):
+    """
+    Subclass Group model just to control model-database routing easier.
+    """
+
+    app_label = 'photo_survey'
+
+    class Meta:
+
+        proxy = True
+        db_table = 'auth_group'
 
 
 class SurveyType(models.Model):
@@ -253,7 +267,6 @@ class PublicPropertyData(models.Model):
     with live data.
     """
 
-    # TODO where should this live?
     app_label = 'photo_survey'
 
     parcelno = models.CharField('Parcel ID', max_length=32, db_index=True)

@@ -4,7 +4,7 @@ import requests
 
 from django.conf import settings
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.db.models import Count
@@ -19,7 +19,7 @@ from cod_utils.cod_logger import CODLogger
 from cod_utils.util import get_parcel_id
 
 from photo_survey.models import Image, ImageMetadata
-from photo_survey.models import ParcelMetadata, SurveyType, Survey, SurveyQuestion, SurveyAnswer
+from photo_survey.models import ParcelMetadata, SurveyType, Survey, Surveyor, SurveyorGroup, SurveyQuestion, SurveyAnswer
 from photo_survey.models import PublicPropertyData
 
 from assessments.models import ParcelMaster

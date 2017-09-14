@@ -1,8 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.models import User, Group
 
-from .models import Survey, Surveyor, SurveyType, SurveyQuestion, SurveyQuestionAvailAnswer
+from .models import Survey, Surveyor, SurveyorGroup, SurveyType, SurveyQuestion, SurveyQuestionAvailAnswer
 
 
 class SurveyTypeAdmin(admin.ModelAdmin):
@@ -79,4 +79,31 @@ class SurveyorAdmin(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name')
     list_filter = ()
 
+    def get_queryset(self, request):    # pragma: no cover  (only used in admin page)
+        """
+        Filter the objects displayed in the change_list to not show bridging_neighborhoods users.
+        """
+
+        # surveyor_group = SurveyorGroup.objects.filter(name="surveyors")[0]
+        # surveyors = Surveyor.objects.filter(username__contains='@')
+        # for surveyor in surveyors:
+        #     surveyor_group.user_set.db_manager('photo_survey').add(surveyor)
+
+
+        qs = super(SurveyorAdmin, self).get_queryset(request)
+        return qs.filter(groups__name = "surveyors")
+
 admin.site.register(Surveyor, SurveyorAdmin)
+
+# Define a new Group admin
+class SurveyorGroupAdmin(GroupAdmin):
+    """
+    Admin class to administer groups of surveyors.
+    """
+
+    app_label = 'photo_survey'
+
+    list_display = ['name']
+    list_filter = ()
+
+admin.site.register(SurveyorGroup, SurveyorGroupAdmin)
