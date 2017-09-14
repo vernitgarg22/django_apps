@@ -27,7 +27,7 @@ class Subscriber(models.Model):
     service_type = models.CharField('Service', max_length=32, default=ScheduleDetail.DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + ScheduleDetail.SERVICES_LIST + ')')
     last_status_update = models.DateTimeField('Time of last status change', blank=True, null=True)
     created_at = models.DateTimeField('Time of initial subscription', blank=True, null=True)
-    comment = models.CharField('Internal use only', max_length = 128, blank=True, null=True)
+    comment = models.CharField('Comment', max_length = 128, blank=True, null=True)
     latitude = models.CharField('Latitude', max_length = 32, blank=True, null=True)
     longitude = models.CharField('Longitude', max_length = 32, blank=True, null=True)
     address = models.CharField('Home address', max_length = 128, blank=True, null=True)
