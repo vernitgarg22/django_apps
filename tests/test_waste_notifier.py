@@ -204,7 +204,7 @@ class WasteNotifierTests(TestCase):
         for service, expected in values:
             cleanup_db()
             response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "0", "service_type": service } )
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
 
 
@@ -224,9 +224,18 @@ class WasteNotifierTests(TestCase):
             subscriber.save()
 
             response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "Subscription confirmation returns correct message")
 
+
+    def test_sign_up_by_fone(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl" }, secure=True)
+        self.assertEqual(response.status_code, 201)
+        expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
+        self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
 
     def test_includes_yard_waste_all(self):
         self.assertTrue(views.includes_yard_waste(['all']))
@@ -324,10 +333,10 @@ class WasteNotifierTests(TestCase):
         c = Client()
 
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         subscriber = Subscriber.objects.first()
         self.assertEqual(subscriber.status, 'active')
@@ -362,7 +371,7 @@ class WasteNotifierTests(TestCase):
 
             cleanup_db()
             response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all", value: "test value" } )
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 201)
             subscriber = Subscriber.objects.all()[0]
             self.assertEqual(getattr(subscriber, value), 'test value', "Subscribing can set {}".format(value))
 
@@ -385,10 +394,10 @@ class WasteNotifierTests(TestCase):
         c = Client()
 
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         subscriber = Subscriber.objects.first()
 
@@ -412,10 +421,10 @@ class WasteNotifierTests(TestCase):
         c = Client()
 
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
-        self.assertEqual(response.status_code == 200, True)
+        self.assertEqual(response.status_code == 201, True)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
-        self.assertEqual(response.status_code == 200, True)
+        self.assertEqual(response.status_code == 201, True)
 
         subscriber = Subscriber.objects.first()
         self.assertEqual(subscriber.status, 'inactive')

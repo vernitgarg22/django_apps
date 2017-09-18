@@ -15,6 +15,7 @@ from waste_schedule.models import ScheduleDetail
 from waste_notifier.util import *
 import cod_utils.util
 import cod_utils.security
+from cod_utils.codgeocoder import CODGeocoder
 from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
 
@@ -47,7 +48,46 @@ def subscribe_notifications(request):
     # text the subscriber to ask them to confirm
     MsgHandler().send_text(subscriber.phone_number, body)
 
-    return Response({ "received": str(subscriber), "message": body })
+    return Response({ "received": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+def subscribe_address(request):
+    """
+    Parse subscription request via text message with user's street address and text user request for confirmation.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    msg_handler = MsgHandler()
+
+    # Make sure the call came from twilio and is valid
+    msg_handler.validate(request)
+
+    # Verify required fields are present
+    if not request.data.get('From') or not request.data.get('Body'):
+        return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Clean up phone number
+    phone_number = msg_handler.get_fone_number(request)
+
+    address = request.data.get('Body').upper().strip()
+
+    located = CODGeocoder().geocode(address)
+
+    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
+    url = GIS_ADDRESS_LOOKUP_URL.format(located['location']['x'], located['location']['y'])
+    r = requests.get(url)
+
+    # TODO don't hard code waste area id
+    subscriber_data = { "phone_number": phone_number, "waste_area_ids": [8] }
+
+    # Create the subscriber and activate them
+    subscriber, error = Subscriber.update_or_create_from_dict(subscriber_data)
+    if error:
+        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+    return update_subscription(phone_number, True)
 
 
 def update_subscription(phone_number, activate):
@@ -77,7 +117,7 @@ def update_subscription(phone_number, activate):
     # send the subscriber a confirmation message
     MsgHandler().send_text(subscriber.phone_number, body)
 
-    return Response({ "subscriber": str(subscriber), "message": body })
+    return Response({ "subscriber": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
 def add_subscriber_comment(phone_number, comment):
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
@@ -101,17 +141,17 @@ def confirm_notifications(request):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    # # Make sure the call came from twilio and is valid
-    MsgHandler().validate(request)
+    msg_handler = MsgHandler()
+
+    # Make sure the call came from twilio and is valid
+    msg_handler.validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
         return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Clean up phone number
-    phone_number = request.data['From'].replace('+', '')
-    if phone_number.startswith('1'):
-        phone_number = phone_number[1:]
+    phone_number = msg_handler.get_fone_number(request)
 
     body = request.data['Body']
     body = body.lower()

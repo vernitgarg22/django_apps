@@ -142,17 +142,21 @@ class Subscriber(models.Model):
 
         phone_number = data['phone_number']
 
+        waste_area_ids = data.get('waste_area_ids')
+        if type(waste_area_ids) == list:
+            waste_area_ids = ''.join( [ str(num) + ',' for num in waste_area_ids ] )
+
         # update existing subscriber or create new one
         subscriber = Subscriber.objects.none()
         previous = Subscriber.objects.filter(phone_number__exact=phone_number)
         if previous.exists():
             subscriber = previous[0]
             subscriber.phone_number=phone_number
-            subscriber.waste_area_ids=data['waste_area_ids']
+            subscriber.waste_area_ids=waste_area_ids
             subscriber.status=Subscriber.DEFAULT_STATUS
         else:
             # try to create a subscriber with the posted data
-            subscriber = Subscriber(phone_number=phone_number, waste_area_ids=data['waste_area_ids'])
+            subscriber = Subscriber(phone_number=phone_number, waste_area_ids=waste_area_ids)
 
         # set service type
         if data.get("service_type"):

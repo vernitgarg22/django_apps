@@ -47,6 +47,18 @@ class MsgHandler():
         if not request_valid:
             raise PermissionDenied('Request failed twilio validation check')
 
+    def get_fone_number(self, request):
+        """
+        Returns phone number of message sender.
+        """
+
+        number = request.data['From'].replace('+', '')
+        if number.startswith('1'):
+            number = number[1:]
+
+        return number
+
+
     def send_text(self, phone_number, text, dry_run_param = False):
         """
         Send a text message via twilio rest client
