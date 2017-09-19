@@ -15,9 +15,10 @@ from waste_schedule.models import ScheduleDetail
 from waste_notifier.util import *
 import cod_utils.util
 import cod_utils.security
-from cod_utils.codgeocoder import CODGeocoder
 from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
+
+import direccion
 
 
 @api_view(['POST'])
@@ -71,19 +72,21 @@ def subscribe_address(request):
     # Clean up phone number
     phone_number = msg_handler.get_fone_number(request)
 
-    address = request.data.get('Body').upper().strip()
+    street_address = request.data.get('Body').upper().strip()
 
-    located = CODGeocoder().geocode(address)
+    # Parse address string and get result from AddressPoint geocoder
+    address = direccion.Address(street_address)
+    location = address.geocode()
 
-    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
-    url = GIS_ADDRESS_LOOKUP_URL.format(located['location']['x'], located['location']['y'])
-    r = requests.get(url)
+    # Now look up waste areas for this location
+    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
+    url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
+    response = requests.get(url)
 
-    # TODO don't hard code waste area id
-    subscriber_data = { "phone_number": phone_number, "waste_area_ids": [8] }
+    waste_area_ids = [ feature['attributes']['FID'] for feature in response.json()['features'] ]
 
     # Create the subscriber and activate them
-    subscriber, error = Subscriber.update_or_create_from_dict(subscriber_data)
+    subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids } )
     if error:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
