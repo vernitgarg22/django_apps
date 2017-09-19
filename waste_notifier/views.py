@@ -78,6 +78,10 @@ def subscribe_address(request):
     address = direccion.Address(street_address)
     location = address.geocode()
 
+    # TODO figure out how to handle 'address not found' or 'no address supplied'
+    if not location or location['score'] < 50:
+        return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+
     # Now look up waste areas for this location
     GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
     url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
@@ -87,7 +91,7 @@ def subscribe_address(request):
 
     # Create the subscriber and activate them
     subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids } )
-    if error:
+    if error:    # pragma: no cover (should never get here)
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     return update_subscription(phone_number, True)
