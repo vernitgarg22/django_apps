@@ -74,12 +74,17 @@ def subscribe_address(request):
 
     street_address = request.data.get('Body').upper().strip()
 
+    pos = street_address.find("DETROIT")
+    if pos >= 0:
+        street_address = street_address[0:pos]
+
     # Parse address string and get result from AddressPoint geocoder
     address = direccion.Address(street_address)
     location = address.geocode()
 
     # TODO figure out how to handle 'address not found' or 'no address supplied'
     if not location or location['score'] < 50:
+        MsgHandler().send_text(phone_number, "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address))
         return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Now look up waste areas for this location
@@ -125,6 +130,7 @@ def update_subscription(phone_number, activate):
     MsgHandler().send_text(subscriber.phone_number, body)
 
     return Response({ "subscriber": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
+
 
 def add_subscriber_comment(phone_number, comment):
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
