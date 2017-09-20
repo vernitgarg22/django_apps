@@ -60,7 +60,7 @@ class MsgHandler():
         return number
 
 
-    def send_text(self, phone_number, text, dry_run_param = False):
+    def send_text(self, phone_number, text, phone_sender=None, dry_run_param=False):
         """
         Send a text message via twilio rest client
         """
@@ -68,10 +68,13 @@ class MsgHandler():
         if MsgHandler.DRY_RUN or dry_run_param:
             return False
 
+        if not phone_sender:
+            phone_sender = MsgHandler.get_phone_sender()
+
         try:
             message = client.messages.create(
                 to = "+1" + phone_number,
-                from_ = MsgHandler.get_phone_sender(),
+                from_ = phone_sender,
                 body = text,
             )
             return message.status != 'failed'

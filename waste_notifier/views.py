@@ -47,7 +47,7 @@ def subscribe_notifications(request):
     body = body.format(services_desc)
 
     # text the subscriber to ask them to confirm
-    MsgHandler().send_text(subscriber.phone_number, body)
+    MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
 
     return Response({ "received": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
@@ -84,7 +84,11 @@ def subscribe_address(request):
 
     # TODO figure out how to handle 'address not found' or 'no address supplied'
     if not location or location['score'] < 50:
-        MsgHandler().send_text(phone_number, "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address))
+
+        msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
+        text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
+        MsgHandler().send_text(phone_number=text_signup_number, text=msg)
+
         return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Now look up waste areas for this location
@@ -127,7 +131,7 @@ def update_subscription(phone_number, activate):
     body = body.format(services_desc)
 
     # send the subscriber a confirmation message
-    MsgHandler().send_text(subscriber.phone_number, body)
+    MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
 
     return Response({ "subscriber": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
@@ -256,7 +260,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     for subscriber in subscribers_services.get_subscribers():
 
         message = get_service_message(subscribers_services.get_services(subscriber), date)
-        MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
+        MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
 
     # send out notifications about any schedule changes
     for subscribers_services_detail in subscribers_services_details:
@@ -265,7 +269,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
             message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
 
             # TODO disable this temporarily
-            MsgHandler().send_text(subscriber.phone_number, message, dry_run_param)
+            MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
 
