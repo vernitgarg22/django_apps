@@ -87,7 +87,7 @@ def subscribe_address(request):
 
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
         text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
-        MsgHandler().send_text(phone_number=text_signup_number, text=msg)
+        MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
 
         return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
 
