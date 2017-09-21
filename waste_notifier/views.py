@@ -103,6 +103,7 @@ def subscribe_address(request):
     if error:    # pragma: no cover (should never get here)
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
+    add_subscriber_comment(phone_number=phone_number, comment='signed up via text')
     return update_subscription(phone_number, True)
 
 
