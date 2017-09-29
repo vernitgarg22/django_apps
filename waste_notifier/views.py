@@ -85,7 +85,11 @@ def subscribe_address(request):
     # TODO figure out how to handle 'address not found' or 'no address supplied'
     if not location or location['score'] < 50:
 
-        MsgHandler().send_admin_alert('Invalid waste reminder text signup: {}'.format(street_address))
+        invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
+
+        CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
+
+        MsgHandler().send_admin_alert(invalid_addr_msg)
 
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
         text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]

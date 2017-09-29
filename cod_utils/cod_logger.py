@@ -45,3 +45,14 @@ class CODLogger():
         # TODO should configure log level better ...
         if not settings.RUNNING_UNITTESTS: # pragma: no cover
             logger.error("api call: " + msg)
+
+    def log_error(self, name, area, msg):
+        """
+        Log information about a runtime error.
+        """
+
+        logger = self.get_logger(name)
+
+        # TODO should configure log level better ...
+        if not settings.RUNNING_UNITTESTS: # pragma: no cover
+            logger.error("ERROR in " + area + ": " + msg)
