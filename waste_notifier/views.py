@@ -101,7 +101,7 @@ def subscribe_address(request):
     waste_area_ids = [ feature['attributes']['FID'] for feature in response.json()['features'] ]
 
     # Create the subscriber and activate them
-    subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids, "address": address, "latitude": location['location']['y'], "longitude": location['location']['x'] } )
+    subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids, "address": address.address, "latitude": location['location']['y'], "longitude": location['location']['x'] } )
     if error:    # pragma: no cover (should never get here)
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
