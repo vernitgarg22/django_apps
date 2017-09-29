@@ -85,6 +85,8 @@ def subscribe_address(request):
     # TODO figure out how to handle 'address not found' or 'no address supplied'
     if not location or location['score'] < 50:
 
+        MsgHandler().send_admin_alert('Invalid waste reminder text signup: {}'.format(street_address))
+
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
         text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
         MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
