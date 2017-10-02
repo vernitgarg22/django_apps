@@ -50,6 +50,8 @@ DEBUG = get_secret('DEBUG', default=False)
 DRY_RUN = get_secret('DRY_RUN', default=False)
 ALLOWED_HOSTS = get_secret('ALLOWED_HOSTS', default=[])
 
+CREDENTIALS = get_secret("CREDENTIALS")
+
 AUTO_LOADED_DATA = {}
 def load_auto_loaded_data():
     if AUTO_LOADED_DATA:    # pragma: no cover
@@ -80,6 +82,7 @@ INSTALLED_APPS = (
     'assessors_data',
     'blight_tickets',
     'cod_utils',
+    'data_cache',
     'photo_survey',
     'waste_schedule',
     'waste_notifier',
@@ -161,6 +164,9 @@ class DjangoAppsRouter(object):
     the myapp2 application"""
 
     ModelDBMap = {
+        "DataCredentials": "data_cache",
+        "DataSource": "data_cache",
+        "DataValue": "data_cache",
         "Subscriber": "waste_collection",
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
@@ -186,6 +192,9 @@ class DjangoAppsRouter(object):
     }
 
     ModelDBMapDev = {
+        "DataCredentials": "data_cache_dev",
+        "DataSource": "data_cache_dev",
+        "DataValue": "data_cache_dev",
         "Subscriber": "waste_collection_dev",
         "ScheduleDetail": "waste_collection_dev",
         "WasteItem": "waste_collection_dev",

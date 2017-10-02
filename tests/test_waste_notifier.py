@@ -260,6 +260,16 @@ class WasteNotifierTests(TestCase):
         expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
         self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
 
+    @skip('virginia park address not working yet')
+    def test_sign_up_by_fone_virginia_park_st(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "670 virginia park st" }, secure=True)
+        self.assertEqual(response.status_code, 201)
+        expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
+        self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
+
     def test_includes_yard_waste_all(self):
         self.assertTrue(views.includes_yard_waste(['all']))
 
