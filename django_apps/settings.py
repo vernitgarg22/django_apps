@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from os import environ as env
 import json
 
 from django.core.exceptions import ImproperlyConfigured
@@ -61,6 +62,13 @@ def load_auto_loaded_data():
         AUTO_LOADED_DATA[auto_name] = value
 
 load_auto_loaded_data()
+
+def add_vals_to_os():
+    for key in [ "SLACK_API_TOKEN" ]:
+        value = AUTO_LOADED_DATA[key]
+        env[key] = value
+
+add_vals_to_os()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -198,9 +206,6 @@ class DjangoAppsRouter(object):
     }
 
     ModelDBMapDev = {
-        "DataCredentials": "data_cache_dev",
-        "DataSource": "data_cache_dev",
-        "DataValue": "data_cache_dev",
         "Subscriber": "waste_collection_dev",
         "ScheduleDetail": "waste_collection_dev",
         "WasteItem": "waste_collection_dev",
