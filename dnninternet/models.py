@@ -312,7 +312,7 @@ class Classification(models.Model):
 
 
 class ContentitemSlug(models.Model):
-    tabid = models.ForeignKey('Tabs', models.DO_NOTHING, db_column='TabId', primary_key=True)  # Field name made lowercase.
+    tabid = models.OneToOneField('Tabs', models.DO_NOTHING, db_column='TabId', primary_key=True)  # Field name made lowercase.
     contentitemid = models.ForeignKey('Contentitems', models.DO_NOTHING, db_column='ContentItemId', blank=True, null=True)  # Field name made lowercase.
     httpstatus = models.IntegerField(db_column='HttpStatus')  # Field name made lowercase.
     slug = models.CharField(db_column='Slug', max_length=255)  # Field name made lowercase.
@@ -365,7 +365,7 @@ class ContentitemsTags(models.Model):
 
 
 class ContentlayoutVersions(models.Model):
-    moduleid = models.ForeignKey('Modules', models.DO_NOTHING, db_column='ModuleId', primary_key=True)  # Field name made lowercase.
+    moduleid = models.OneToOneField('Modules', models.DO_NOTHING, db_column='ModuleId', primary_key=True)  # Field name made lowercase.
     version = models.IntegerField(db_column='Version')  # Field name made lowercase.
     columnsizes = models.CharField(db_column='ColumnSizes', max_length=50)  # Field name made lowercase.
     columncssclasses = models.CharField(db_column='ColumnCssClasses', max_length=256)  # Field name made lowercase.
@@ -381,7 +381,7 @@ class ContentlayoutVersions(models.Model):
 
 
 class ContentpersonalizationPersonalizedtabs(models.Model):
-    tabid = models.ForeignKey('Tabs', models.DO_NOTHING, db_column='TabId', primary_key=True)  # Field name made lowercase.
+    tabid = models.OneToOneField('Tabs', models.DO_NOTHING, db_column='TabId', primary_key=True)  # Field name made lowercase.
     portalid = models.IntegerField(db_column='PortalId')  # Field name made lowercase.
     originaltabid = models.IntegerField(db_column='OriginalTabId')  # Field name made lowercase.
     name = models.CharField(db_column='Name', max_length=256)  # Field name made lowercase.
@@ -1940,7 +1940,7 @@ class Documents(models.Model):
 
 
 class Documentssettings(models.Model):
-    moduleid = models.ForeignKey('Modules', models.DO_NOTHING, db_column='ModuleID', primary_key=True)  # Field name made lowercase.
+    moduleid = models.OneToOneField('Modules', models.DO_NOTHING, db_column='ModuleID', primary_key=True)  # Field name made lowercase.
     showtitlelink = models.NullBooleanField(db_column='ShowTitleLink')  # Field name made lowercase.
     sortorder = models.CharField(db_column='SortOrder', max_length=2000, blank=True, null=True)  # Field name made lowercase.
     displaycolumns = models.CharField(db_column='DisplayColumns', max_length=2000, blank=True, null=True)  # Field name made lowercase.
@@ -2294,7 +2294,7 @@ class Eventssubscription(models.Model):
 
 
 class Exceptionevents(models.Model):
-    logeventid = models.ForeignKey(Eventlog, models.DO_NOTHING, db_column='LogEventID', primary_key=True)  # Field name made lowercase.
+    logeventid = models.OneToOneField(Eventlog, models.DO_NOTHING, db_column='LogEventID', primary_key=True)  # Field name made lowercase.
     assemblyversion = models.CharField(db_column='AssemblyVersion', max_length=20)  # Field name made lowercase.
     portalid = models.IntegerField(db_column='PortalId', blank=True, null=True)  # Field name made lowercase.
     userid = models.IntegerField(db_column='UserId', blank=True, null=True)  # Field name made lowercase.
@@ -2467,7 +2467,7 @@ class Filestatistics(models.Model):
 
 
 class Fileversions(models.Model):
-    fileid = models.ForeignKey('Files', models.DO_NOTHING, db_column='FileId', primary_key=True)  # Field name made lowercase.
+    fileid = models.OneToOneField('Files', models.DO_NOTHING, db_column='FileId', primary_key=True)  # Field name made lowercase.
     version = models.IntegerField(db_column='Version')  # Field name made lowercase.
     filename = models.CharField(db_column='FileName', max_length=246)  # Field name made lowercase.
     extension = models.CharField(db_column='Extension', max_length=100)  # Field name made lowercase.
@@ -2540,7 +2540,7 @@ class Foldermappings(models.Model):
 
 
 class Foldermappingssettings(models.Model):
-    foldermappingid = models.ForeignKey(Foldermappings, models.DO_NOTHING, db_column='FolderMappingID', primary_key=True)  # Field name made lowercase.
+    foldermappingid = models.OneToOneField(Foldermappings, models.DO_NOTHING, db_column='FolderMappingID', primary_key=True)  # Field name made lowercase.
     settingname = models.CharField(db_column='SettingName', max_length=50)  # Field name made lowercase.
     settingvalue = models.CharField(db_column='SettingValue', max_length=2000)  # Field name made lowercase.
     createdbyuserid = models.IntegerField(db_column='CreatedByUserID', blank=True, null=True)  # Field name made lowercase.
@@ -2627,7 +2627,7 @@ class Htmltext(models.Model):
     publishdate = models.DateTimeField(db_column='PublishDate', blank=True, null=True)  # Field name made lowercase.
 
     def __str__(self):
-        return str(itemid)
+        return str(self.itemid)
 
     class Meta:
         managed = False
@@ -3165,7 +3165,7 @@ class Modulepermission(models.Model):
 
 
 class Modulesettings(models.Model):
-    moduleid = models.ForeignKey('Modules', models.DO_NOTHING, db_column='ModuleID', primary_key=True)  # Field name made lowercase.
+    moduleid = models.OneToOneField('Modules', models.DO_NOTHING, db_column='ModuleID', primary_key=True)  # Field name made lowercase.
     settingname = models.CharField(db_column='SettingName', max_length=50)  # Field name made lowercase.
     settingvalue = models.TextField(db_column='SettingValue')  # Field name made lowercase.
     createdbyuserid = models.IntegerField(db_column='CreatedByUserID', blank=True, null=True)  # Field name made lowercase.
@@ -3367,7 +3367,7 @@ class Portallanguages(models.Model):
 
 
 class Portallocalization(models.Model):
-    portalid = models.ForeignKey('Portals', models.DO_NOTHING, db_column='PortalID', primary_key=True)  # Field name made lowercase.
+    portalid = models.OneToOneField('Portals', models.DO_NOTHING, db_column='PortalID', primary_key=True)  # Field name made lowercase.
     culturecode = models.CharField(db_column='CultureCode', max_length=10)  # Field name made lowercase.
     portalname = models.CharField(db_column='PortalName', max_length=128)  # Field name made lowercase.
     logofile = models.CharField(db_column='LogoFile', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -3783,7 +3783,7 @@ class Schedulehistory(models.Model):
 
 
 class Scheduleitemsettings(models.Model):
-    scheduleid = models.ForeignKey(Schedule, models.DO_NOTHING, db_column='ScheduleID', primary_key=True)  # Field name made lowercase.
+    scheduleid = models.OneToOneField(Schedule, models.DO_NOTHING, db_column='ScheduleID', primary_key=True)  # Field name made lowercase.
     settingname = models.CharField(db_column='SettingName', max_length=50)  # Field name made lowercase.
     settingvalue = models.TextField(db_column='SettingValue')  # Field name made lowercase.
 
@@ -3969,7 +3969,7 @@ class Tabaliasskins(models.Model):
 
 
 class Tabmodulesettings(models.Model):
-    tabmoduleid = models.ForeignKey('Tabmodules', models.DO_NOTHING, db_column='TabModuleID', primary_key=True)  # Field name made lowercase.
+    tabmoduleid = models.OneToOneField('Tabmodules', models.DO_NOTHING, db_column='TabModuleID', primary_key=True)  # Field name made lowercase.
     settingname = models.CharField(db_column='SettingName', max_length=50)  # Field name made lowercase.
     settingvalue = models.TextField(db_column='SettingValue')  # Field name made lowercase.
     createdbyuserid = models.IntegerField(db_column='CreatedByUserID', blank=True, null=True)  # Field name made lowercase.
@@ -4043,7 +4043,7 @@ class Tabpermission(models.Model):
 
 
 class Tabsettings(models.Model):
-    tabid = models.ForeignKey('Tabs', models.DO_NOTHING, db_column='TabID', primary_key=True)  # Field name made lowercase.
+    tabid = models.OneToOneField('Tabs', models.DO_NOTHING, db_column='TabID', primary_key=True)  # Field name made lowercase.
     settingname = models.CharField(db_column='SettingName', max_length=50)  # Field name made lowercase.
     settingvalue = models.CharField(db_column='SettingValue', max_length=2000)  # Field name made lowercase.
     createdbyuserid = models.IntegerField(db_column='CreatedByUserID', blank=True, null=True)  # Field name made lowercase.
@@ -4058,7 +4058,7 @@ class Tabsettings(models.Model):
 
 
 class Taburls(models.Model):
-    tabid = models.ForeignKey('Tabs', models.DO_NOTHING, db_column='TabId', primary_key=True)  # Field name made lowercase.
+    tabid = models.OneToOneField('Tabs', models.DO_NOTHING, db_column='TabId', primary_key=True)  # Field name made lowercase.
     seqnum = models.IntegerField(db_column='SeqNum')  # Field name made lowercase.
     url = models.CharField(db_column='Url', max_length=200)  # Field name made lowercase.
     querystring = models.CharField(db_column='QueryString', max_length=200, blank=True, null=True)  # Field name made lowercase.
@@ -4272,7 +4272,7 @@ class Userauthentication(models.Model):
 
 
 class Userdefineddata(models.Model):
-    userdefinedfieldid = models.ForeignKey('Userdefinedfields', models.DO_NOTHING, db_column='UserDefinedFieldId', primary_key=True)  # Field name made lowercase.
+    userdefinedfieldid = models.OneToOneField('Userdefinedfields', models.DO_NOTHING, db_column='UserDefinedFieldId', primary_key=True)  # Field name made lowercase.
     userdefinedrowid = models.ForeignKey('Userdefinedrows', models.DO_NOTHING, db_column='UserDefinedRowId')  # Field name made lowercase.
     fieldvalue = models.TextField(db_column='FieldValue', blank=True, null=True)  # Field name made lowercase.
 
@@ -4283,7 +4283,7 @@ class Userdefineddata(models.Model):
 
 
 class Userdefinedfieldsettings(models.Model):
-    fieldid = models.ForeignKey('Userdefinedfields', models.DO_NOTHING, db_column='FieldId', primary_key=True)  # Field name made lowercase.
+    fieldid = models.OneToOneField('Userdefinedfields', models.DO_NOTHING, db_column='FieldId', primary_key=True)  # Field name made lowercase.
     settingname = models.CharField(db_column='SettingName', max_length=50)  # Field name made lowercase.
     settingvalue = models.TextField(db_column='SettingValue', blank=True, null=True)  # Field name made lowercase.
 
@@ -4441,7 +4441,7 @@ class Users(models.Model):
 
 
 class Usersonline(models.Model):
-    userid = models.ForeignKey(Users, models.DO_NOTHING, db_column='UserID', primary_key=True)  # Field name made lowercase.
+    userid = models.OneToOneField(Users, models.DO_NOTHING, db_column='UserID', primary_key=True)  # Field name made lowercase.
     portalid = models.ForeignKey(Portals, models.DO_NOTHING, db_column='PortalID')  # Field name made lowercase.
     tabid = models.IntegerField(db_column='TabID')  # Field name made lowercase.
     creationdate = models.DateTimeField(db_column='CreationDate')  # Field name made lowercase.
@@ -4598,7 +4598,7 @@ class AspnetApplications(models.Model):
 
 class AspnetMembership(models.Model):
     applicationid = models.ForeignKey(AspnetApplications, models.DO_NOTHING, db_column='ApplicationId')  # Field name made lowercase.
-    userid = models.ForeignKey('AspnetUsers', models.DO_NOTHING, db_column='UserId', primary_key=True)  # Field name made lowercase.
+    userid = models.OneToOneField('AspnetUsers', models.DO_NOTHING, db_column='UserId', primary_key=True)  # Field name made lowercase.
     password = models.CharField(db_column='Password', max_length=128)  # Field name made lowercase.
     passwordformat = models.IntegerField(db_column='PasswordFormat')  # Field name made lowercase.
     passwordsalt = models.CharField(db_column='PasswordSalt', max_length=128)  # Field name made lowercase.

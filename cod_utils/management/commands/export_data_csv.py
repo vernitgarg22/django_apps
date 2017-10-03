@@ -11,8 +11,8 @@ from django.utils import timezone
 class Command(BaseCommand):
     help = """
         Use this to export survey data, e.g.,
-        python manage.py export_data_csv database model
-        python manage.py export_data_csv photo_survey Survey"""
+        python manage.py export_data_csv app database model output_file
+        python manage.py export_data_csv app photo_survey Survey survey.csv"""
 
     def add_arguments(self, parser):
         """
@@ -36,9 +36,15 @@ class Command(BaseCommand):
         Extract the value for 'field' from the object.
         """
 
+        value = None
+
         if type(field) == models.ForeignKey:
             klass = field.related_model()
-            value = type(klass).objects.using(self.database).get(id=obj.pk)
+            values = type(klass).objects.using(self.database).filter(pk=obj.pk)
+            if values:
+                value = values[0]
+            else:
+                value = obj.pk
         else:
             value = obj.__getattribute__(field.name)
 
@@ -76,7 +82,7 @@ class Command(BaseCommand):
         objects = klass.objects.using(self.database).all()
 
         lines = 0
-        with open(filename, 'w', newline='') as csvfile:
+        with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
 
             writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(Command.get_header(klass))
