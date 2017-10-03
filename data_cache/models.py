@@ -51,13 +51,13 @@ class DataSource(models.Model):
         Refreshes the data (if needed) and returns the datavalue object.
         """
         if self.datavalue_set.exists():
-            data = self.datavalue_set.first()
+            data_value = self.datavalue_set.first()
         else:
 
-            data = DataValue(data_source=self)
-            data.update()
+            data_value = DataValue(data_source=self)
+            data_value.update()
 
-        return data
+        return data_value
 
 
 class DataValue(models.Model):

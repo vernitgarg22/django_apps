@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,4 +34,6 @@ def get_data(request, name):
     except:
         return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    return Response( { "data": data_value.data, "updated": util.date_json(data_value.updated) })
+    data = json.loads(data_value.data)
+
+    return Response( { "data": data, "updated": util.date_json(data_value.updated) })
