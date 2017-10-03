@@ -6,7 +6,7 @@ from django.test import Client
 from django.test import TestCase
 from django.conf import settings
 
-from data_cache.models import DataCredentials, DataSource, DataValue
+from data_cache.models import DataCredential, DataSource, DataValue
 
 from cod_utils import util
 
@@ -21,7 +21,7 @@ def cleanup_db():
 def init_hydrants_creds():
 
     secret_creds = settings.CREDENTIALS['HYDRANTS']
-    credentials = DataCredentials(username=secret_creds['USERNAME'], password=secret_creds['PASSWORD'], referer=secret_creds['REFERER'], url=secret_creds['URL'])
+    credentials = DataCredential(username=secret_creds['USERNAME'], password=secret_creds['PASSWORD'], referer=secret_creds['REFERER'], url=secret_creds['URL'])
     credentials.save()
     return credentials
 
@@ -32,7 +32,7 @@ def init_test_data():
 
 def init_test_data_invalid_auth():
 
-    credentials = DataCredentials(username="invalid", password="invalid", referer="invalid", url="http://invalid")
+    credentials = DataCredential(username="invalid", password="invalid", referer="invalid", url="http://invalid")
     credentials.save()
 
     url = "http://jsonplaceholder.typicode.com/posts?userId=1"

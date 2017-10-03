@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from cod_utils import util
 
 
-class DataCredentials(models.Model):
+class DataCredential(models.Model):
     """
     Login credentials for a particular data source.
     """
@@ -44,7 +44,7 @@ class DataSource(models.Model):
 
     name = models.CharField('Name', max_length=64, unique=True, db_index=True)
     url = models.CharField('Data Source URL', max_length=1024)
-    credentials = models.ForeignKey(DataCredentials, null=True)
+    credentials = models.ForeignKey(DataCredential, null=True)
 
     def get(self):
         """

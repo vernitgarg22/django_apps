@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import DataCredentials, DataSource, DataValue
+from .models import DataCredential, DataSource, DataValue
 
 
-class DataCredentialsAdmin(admin.ModelAdmin):
+class DataCredentialAdmin(admin.ModelAdmin):
 
     fieldsets = [
         (None, {'fields': ['username', 'password', 'referer', 'url']}),
@@ -14,7 +14,7 @@ class DataCredentialsAdmin(admin.ModelAdmin):
     search_fields = ['url']
     ordering = ['url']
 
-admin.site.register(DataCredentials, DataCredentialsAdmin)
+admin.site.register(DataCredential, DataCredentialAdmin)
 
 class DataSourceAdmin(admin.ModelAdmin):
 

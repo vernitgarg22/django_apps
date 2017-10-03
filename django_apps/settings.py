@@ -177,7 +177,7 @@ class DjangoAppsRouter(object):
     the myapp2 application"""
 
     ModelDBMap = {
-        "DataCredentials": "data_cache",
+        "DataCredential": "data_cache",
         "DataSource": "data_cache",
         "DataValue": "data_cache",
         "Subscriber": "waste_collection",
