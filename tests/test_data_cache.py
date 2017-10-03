@@ -77,7 +77,7 @@ class DataCacheTests(TestCase):
 
         data_value = DataValue.objects.first()
         self.assertTrue(response.status_code == 200)
-        self.assertEqual(data_value.data, response.data['data'], "Cached data should get returned")
+        self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
     def test_hydrant_data(self):
 
@@ -88,7 +88,7 @@ class DataCacheTests(TestCase):
 
         data_value = DataValue.objects.first()
         self.assertTrue(response.status_code == 200)
-        self.assertEqual(data_value.data, response.data['data'], "Cached data should get returned")
+        self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
     def test_data_cache_invalid_auth(self):
 
