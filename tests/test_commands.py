@@ -12,6 +12,7 @@ from assessments.models import ParcelMaster, Sales
 from photo_survey.models import Survey, Image, ImageMetadata, ParcelMetadata, PublicPropertyData
 
 from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
+from tests.models import TestDataA, TestDataB
 
 
 class SendMessageTest(TestCase):
@@ -195,3 +196,20 @@ class ExportDataCSVTest(TestCase):
         self.assertEqual(out.getvalue(), 'Wrote 1 lines to deleteme.csv\n')
 
         os.remove('deleteme.csv')
+
+    def test_output_foreign_key(self):
+
+        out = StringIO()
+
+        test_data_a = TestDataA(data='data')
+        test_data_a.save()
+        test_data_b = TestDataB(test_data_a=test_data_a, data='data')
+        test_data_b.save()
+
+        test_data_a.delete()
+
+        call_command('export_data_csv', 'tests', 'default', 'TestDataB', 'test_data_b.csv', stdout=out)
+
+        self.assertEqual(out.getvalue(), 'Wrote 1 lines to test_data_b.csv\n')
+
+        os.remove('test_data_b.csv')
