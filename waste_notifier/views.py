@@ -195,7 +195,7 @@ def confirm_notifications(request):
 
 
 @api_view(['POST'])
-def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
+def send_notifications_request(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
@@ -226,9 +226,16 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
     elif date_name == 'tomorrow':
        date_val = cod_utils.util.tomorrow()
 
-    date = date_val
+    return send_notifications(date_val)
+
+
+def send_notifications(date, dry_run_param=False):
+
     if type(date) is str:
-        date = datetime.date(int(date_val[0:4]), int(date_val[4:6]), int(date_val[6:8]))
+        date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8]))
+
+    if settings.DRY_RUN:
+        dry_run_param = True
 
     subscribers_services = SubscriberServices()
     subscribers_services_details = []
@@ -278,7 +285,7 @@ def send_notifications(request, date_val=cod_utils.util.tomorrow(), date_name=No
             # TODO disable this temporarily
             MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
 
-    content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param or settings.DRY_RUN)
+    content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param)
 
     # slack the json response to #zzz
     slack_alerts_summary(content.get_content())
