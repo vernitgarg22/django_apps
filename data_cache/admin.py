@@ -28,3 +28,16 @@ class DataSourceAdmin(admin.ModelAdmin):
     ordering = ['url']
 
 admin.site.register(DataSource, DataSourceAdmin)
+
+class DataValueAdmin(admin.ModelAdmin):
+
+    fieldsets = [
+        (None, {'fields': ['data_source', 'data', 'updated']}),
+    ]
+    list_display = ('data_source', 'data', 'updated')
+    list_filter = ['data_source']
+    list_editable = ['data', 'updated']
+    search_fields = ['data_source']
+    ordering = ['data_source']
+
+admin.site.register(DataValue, DataValueAdmin)
