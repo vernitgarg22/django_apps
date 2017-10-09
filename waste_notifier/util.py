@@ -238,7 +238,7 @@ class NotificationContent():
         # - info only notice
         # - start or end date
 
-        week_type = ScheduleDetail.get_date_week_type(datetime.date.today())
+        week_type = ScheduleDetail.get_date_week_type(date_applicable)
 
         self.content = {
             "meta": {

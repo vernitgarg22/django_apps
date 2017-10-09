@@ -15,23 +15,25 @@ class Command(BaseCommand):
         python manage.py send_waste_reminders  """
 
     def add_arguments(self, parser):
-        parser.add_argument('--tomorrow', default=util.tomorrow(), help="Date value to treat as tomorrow. Format=YYYYMMDD")
+        parser.add_argument('--today', default=date.today(), help="Date value to treat as today. Format=YYYYMMDD")
         parser.add_argument('--dry_run', default='no', help="Pass 'yes' to do a dry run")
 
     def handle(self, *args, **options):
 
         # Validate and parse our command-line params
-        tomorrow = options['tomorrow']
+        today = options['today']
         dry_run_param = options['dry_run']
 
         if dry_run_param not in ['yes', 'no']:
             raise CommandError("--dry_run must be 'yes' or 'no'")
 
-        if type(tomorrow) == str:
-            if not re.fullmatch(r'^\d{8}$', tomorrow):
-                raise CommandError("Date format for tomorrow must be YYYYMMDD")
-            tomorrow = date(int(tomorrow[0:4]), int(tomorrow[4:6]), int(tomorrow[6:8]))
+        if type(today) == str:
+            if not re.fullmatch(r'^\d{8}$', today):
+                raise CommandError("Date format for 'today' must be YYYYMMDD")
+            today = date(int(today[0:4]), int(today[4:6]), int(today[6:8]))
+        elif not type(today) == date:    # pragma: no cover (should never get here)
+            raise CommandError("Invalid data type for today param")
 
-        response = views.send_notifications(date=tomorrow, dry_run_param=True)
+        response = views.send_notifications(date=util.tomorrow(today=today), dry_run_param=True)
 
-        return "Status: {}, data: {}".format(response.status_code, str(response.data))
+        return "status: {}, data: {}".format(response.status_code, str(response.data))

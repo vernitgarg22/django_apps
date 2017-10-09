@@ -37,7 +37,7 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
     Add meta data for the /send endpoint (e.g., date)
     """
 
-    week_type = ScheduleDetail.get_date_week_type(datetime.date.today())
+    week_type = ScheduleDetail.get_date_week_type(date)
     meta = {
         'meta': {
             'current_time': datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),
@@ -510,14 +510,14 @@ class WasteNotifierTests(TestCase):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
-        detail = ScheduleDetail(detail_type='info', service_type='all', description='City services have not affected by snow storm', normal_day=datetime.date(2018, 1, 1))
+        detail = ScheduleDetail(detail_type='info', service_type='all', description='City services have not been affected by snow storm', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
         detail.save(null_waste_area_ids=True)
 
         c = Client()
         response = c.post('/waste_notifier/send/20180101/')
         self.assertEqual(response.status_code, 200)
-        expected = {'citywide': {'message': 'City of Detroit Public Works:  City services have not affected by snow storm (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = {'citywide': {'message': 'City of Detroit Public Works:  City services have not been affected by snow storm (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
         self.assertDictEqual(expected, response.data, "Sending info for all services works")
 
