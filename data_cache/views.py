@@ -10,6 +10,7 @@ from rest_framework import status
 
 from cod_utils.cod_logger import CODLogger
 from cod_utils import util
+from cod_utils import security
 
 from data_cache.models import DataSource, DataValue
 
@@ -21,6 +22,12 @@ def get_data(request, name):
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    # Only allow certain servers to call this endpoint
+    if security.block_client(request):
+        remote_addr = request.META.get('REMOTE_ADDR')
+        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # Retrieve the data source
     try:
