@@ -59,11 +59,11 @@ class DataCacheTests(TestCase):
         init_test_data()
 
         c = Client()
-        response = c.get("/data_cache/test/")
+        response = c.get("/data_cache/test/", secure=True)
 
         data_value = DataValue.objects.first()
         self.assertTrue(response.status_code == 200)
-        self.assertEqual(data_value.data, response.data['data'], "Cached data should get returned")
+        self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
     def test_data_cache_existing_data(self):
 
@@ -73,7 +73,7 @@ class DataCacheTests(TestCase):
         data_source.get()
 
         c = Client()
-        response = c.get("/data_cache/test/")
+        response = c.get("/data_cache/test/", secure=True)
 
         data_value = DataValue.objects.first()
         self.assertTrue(response.status_code == 200)
@@ -84,18 +84,48 @@ class DataCacheTests(TestCase):
         init_hydrants_data()
 
         c = Client()
-        response = c.get("/data_cache/hydrants/")
+        response = c.get("/data_cache/hydrants/", secure=True)
 
         data_value = DataValue.objects.first()
         self.assertTrue(response.status_code == 200)
         self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
+
+    def test_data_cache_static(self):
+
+        init_test_data()
+
+        data_source = DataSource.objects.first()
+        data_source.url = None
+        data_source.save()
+        data_value = DataValue(data_source=data_source, data='{"foo": "bar"}', updated=util.get_local_time())
+        data_value.save()
+
+        c = Client()
+        response = c.get("/data_cache/test/", secure=True)
+
+        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.data['data'], {'foo': 'bar'}, "Cached static data should get returned")
+
+    def test_data_cache_static_no_data(self):
+
+        init_test_data()
+
+        data_source = DataSource.objects.first()
+        data_source.url = None
+        data_source.save()
+
+        c = Client()
+        response = c.get("/data_cache/test/", secure=True)
+
+        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.data['data'], {}, "Cached static empty data should get returned when data value is empty")
 
     def test_data_cache_invalid_auth(self):
 
         init_test_data_invalid_auth()
 
         c = Client()
-        response = c.get("/data_cache/test/")
+        response = c.get("/data_cache/test/", secure=True)
 
         data_value = DataValue.objects.first()
         self.assertTrue(response.status_code == 503)
@@ -110,7 +140,7 @@ class DataCacheTests(TestCase):
         data_source.save()
 
         c = Client()
-        response = c.get("/data_cache/hydrants/")
+        response = c.get("/data_cache/hydrants/", secure=True)
         self.assertTrue(response.status_code == 503)
 
     def test_data_cache_invalid_source2(self):
@@ -123,14 +153,31 @@ class DataCacheTests(TestCase):
         data_source.save()
 
         c = Client()
-        response = c.get("/data_cache/hydrants/")
+        response = c.get("/data_cache/hydrants/", secure=True)
         self.assertTrue(response.status_code == 503)
 
-    def test_data_cache(self):
+    def test_data_cache_404(self):
 
         init_test_data()
 
         c = Client()
-        response = c.get("/data_cache/invalid/")
+        response = c.get("/data_cache/invalid/", secure=True)
         self.assertTrue(response.status_code == 404)
 
+    def test_data_cache_not_secure(self):
+
+        c = Client()
+        response = c.get("/data_cache/test/")
+        self.assertTrue(response.status_code == 403)
+
+    def test_data_cache_blocked_client(self):
+
+        # Force block_client to block us
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
+
+        c = Client()
+        response = c.get("/data_cache/test/")
+
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
+
+        self.assertTrue(response.status_code == 403)

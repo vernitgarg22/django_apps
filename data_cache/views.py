@@ -8,9 +8,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from cod_utils.cod_logger import CODLogger
 from cod_utils import util
 from cod_utils import security
+from cod_utils.cod_logger import CODLogger
+from cod_utils.messaging import MsgHandler
 
 from data_cache.models import DataSource, DataValue
 
@@ -29,6 +30,10 @@ def get_data(request, name):
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
     # Retrieve the data source
     try:
         data_source = DataSource.objects.get(name=name)
@@ -41,6 +46,6 @@ def get_data(request, name):
     except:
         return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    data = json.loads(data_value.data)
+    data = json.loads(data_value.data) if data_value and data_value.data else {}
 
     return Response( { "data": data, "updated": util.date_json(data_value.updated) })

@@ -34,7 +34,7 @@ class DataCredential(models.Model):
 
         return False, ''
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.username
 
 
@@ -70,7 +70,7 @@ class DataSource(models.Model):
 
         return not self.url
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.name
 
 
@@ -140,5 +140,5 @@ class DataValue(models.Model):
         except json.decoder.JSONDecodeError:
             raise Exception("Invalid JSON received")
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.data_source.name
