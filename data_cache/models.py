@@ -43,7 +43,7 @@ class DataSource(models.Model):
     app_label = 'data_cache'
 
     name = models.CharField('Name', max_length=64, unique=True, db_index=True)
-    url = models.CharField('Data Source URL', max_length=1024)
+    url = models.CharField('Data Source URL', max_length=1024, null=True)
     credentials = models.ForeignKey(DataCredential, null=True)
 
     def get(self):
@@ -58,6 +58,14 @@ class DataSource(models.Model):
             data_value.update()
 
         return data_value
+
+    def is_static(self):
+        """
+        Returns True if the data for this data source is 'static' and can only
+        be set by hand.
+        """
+
+        return not self.url
 
 
 class DataValue(models.Model):
@@ -108,6 +116,9 @@ class DataValue(models.Model):
         """
         Update the data for this data value instance.
         """
+
+        if self.data_source.is_static():
+            return
 
         # Get the data
         url = self.get_url()
