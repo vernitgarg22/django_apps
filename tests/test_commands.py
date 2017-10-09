@@ -1,4 +1,4 @@
-import csv, os, re
+import csv, datetime, os, re
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -10,8 +10,11 @@ from cod_utils.util import get_local_time
 
 from assessments.models import ParcelMaster, Sales
 from photo_survey.models import Survey, Image, ImageMetadata, ParcelMetadata, PublicPropertyData
+from waste_notifier.models import Subscriber
+from waste_schedule.models import ScheduleDetail
 
 from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
+from tests.test_waste_notifier import add_meta
 from tests.models import TestDataA, TestDataB
 
 
@@ -213,3 +216,36 @@ class ExportDataCSVTest(TestCase):
         self.assertEqual(out.getvalue(), 'Wrote 1 lines to test_data_b.csv\n')
 
         os.remove('test_data_b.csv')
+
+
+class SendwasteRemindersTest(TestCase):
+
+    def test0(self):
+
+        out = StringIO()
+        call_command('send_waste_reminders', stdout=out)
+        self.assertTrue(out.getvalue().startswith("status: 200, "))
+
+    def test1(self):
+
+        out = StringIO()
+
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", service_type="all")
+        subscriber.activate()
+
+        call_command('send_waste_reminders', '--today=20170521', stdout=out)
+
+        # 'tomorrow' (20170522) is a monday - week 'b', so route 0 should get picked up
+        expected = "status: 200, data: {'meta': {'date_applicable': '2017-05-22', 'current_time': '" + datetime.datetime.today().strftime("%Y-%m-%d %H:%M") + "', 'week_type': 'b', 'dry_run': True}, 'all': {0: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}\n"
+
+        self.assertEqual(out.getvalue(), expected)
+
+    def test2(self):
+
+        with self.assertRaises(CommandError, msg="--dry_run must be 'yes' or 'no'") as error:
+            call_command('send_waste_reminders', '--dry_run=True')
+
+    def test3(self):
+
+        with self.assertRaises(CommandError, msg="Date format for 'today' must be YYYYMMDD") as error:
+            call_command('send_waste_reminders', '--today=171007')
