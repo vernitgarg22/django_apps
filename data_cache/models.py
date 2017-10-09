@@ -34,6 +34,9 @@ class DataCredential(models.Model):
 
         return False, ''
 
+    def __str__(self):
+        return self.username
+
 
 class DataSource(models.Model):
     """
@@ -66,6 +69,9 @@ class DataSource(models.Model):
         """
 
         return not self.url
+
+    def __str__(self):
+        return self.name
 
 
 class DataValue(models.Model):
@@ -133,3 +139,6 @@ class DataValue(models.Model):
             self.save()
         except json.decoder.JSONDecodeError:
             raise Exception("Invalid JSON received")
+
+    def __str__(self):
+        return self.data_source.name
