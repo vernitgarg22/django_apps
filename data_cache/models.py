@@ -43,8 +43,8 @@ class DataSource(models.Model):
     app_label = 'data_cache'
 
     name = models.CharField('Name', max_length=64, unique=True, db_index=True)
-    url = models.CharField('Data Source URL', max_length=1024, null=True)
-    credentials = models.ForeignKey(DataCredential, null=True)
+    url = models.CharField('Data Source URL', max_length=1024, null=True, blank=True)
+    credentials = models.ForeignKey(DataCredential, null=True, blank=True)
 
     def get(self):
         """
