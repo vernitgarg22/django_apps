@@ -31,8 +31,10 @@ class Command(BaseCommand):
             if not re.fullmatch(r'^\d{8}$', today):
                 raise CommandError("Date format for 'today' must be YYYYMMDD")
             today = date(int(today[0:4]), int(today[4:6]), int(today[6:8]))
-        elif not type(today) == date:    # pragma: no cover (should never get here)
-            raise CommandError("Invalid data type for today param")
+        elif not type(today) == date:
+            raise CommandError("Invalid data type for today param")    # pragma: no cover (should never get here)
+
+        dry_run_param = dry_run_param == "yes"
 
         response = views.send_notifications(date=util.tomorrow(today=today), dry_run_param=True)
 

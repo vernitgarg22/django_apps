@@ -55,8 +55,6 @@ CREDENTIALS = get_secret("CREDENTIALS")
 
 AUTO_LOADED_DATA = {}
 def load_auto_loaded_data():
-    if AUTO_LOADED_DATA:    # pragma: no cover
-        return
     auto_names = get_secret('AUTO_LOADED_DATA_NAMES', default=[])
     for auto_name in auto_names:
         value = get_secret(auto_name)

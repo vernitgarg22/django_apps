@@ -106,8 +106,8 @@ def subscribe_address(request):
 
     # Create the subscriber and activate them
     subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids, "address": address.address, "latitude": location['location']['y'], "longitude": location['location']['x'] } )
-    if error:    # pragma: no cover (should never get here)
-        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+    if error:
+        return Response(error, status=status.HTTP_400_BAD_REQUEST)    # pragma: no cover (should never get here)
 
     add_subscriber_comment(phone_number=phone_number, comment='signed up via text')
     return update_subscription(phone_number, True)

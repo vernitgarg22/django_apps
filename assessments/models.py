@@ -10,8 +10,8 @@ from assessments import util
 
 class Sales(models.Model):
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        id = BigAutoField(primary_key=True)
+    if not settings.RUNNING_UNITTESTS:
+        id = BigAutoField(primary_key=True)    # pragma: no cover
    
     pnum = models.CharField(max_length=25)
     saledate = models.DateTimeField(blank=True, null=True)
@@ -22,8 +22,8 @@ class Sales(models.Model):
     grantor = models.CharField(max_length=35)
     grantee = models.CharField(max_length=35)
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
+    if not settings.RUNNING_UNITTESTS:
+        class Meta:    # pragma: no cover
             managed = False
             db_table = 'Sales'
 
@@ -47,8 +47,8 @@ class ParcelMaster(models.Model):
 
     IGNORED_FIELDS = [ 'id' ]
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        id = BigAutoField(primary_key=True)
+    if not settings.RUNNING_UNITTESTS:
+        id = BigAutoField(primary_key=True)    # pragma: no cover
 
     pnum = models.CharField(unique=True, max_length=25)
     relatedpnum = models.CharField(max_length=25)
@@ -101,8 +101,8 @@ class ParcelMaster(models.Model):
     cibbedrooms = models.SmallIntegerField(db_column='CiBBedrooms')
     cibunits = models.SmallIntegerField(db_column='CiBUnits')
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
+    if not settings.RUNNING_UNITTESTS:
+        class Meta:    # pragma: no cover
             managed = False
             db_table = 'ParcelMaster'
 
@@ -132,8 +132,8 @@ class RoleType(models.Model):
     role_updated = models.DateField(blank=True, null=True)
     role_updateby = models.CharField(max_length=4, blank=True, null=True)
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
+    if not settings.RUNNING_UNITTESTS:
+        class Meta:    # pragma: no cover
             managed = False
             db_table = 'role_type'
 
@@ -189,8 +189,8 @@ class Parcel(models.Model):
     prc_nghb_code = models.CharField(max_length=10, blank=True, null=True)
     prc_nsp_code = models.CharField(max_length=30, blank=True, null=True)
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
+    if not settings.RUNNING_UNITTESTS:
+        class Meta:    # pragma: no cover
             managed = False
             db_table = 'parcel'
             unique_together = (('prc_parcel_no', 'prc_avp_no'),)
@@ -235,8 +235,8 @@ class CaseType(models.Model):
     cst_exp_date_param = models.CharField(max_length=80, blank=True, null=True)
     cst_summary_rpt = models.CharField(max_length=50, blank=True, null=True)
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
+    if not settings.RUNNING_UNITTESTS:
+        class Meta:    # pragma: no cover
             managed = False
             db_table = 'case_type'
 
@@ -266,8 +266,8 @@ class CaseMain(models.Model):
     csm_mastno = models.CharField(max_length=14, blank=True, null=True)
     csm_tracking_no = models.BigIntegerField(blank=True, null=True)
 
-    if not settings.RUNNING_UNITTESTS: # pragma: no cover
-        class Meta:
+    if not settings.RUNNING_UNITTESTS:
+        class Meta:    # pragma: no cover
             managed = False
             db_table = 'casemain'
 

@@ -76,8 +76,8 @@ class Command(BaseCommand):
 
         models = importlib.import_module('.models', self.application)
         klass = locate(self.application + '.models.' + model)
-        if not klass:    # pragma: no cover (should never get here)
-            raise CommandError("Class {} not found".format(self.application + '.models.' + model))
+        if not klass:
+            raise CommandError("Class {} not found".format(self.application + '.models.' + model))    # pragma: no cover (should never get here)
 
         objects = klass.objects.using(self.database).all()
 

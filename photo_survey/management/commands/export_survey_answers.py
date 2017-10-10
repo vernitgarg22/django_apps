@@ -137,8 +137,8 @@ class Command(BaseCommand):
 
             answer_weights = [ avail_answer.weight for avail_answer in question.surveyquestionavailanswer_set.all() if avail_answer.value in curr_answers ]
 
-            if len(curr_answers) != len(answer_weights):    # pragma: no cover    - should never get here at all
-                raise Exception('# of answers and # of answer weights should be equal')
+            if len(curr_answers) != len(answer_weights):
+                raise Exception('# of answers and # of answer weights should be equal')    # pragma: no cover (should never get here)
 
             if not answer_weights:
                 curr_score = 0

@@ -90,8 +90,8 @@ class MsgHandler():
         admin_numbers = settings.AUTO_LOADED_DATA['ADMIN_PHONE_NUMBERS']
 
         client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if dry_run_param:    # pragma: no cover
-            return False
+        if dry_run_param:
+            return False    # pragma: no cover
 
         success = True
 
@@ -102,8 +102,8 @@ class MsgHandler():
                     from_ = MsgHandler.get_phone_sender(),
                     body = text,
                 )
-                if message.status == 'failed':    # pragma: no cover
-                    success = FALSE
+                if message.status == 'failed':
+                    success = FALSE    # pragma: no cover
             except:    # pragma: no cover
                 print("Error received sending twilio msg")
                 return False

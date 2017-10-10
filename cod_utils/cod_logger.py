@@ -13,8 +13,8 @@ class CODLogger():
 
     def __init__(self):
         # Make sure only 1 instance is created
-        if self.__instance:   # pragma: no cover (note: should not get called)
-            raise Exception("call static instance() to get access to " + __class__.__name__)
+        if self.__instance:
+            raise Exception("call static instance() to get access to " + __class__.__name__)    # pragma: no cover (note: should never get called)
         self.loggers = {}
 
     @staticmethod
@@ -43,8 +43,8 @@ class CODLogger():
         logger = self.get_logger(name)
 
         # TODO should configure log level better ...
-        if not settings.RUNNING_UNITTESTS: # pragma: no cover
-            logger.error("api call: " + msg)
+        if not settings.RUNNING_UNITTESTS:
+            logger.error("api call: " + msg)    # pragma: no cover
 
     def log_error(self, name, area, msg):
         """
@@ -54,5 +54,5 @@ class CODLogger():
         logger = self.get_logger(name)
 
         # TODO should configure log level better ...
-        if not settings.RUNNING_UNITTESTS: # pragma: no cover
-            logger.error("ERROR in " + area + ": " + msg)
+        if not settings.RUNNING_UNITTESTS:
+            logger.error("ERROR in " + area + ": " + msg)    # pragma: no cover
