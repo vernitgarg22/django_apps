@@ -4,3 +4,5 @@ echo $(date) >> ${OUTPUT}
 echo "" >> ${OUTPUT}
 python manage.py send_waste_reminders >> ${OUTPUT} 2>&1
 echo "" >> ${OUTPUT}
+
+exit 0
