@@ -36,6 +36,6 @@ class Command(BaseCommand):
 
         dry_run_param = dry_run_param == "yes"
 
-        response = views.send_notifications(date=util.tomorrow(today=today), dry_run_param=True)
+        response = views.send_notifications(date=util.tomorrow(today=today), dry_run_param=dry_run_param)
 
         return "status: {}, data: {}".format(response.status_code, str(response.data))
