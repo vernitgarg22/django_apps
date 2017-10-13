@@ -1520,7 +1520,7 @@ class DnngoXblogArticles(models.Model):
     per_allusers = models.SmallIntegerField(db_column='Per_AllUsers')  # Field name made lowercase.
     per_roles = models.TextField(db_column='Per_Roles', blank=True, null=True)  # Field name made lowercase.
 
-    def __str__(self):
+    def __str__(self):      # pragma: no cover (this is mostly just for debugging)
         return str(self.id) + ' - ' + self.title
 
     class Meta:
@@ -2386,7 +2386,7 @@ class Faqs(models.Model):
     publishdate = models.DateTimeField(db_column='PublishDate', blank=True, null=True)  # Field name made lowercase.
     expiredate = models.DateTimeField(db_column='ExpireDate', blank=True, null=True)  # Field name made lowercase.
 
-    def __str__(self):
+    def __str__(self):      # pragma: no cover (this is mostly just for debugging)
         return str(self.itemid) + ' - ' + self.question
 
     class Meta:
@@ -2626,7 +2626,7 @@ class Htmltext(models.Model):
     summary = models.TextField(db_column='Summary', blank=True, null=True)  # Field name made lowercase.
     publishdate = models.DateTimeField(db_column='PublishDate', blank=True, null=True)  # Field name made lowercase.
 
-    def __str__(self):
+    def __str__(self):      # pragma: no cover (this is mostly just for debugging)
         return str(self.itemid)
 
     class Meta:
@@ -3197,7 +3197,7 @@ class Modules(models.Model):
     isshareable = models.BooleanField(db_column='IsShareable')  # Field name made lowercase.
     isshareableviewonly = models.BooleanField(db_column='IsShareableViewOnly')  # Field name made lowercase.
 
-    def __str__(self):
+    def __str__(self):      # pragma: no cover (this is mostly just for debugging)
         return str(self.moduleid)
 
     class Meta:

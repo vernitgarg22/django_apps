@@ -17,19 +17,17 @@ import json
 
 from django.core.exceptions import ImproperlyConfigured
 
+DJANGO_HOME = env['DJANGO_HOME']
+RUNNING_UNITTESTS = True if os.environ.get('RUNNING_UNITTESTS') == 'yes' else False
 
-# TODO move stuff that is shared between django_apps.settings and tests.test_settings into a shared location
-
-
-DJANGO_HOME = os.environ['DJANGO_HOME']
-
-with open(DJANGO_HOME + "/secrets.json") as f:
+SECRETS_PATH = "/tests/test_secrets.json" if RUNNING_UNITTESTS else "/secrets.json"
+with open(DJANGO_HOME + SECRETS_PATH) as f:
     secrets = json.loads(f.read())
 
 def get_secret(setting, secrets=secrets, default=None):
     try:
         return secrets[setting]
-    except KeyError:
+    except KeyError:              # pragma: no cover
         if default != None:
             secrets[setting] = default
             return secrets[setting]
@@ -39,7 +37,7 @@ def get_secret(setting, secrets=secrets, default=None):
 
 def get_databases():
     tmp = get_secret('DATABASES')
-    if tmp['default']['NAME'] == 'db.sqlite3':
+    if tmp['default']['NAME'] == 'db.sqlite3':       # pragma: no cover
         tmp['default']['NAME'] = os.path.join(BASE_DIR, 'db.sqlite3')
     return tmp
 
@@ -54,8 +52,6 @@ CREDENTIALS = get_secret("CREDENTIALS")
 
 AUTO_LOADED_DATA = {}
 def load_auto_loaded_data():
-    if AUTO_LOADED_DATA:
-        return
     auto_names = get_secret('AUTO_LOADED_DATA_NAMES', default=[])
     for auto_name in auto_names:
         value = get_secret(auto_name)
@@ -76,7 +72,6 @@ add_vals_to_os()
 # Monkey-patch stuff that we want disabled locally
 if DEBUG:
     import tests.disabled
-
 
 # Application definition
 
@@ -102,6 +97,8 @@ INSTALLED_APPS = (
     'weather_info',
     'corsheaders',
 )
+if RUNNING_UNITTESTS:
+    INSTALLED_APPS = INSTALLED_APPS + ('tests',)
 
 MIDDLEWARE_CLASSES = (
     # KARL: removing some of the sessions middleware package because assessments database has no sessions table
@@ -168,8 +165,6 @@ APPEND_SLASH = True
 STATIC_ROOT = DJANGO_HOME + "/static"
 STATIC_URL = '/static/'
 
-RUNNING_UNITTESTS = False
-
 DATABASE_ROUTERS = [ 'django_apps.settings.DjangoAppsRouter', ]
 
 class DjangoAppsRouter(object):
@@ -184,7 +179,8 @@ class DjangoAppsRouter(object):
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
         "Sales": "eql",
-        "ParcelMaster": "eql",
+        # TODO fix this
+        # "ParcelMaster": "eql",
         "RoleType": "tidemark",
         "Parcel": "tidemark",
         "CaseType": "tidemark",
@@ -222,12 +218,11 @@ class DjangoAppsRouter(object):
         "SurveyQuestionAvailAnswer": "photo_survey_dev",
     }
 
-
     @staticmethod
     def get_db(model):
         name = model if type(model) == str else model.__name__
         database = None
-        if DEBUG:
+        if DEBUG:               # pragma: no cover
             database = DjangoAppsRouter.ModelDBMapDev.get(name)
         if not database:
             database = DjangoAppsRouter.ModelDBMap.get(name)
@@ -244,7 +239,7 @@ class DjangoAppsRouter(object):
         return True
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        if db in [ 'blight_tickets', 'eql', 'tidemark' ]:
+        if not RUNNING_UNITTESTS and db in [ 'blight_tickets', 'eql', 'tidemark' ]:    # pragma: no cover
             return False
         if model_name:
             return DjangoAppsRouter.get_db(model_name)
