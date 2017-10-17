@@ -1,4 +1,6 @@
+from collections import OrderedDict
 from datetime import date
+import json
 import re
 
 from django.core.management.base import BaseCommand, CommandError
@@ -38,4 +40,4 @@ class Command(BaseCommand):
 
         response = views.send_notifications(date=util.tomorrow(today=today), dry_run_param=dry_run_param)
 
-        return "status: {}, data: {}".format(response.status_code, str(response.data))
+        return json.dumps({ "status": response.status_code, "data": OrderedDict(response.data) })
