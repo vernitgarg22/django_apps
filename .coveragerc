@@ -1,6 +1,7 @@
 [run]
 omit =
     Lib/*
+    lib/*
     /Python34/*
     tests/*
     */migrations/*
