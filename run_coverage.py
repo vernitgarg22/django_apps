@@ -5,4 +5,11 @@ then
     exit 1
 fi
 coverage html
-start htmlcov/index.html
+which start > /dev/null
+retval=$?
+if [ ${retval} -eq 0 ]
+then
+	start htmlcov/index.html
+else
+	open htmlcov/index.html
+fi
