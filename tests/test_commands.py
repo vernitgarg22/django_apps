@@ -1,4 +1,4 @@
-import csv, datetime, os, re
+import csv, datetime, json, os, re
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -143,9 +143,11 @@ class ImportPhotoSurveyImagesTest(TestCase):
         out = StringIO()
 
         self.create_csv()
-        cleanup_db()
 
         parcel = ParcelMetadata.objects.using('photo_survey').first()
+
+        cleanup_db()
+
         parcel.parcel_id = 'removed'
         parcel.save(using='photo_survey')
 
@@ -224,7 +226,7 @@ class SendwasteRemindersTest(TestCase):
 
         out = StringIO()
         call_command('send_waste_reminders', stdout=out)
-        self.assertTrue(out.getvalue().startswith("status: 200, "))
+        self.assertTrue(out.getvalue().find('"status": 200') >= 0)
 
     def test1(self):
 
@@ -235,10 +237,10 @@ class SendwasteRemindersTest(TestCase):
 
         call_command('send_waste_reminders', '--today=20170521', stdout=out)
 
-        # 'tomorrow' (20170522) is a monday - week 'b', so route 0 should get picked up
-        expected = "status: 200, data: {'meta': {'date_applicable': '2017-05-22', 'current_time': '" + datetime.datetime.today().strftime("%Y-%m-%d %H:%M") + "', 'week_type': 'b', 'dry_run': True}, 'all': {0: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}\n"
+        expected = {"status":200,"data":{"meta":{"date_applicable":"2017-05-22","week_type":"b","current_time":datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),"dry_run":True},"all":{"0":{"message":"City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).","subscribers":["5005550006"]}}}}
+        data = json.loads(out.getvalue())
 
-        self.assertEqual(out.getvalue(), expected)
+        self.assertEqual(data, expected)
 
     def test2(self):
 
