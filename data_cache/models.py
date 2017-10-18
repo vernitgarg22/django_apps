@@ -63,10 +63,6 @@ class DataSource(models.Model):
                 DataValue(data_source=self).save()
             return
 
-        # TODO figure out a way to guarantee that any deleted items will not persist
-        # keep a dict of all items, removing each item as it gets updated, then
-        # delete any 'orphans' at the end?
-
         # Get the data
         url = self.get_url()
         r = requests.get(url)
