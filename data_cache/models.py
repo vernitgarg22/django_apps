@@ -49,15 +49,17 @@ class DataSource(models.Model):
     url = models.CharField('Data Source URL', max_length=1024, null=True, blank=True)
     credentials = models.ForeignKey(DataCredential, null=True, blank=True)
 
-    def get(self):
+    def get(self, params=None):
         """
         Refreshes the data (if needed) and returns the datavalue object.
         """
         if self.datavalue_set.exists():
+            if params:
+                data_values = self.datavalue_set.filter(tag=tag)
             data_value = self.datavalue_set.first()
         else:
 
-            data_value = DataValue(data_source=self)
+            data_value = DataValue(data_source=self, tag=tag)
             data_value.update()
 
         return data_value
@@ -84,6 +86,9 @@ class DataValue(models.Model):
     data_source = models.ForeignKey(DataSource)
     data = models.TextField()
     updated = models.DateTimeField('Last time data was cached')
+
+    # TODO finish this?
+    tag = models.CharField(max_length=128, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         """
@@ -128,6 +133,11 @@ class DataValue(models.Model):
 
         # Get the data
         url = self.get_url()
+
+        # add in url param?
+        if self.tag:
+            url = url.format(tag)
+
         r = requests.get(url)
 
         # Test success and attempt to parse
