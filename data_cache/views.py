@@ -17,7 +17,7 @@ from data_cache.models import DataSource, DataValue
 
 
 @api_view(['GET'])
-def get_data(request, name, tag=None):
+def get_data(request, name, param=None):
     """
     Returns data cached for the given data source, updating the data whenever necessary.
     """
@@ -42,7 +42,7 @@ def get_data(request, name, tag=None):
 
     # Retrieve the data value for the source
     try:
-        data_value = data_source.get()
+        data_value = data_source.get(param=param)
     except:
         return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 

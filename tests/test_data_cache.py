@@ -18,9 +18,9 @@ def cleanup_model(model):
 def cleanup_db():
     cleanup_model(DataSource)
 
-def init_hydrants_creds():
+def init_creds(key):
 
-    secret_creds = settings.CREDENTIALS['HYDRANTS']
+    secret_creds = settings.CREDENTIALS[key]
     credentials = DataCredential(username=secret_creds['USERNAME'], password=secret_creds['PASSWORD'], referer=secret_creds['REFERER'], url=secret_creds['URL'])
     credentials.save()
     return credentials
@@ -40,8 +40,14 @@ def init_test_data_invalid_auth():
 
 def init_hydrants_data():
 
-    credentials = init_hydrants_creds()
+    credentials = init_creds(key="HYDRANTS")
     DataSource(name='hydrants', url="https://gisweb.glwater.org/arcgis/rest/services/Hydrants/dwsd_HydrantInspection_v2/MapServer/0?f=json", credentials=credentials).save()
+
+def init_gis_data():
+
+    credentials = init_creds(key="GIS")
+    url = 'https://gis.detroitmi.gov/arcgis/rest/services/DoIT/bridging_neighborhoods/MapServer/0/query?where=1%3D1&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=FID%2C+parcelno%2C+programare&returnGeometry=false&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json'
+    DataSource(name='bridging_neighborhoods', url=url, credentials=credentials, data_parse_path="features", data_id_parse_path="attributes/FID").save()
 
 def init_test_data_invalid_source():
 
@@ -181,3 +187,12 @@ class DataCacheTests(TestCase):
         settings.ALLOWED_HOSTS.append("127.0.0.1")
 
         self.assertTrue(response.status_code == 403)
+
+    def test_data_cache_params(self):
+
+        init_gis_data()
+
+        c = Client()
+        response = c.get("/data_cache/bridging_neighborhoods/100/", secure=True)
+        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.json()['data']['attributes']['FID'], 100, "Data cache can be queried with a parameter")
