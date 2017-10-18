@@ -17,7 +17,7 @@ from data_cache.models import DataSource, DataValue
 
 
 @api_view(['GET'])
-def get_data(request, name):
+def get_data(request, name, tag=None):
     """
     Returns data cached for the given data source, updating the data whenever necessary.
     """
