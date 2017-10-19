@@ -15,8 +15,6 @@ class Command(BaseCommand):
         num_updated = 0
         data_sources = DataSource.objects.all()
         for data_source in data_sources:
-            for data_value in data_source.datavalue_set.all():
-                data_value.update()
-                num_updated = num_updated + 1
+            data_source.refresh()
 
         return "Updated {} data cache values".format(num_updated)
