@@ -12,6 +12,7 @@ from cod_utils import util
 from cod_utils import security
 from cod_utils.cod_logger import CODLogger
 from cod_utils.messaging import MsgHandler
+from cod_utils.util import get_parcel_id
 
 from data_cache.models import DataSource, DataValue
 
@@ -29,6 +30,10 @@ def get_data(request, name, param=None):
         remote_addr = request.META.get('REMOTE_ADDR')
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
+
+    # Parse parcel ids when necessary
+    if param:
+        param = get_parcel_id(request.path, 3)
 
     # Only call via https...
     if not request.is_secure():
