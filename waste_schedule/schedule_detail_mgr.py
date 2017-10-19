@@ -71,6 +71,12 @@ class ScheduleDetailMgr():
             ScheduleDetailMgr.__instance = ScheduleDetailMgr()
         return ScheduleDetailMgr.__instance
 
+    @staticmethod
+    def clean_route_data(data):
+
+        clean_data = { key: data[key] for key in data.keys() if key in ['FID', 'contractor', 'services', 'week', 'day'] }
+        return clean_data
+
     def get_service_start_and_end(self, service):
         """
         Returns the ScheduleDetail objects that indicate when the given
@@ -158,7 +164,7 @@ class ScheduleDetailMgr():
         # find the correct route info and return it
         for feature in r.json()['features']:
             if int(feature['attributes']['FID']) == int(route_id):
-                return feature['attributes']
+                return self.clean_route_data(feature['attributes'])
 
         return {}      # pragma: no cover (should never get here)
 
@@ -178,7 +184,8 @@ class ScheduleDetailMgr():
 
         # put each piece of route info, into the correct day
         for feature in r.json()['features']:
-            week_route_info.add_day_route(feature['attributes'])
+            data = self.clean_route_data(feature['attributes'])
+            week_route_info.add_day_route(data)
 
         return week_route_info
 
@@ -234,6 +241,19 @@ class ScheduleDetailMgr():
 
         week_route_info = self.get_week_routes(date)
         return week_route_info.get_day(date)
+
+        # week_route_info = self.get_week_routes(date)
+        # data = week_route_info.get_day(date)
+        # response = {}
+
+        # for area in data.keys():
+
+        #     area_data = data[area]
+        #     area_data_new = { key: area_data[key] for key in area_data.keys() if key in ['contractor', 'services', 'week'] }
+        #     response[area] = area_data_new
+
+        # return response
+
 
     def check_all_service_week(self, date, route):
         """
