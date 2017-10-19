@@ -92,7 +92,7 @@ class DataSource(models.Model):
                     data_value.data = json.dumps(sub_data)
                     data_value.save(force_update=True)
 
-                    if settings.RUNNING_UNITTESTS and idx > 100:
+                    if settings.RUNNING_UNITTESTS and idx == 100:
                         break
 
             else:
