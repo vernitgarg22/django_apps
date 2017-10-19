@@ -31,13 +31,13 @@ def get_data(request, name, param=None):
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
-    # Parse parcel ids when necessary
-    if param:
-        param = get_parcel_id(request.path, 3)
-
     # Only call via https...
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    # Parse parcel ids when necessary
+    if param:
+        param = get_parcel_id(request.path, 3)
 
     # Retrieve the data source
     try:
@@ -49,8 +49,16 @@ def get_data(request, name, param=None):
     try:
         data_value = data_source.get(param=param)
     except:
-        return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
+        data_value = None
 
+    # Do correct error handling if not found
+    if not data_value:
+        if param:
+            return Response({ "error": "Data value {} not found".format(param) }, status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    # Return the data
     data = json.loads(data_value.data) if data_value and data_value.data else {}
 
     return Response( { "data": data, "updated": util.date_json(data_value.updated) })
