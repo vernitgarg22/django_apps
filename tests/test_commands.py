@@ -9,13 +9,14 @@ from django.utils.six import StringIO
 from cod_utils.util import get_local_time
 
 from assessments.models import ParcelMaster, Sales
+from data_cache.models import DataSource, DataValue
 from photo_survey.models import Survey, Image, ImageMetadata, ParcelMetadata, PublicPropertyData
 from waste_notifier.models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
 from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
-from tests.test_waste_notifier import add_meta
 from tests.models import TestDataA, TestDataB
+from tests.test_data_cache import init_hydrants_data, init_gis_data
 
 
 class SendMessageTest(TestCase):
@@ -220,7 +221,35 @@ class ExportDataCSVTest(TestCase):
         os.remove('test_data_b.csv')
 
 
-class SendwasteRemindersTest(TestCase):
+class RefreshDataCacheTest(TestCase):
+
+    def setUp(self):
+        DataSource.objects.all().delete()
+
+    def test_simple_data(self):
+        """
+        Test data cache where there is only 1 data value per data source (i.e., no param).
+        """
+
+        init_hydrants_data()
+        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 0)
+
+        call_command('refresh_data_cache')
+        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 1)
+
+    def test_multiple_data(self):
+        """
+        Test data cache where there can be multiple data value objects per data source (i.e., with a param).
+        """
+
+        init_gis_data()
+        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 0)
+
+        call_command('refresh_data_cache')
+        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 101)
+
+
+class SendWasteRemindersTest(TestCase):
 
     def test0(self):
 
