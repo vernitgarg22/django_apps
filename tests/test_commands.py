@@ -6,6 +6,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.test import TestCase
 from django.utils.six import StringIO
 
+from unittest import skip
+
 from cod_utils.util import get_local_time
 
 from assessments.models import ParcelMaster, Sales
@@ -237,6 +239,7 @@ class RefreshDataCacheTest(TestCase):
         call_command('refresh_data_cache')
         self.assertTrue(DataSource.objects.first().datavalue_set.count() == 1)
 
+    @skip('gis server is down')
     def test_multiple_data(self):
         """
         Test data cache where there can be multiple data value objects per data source (i.e., with a param).
