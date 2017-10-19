@@ -97,9 +97,12 @@ class DataSource(models.Model):
 
             else:
 
-                data_value, success = self.datavalue_set.get_or_create(id=1)
+                if self.datavalue_set.exists():
+                    data_value = self.datavalue_set.first()
+                else:
+                    data_value = DataValue(data_source=self)
                 data_value.data = json.dumps(data)
-                data_value.save(force_update=True)
+                data_value.save()
 
         except json.decoder.JSONDecodeError:
             raise Exception("Invalid JSON received")
