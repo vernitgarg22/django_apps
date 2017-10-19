@@ -82,8 +82,7 @@ class DataSource(models.Model):
                     for data_id_key in self.data_id_parse_path.split('/'):
                         sub_data_tmp = sub_data_tmp[data_id_key]
 
-                    data_value_id = sub_data_tmp
-                    data_value, success = self.datavalue_set.get_or_create(param=data_value_id)
+                    data_value, success = self.datavalue_set.get_or_create(param=sub_data_tmp)
 
                     data_value.data = json.dumps(sub_data)
                     data_value.save(force_update=True)
@@ -92,6 +91,7 @@ class DataSource(models.Model):
                         break
 
             else:
+
                 data_value, success = self.datavalue_set.get_or_create(id=1)
                 data_value.data = json.dumps(data)
                 data_value.save(force_update=True)
