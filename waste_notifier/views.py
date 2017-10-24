@@ -194,39 +194,21 @@ def confirm_notifications(request):
     return response
 
 
-@api_view(['POST'])
-def send_notifications_request(request, date_val=cod_utils.util.tomorrow(), date_name=None, format=None):
+def send_notifications_request(date_val=cod_utils.util.tomorrow(), date_name=None, today=None, format=None, dry_run_param=False):
     """
     Send out any necessary notifications (e.g., regular schedule or schedule changes)
     """
 
-    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
-
-    # Only allow certain servers to call this endpoint
-    if cod_utils.security.block_client(request):
-        remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from sending waste alerts".format(remote_addr))
-        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
-
-    # Throw error if there is an unrecognized query param
-    for param in request.query_params.keys():
-        if param not in ['dry_run', 'today']:
-            return Response("Invalid param: " + param, status=status.HTTP_400_BAD_REQUEST)
-
-    # Allow caller to pass in dry_run flag
-    dry_run_param = request.query_params.get('dry_run') == 'true'
-
     # Allow caller to specify what 'today' is
-    today = request.query_params.get('today')
     if today and date_name:
-        return Response("Do not supply both today and date name", status=status.HTTP_400_BAD_REQUEST)
+        return Exception("Do not supply both today and date name")
 
     if today:
         date_val = cod_utils.util.tomorrow(today)
     elif date_name == 'tomorrow':
        date_val = cod_utils.util.tomorrow()
 
-    return send_notifications(date_val)
+    return send_notifications(date_val, dry_run_param)
 
 
 def send_notifications(date, dry_run_param=False):
@@ -290,7 +272,7 @@ def send_notifications(date, dry_run_param=False):
     # slack the json response to #zzz
     slack_alerts_summary(content.get_content())
 
-    return Response(content.get_content())
+    return content.get_content()
 
 
 def get_route_subscribers(service_type, route_id):
