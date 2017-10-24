@@ -40,4 +40,6 @@ class Command(BaseCommand):
 
         response = views.send_notifications(date=util.tomorrow(today=today), dry_run_param=dry_run_param)
 
-        return json.dumps({ "status": response.status_code, "data": OrderedDict(response.data) })
+        # TODO not sure how to do error handling here
+
+        return json.dumps({ "status": 200, "data": OrderedDict(response) })
