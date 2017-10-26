@@ -47,10 +47,21 @@ class DataSource(models.Model):
     app_label = 'data_cache'
 
     name = models.CharField('Name', max_length=64, unique=True, db_index=True)
-    url = models.CharField('Data Source URL', max_length=1024, null=True, blank=True)
+    url = models.CharField('Data Source URL', max_length=3000, null=True, blank=True)
     credentials = models.ForeignKey(DataCredential, null=True, blank=True)
     data_parse_path = models.CharField('Data to extract', max_length=128, null=True, blank=True)
     data_id_parse_path = models.CharField('Data ID to extract', max_length=128, null=True, blank=True)
+
+    @staticmethod
+    def is_success(response):
+        """
+        Returns False if the response status code is not in the http success range (200-299) or
+        if a gis service has returned a status code in the json that is not in the http success range.
+        """
+
+        data = response.json()
+        gis_status_code = data.get("error", {}).get("code", 200) if type(data) is dict else 200
+        return status.is_success(response.status_code) and status.is_success(gis_status_code)
 
     def refresh(self):
         """
@@ -68,8 +79,8 @@ class DataSource(models.Model):
         r = requests.get(url)
 
         # Test success and attempt to parse
-        if not status.is_success(r.status_code):    # pragma: no cover (exception-handling should prevent us from ever getting here)
-            raise Exception("Data source {} not available".format(self.data_source.url))
+        if not self.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)
+            raise Exception("Data source {} not available".format(self.name))
 
         # TODO clean this up a bit?
         try:
