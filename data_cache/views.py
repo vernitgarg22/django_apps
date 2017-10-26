@@ -59,6 +59,9 @@ def get_data(request, name, param=None):
             return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 
     # Return the data
-    data = json.loads(data_value.data) if data_value and data_value.data else {}
+    try:
+        data = json.loads(data_value.data) if data_value and data_value.data else {}
+    except json.decoder.JSONDecodeError:
+        return Response({ "error": "Could not parse json" }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     return Response( { "data": data, "updated": util.date_json(data_value.updated) })
