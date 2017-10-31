@@ -61,7 +61,7 @@ def get_data(request, name, param=None):
     # Return the data
     try:
         data = json.loads(data_value.data) if data_value and data_value.data else {}
-    except json.decoder.JSONDecodeError:
+    except json.decoder.JSONDecodeError:    # pragma: no cover (should never get here)
         return Response({ "error": "Could not parse json" }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     return Response( { "data": data, "updated": util.date_json(data_value.updated) })

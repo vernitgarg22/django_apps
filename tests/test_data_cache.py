@@ -71,6 +71,16 @@ class DataCacheTests(TestCase):
         self.assertTrue(response.status_code == 200)
         self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
+    def test_data_cache_refresh(self):
+
+        init_test_data()
+
+        data_source = DataSource.objects.first()
+        data_source.refresh()
+        data_value = DataValue.objects.first()
+        data_source.refresh()
+        self.assertEqual(data_value.id, DataValue.objects.first().id, "Cached data can be refreshed")
+
     def test_data_cache_existing_data(self):
 
         init_test_data()
@@ -162,12 +172,30 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/hydrants/", secure=True)
         self.assertTrue(response.status_code == 503)
 
+    def test_data_cache_value_rejects_bad_json(self):
+
+        init_test_data()
+
+        data_value = DataValue(data_source=DataSource.objects.first(), data='invalid')
+        with self.assertRaises(Exception, msg="DataValue.save() should reject invalid json") as error:
+            data_value.save()
+
+        del data_value
+
     def test_data_cache_404(self):
 
         init_test_data()
 
         c = Client()
         response = c.get("/data_cache/invalid/", secure=True)
+        self.assertTrue(response.status_code == 404)
+
+    def test_data_cache_param_404(self):
+
+        init_test_data()
+
+        c = Client()
+        response = c.get("/data_cache/test/invalid/", secure=True)
         self.assertTrue(response.status_code == 404)
 
     def test_data_cache_not_secure(self):
@@ -196,3 +224,32 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/bridging_neighborhoods/100/", secure=True)
         self.assertTrue(response.status_code == 200)
         self.assertEqual(response.json()['data']['attributes']['FID'], 100, "Data cache can be queried with a parameter")
+
+    def test_data_cache_params_remove_orphans(self):
+
+        init_gis_data()
+
+        data_source = DataSource.objects.first()
+        data_source.refresh()
+        self.assertEqual(DataValue.objects.count(), 101)
+
+        data_value = DataValue(data_source=data_source, data='{"foo": "bar"}', param="orphan")
+        data_value.save()
+        self.assertEqual(DataValue.objects.get(param="orphan").id, data_value.id)
+
+        # DataSource.refresh() should remove the orphan DataValue object
+        data_source.refresh()
+
+        self.assertTrue(DataValue.objects.filter(param="orphan").count() == 0)
+
+    def test_receiving_bad_json(self):
+
+        init_test_data()
+
+        data_source = DataSource.objects.first()
+        data_source.url = "https://httpbin.org/xml"
+        data_source.save(0)
+
+        c = Client()
+        response = c.get("/data_cache/test/", secure=True)
+        self.assertTrue(response.status_code == 503)

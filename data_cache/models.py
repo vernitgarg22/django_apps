@@ -82,49 +82,43 @@ class DataSource(models.Model):
         if not self.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)
             raise Exception("Data source {} not available".format(self.name))
 
-        # TODO clean this up a bit?
-        try:
+        data = r.json()
+        if self.is_multiple():
 
-            data = r.json()
-            if self.is_multiple():
+            # keep a dict of all previous data values
+            prev_data_values = { data_value.param : data_value for data_value in self.datavalue_set.all() }
 
-                # keep a dict of all previous data values
-                prev_data_values = { data_value.param : data_value for data_value in self.datavalue_set.all() }
+            for idx, sub_data in enumerate(data[self.data_parse_path]):
 
-                for idx, sub_data in enumerate(data[self.data_parse_path]):
+                sub_data_tmp = sub_data
+                for data_id_key in self.data_id_parse_path.split('/'):
+                    sub_data_tmp = sub_data_tmp[data_id_key]
 
-                    sub_data_tmp = sub_data
-                    for data_id_key in self.data_id_parse_path.split('/'):
-                        sub_data_tmp = sub_data_tmp[data_id_key]
+                param = str(sub_data_tmp)
+                data_value, created = self.datavalue_set.get_or_create(param=param)
 
-                    param = sub_data_tmp
-                    data_value, success = self.datavalue_set.get_or_create(param=param)
+                data_value.data = json.dumps(sub_data)
+                data_value.save(force_update=True)
 
-                    data_value.data = json.dumps(sub_data)
-                    data_value.save(force_update=True)
+                # removing each item from previous dict as it gets updated
+                if prev_data_values.get(param):
+                    del prev_data_values[param]
 
-                    # removing each item from previous dict as it gets updated
-                    if prev_data_values.get(param):
-                        del prev_data_values[param]
+                if settings.RUNNING_UNITTESTS and idx == 100:
+                    break
 
-                    if settings.RUNNING_UNITTESTS and idx == 100:
-                        break
+            # delete any 'orphans' at the end?
+            for data_value in prev_data_values.values():
+                data_value.delete()
 
-                # delete any 'orphans' at the end?
-                for data_value in prev_data_values.values():
-                    data_value.delete()
+        else:
 
+            if self.datavalue_set.exists():
+                data_value = self.datavalue_set.first()
             else:
-
-                if self.datavalue_set.exists():
-                    data_value = self.datavalue_set.first()
-                else:
-                    data_value = DataValue(data_source=self)
-                data_value.data = json.dumps(data)
-                data_value.save()
-
-        except json.decoder.JSONDecodeError:
-            raise Exception("Invalid JSON received")
+                data_value = DataValue(data_source=self)
+            data_value.data = json.dumps(data)
+            data_value.save()
 
     def get(self, param=None):
         """
@@ -201,6 +195,12 @@ class DataValue(models.Model):
         """
         Saves this DataValue object, updating 'updated' to current time.
         """
+
+        if self.data:
+            try:
+                json.loads(self.data)
+            except json.decoder.JSONDecodeError:
+                raise Exception("Data is not valid json")
 
         self.updated = util.get_local_time()
 
