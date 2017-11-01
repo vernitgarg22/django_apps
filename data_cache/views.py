@@ -1,5 +1,3 @@
-import json
-
 from django.shortcuts import render
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,7 +12,7 @@ from cod_utils.cod_logger import CODLogger
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import get_parcel_id
 
-from data_cache.models import DataSource, DataValue
+from data_cache.models import DataSet, DataSource, DataValue
 
 
 @api_view(['GET'])
@@ -39,29 +37,23 @@ def get_data(request, name, param=None):
     if param:
         param = get_parcel_id(request.path, 3)
 
-    # Retrieve the data source
+    # Retrieve the data set
     try:
-        data_source = DataSource.objects.get(name=name)
+        data_set = DataSet.objects.get(name=name)
     except ObjectDoesNotExist:
-        return Response({ "error": "Data source does not exist" }, status=status.HTTP_404_NOT_FOUND)
+        return Response({ "error": "Data set does not exist" }, status=status.HTTP_404_NOT_FOUND)
 
-    # Retrieve the data value for the source
+    # Retrieve the data values for this data set
     try:
-        data_value = data_source.get(param=param)
+        data = data_set.get(param=param)
     except:
-        data_value = None
+        data = None
 
     # Do correct error handling if not found
-    if not data_value:
+    if not data:
         if param:
             return Response({ "error": "Data value {} not found".format(param) }, status.HTTP_404_NOT_FOUND)
         else:
-            return Response({ "error": "Data source {} not available".format(data_source.url) }, status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({ "error": "Data set {} not available".format(name) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    # Return the data
-    try:
-        data = json.loads(data_value.data) if data_value and data_value.data else {}
-    except json.decoder.JSONDecodeError:    # pragma: no cover (should never get here)
-        return Response({ "error": "Could not parse json" }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-    return Response( { "data": data, "updated": util.date_json(data_value.updated) })
+    return Response(data)

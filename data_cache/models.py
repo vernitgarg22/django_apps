@@ -9,6 +9,65 @@ from rest_framework.response import Response
 from cod_utils import util
 
 
+class DataSet(models.Model):
+    """
+    Represents a particular data set that has been cached.
+    """
+
+    name = models.CharField('Name', max_length=64, unique=True, db_index=True)
+
+    @staticmethod
+    def add_data_json(data, json):
+        """
+        Add the json object to the data.
+        """
+
+        if data.get("data"):
+
+            if type(data.get("data")) == list:
+                data["data"].extend(json)
+            else:
+                data["data"].update(json)
+        else:
+            data["data"] = json
+
+    def get(self, param=None):
+        """
+        Refresh this dataset (if needed) and returns the datavalue objects.
+        """
+
+        data = {}
+
+        updated = None
+
+        # combine the strings into 1 json object
+        for data_source in self.datasource_set.all():
+
+            data_value = data_source.get(param)
+            if data_value and data_value.data:
+                json_curr = json.loads(data_value.data)
+                self.add_data_json(data, json_curr)
+
+                if not updated or data_value.updated < updated:
+                    updated = data_value.updated
+
+        if updated:
+            data["updated"] = util.date_json(data_value.updated)
+
+        return data
+
+    @staticmethod
+    def is_success(response):
+        """
+        Returns False if the response status code is not in the http success range (200-299) or
+        if a gis service has returned a status code in the json that is not in the http success range.
+        """
+
+        data = response.json()
+        gis_status_code = data.get("error", {}).get("code", 200) if type(data) is dict else 200
+        return status.is_success(response.status_code) and status.is_success(gis_status_code)
+
+
 class DataCredential(models.Model):
     """
     Login credentials for a particular data source.
@@ -48,20 +107,10 @@ class DataSource(models.Model):
 
     name = models.CharField('Name', max_length=64, unique=True, db_index=True)
     url = models.CharField('Data Source URL', max_length=3000, null=True, blank=True)
+    data_set = models.ForeignKey(DataSet, null=True, blank=True)
     credentials = models.ForeignKey(DataCredential, null=True, blank=True)
     data_parse_path = models.CharField('Data to extract', max_length=128, null=True, blank=True)
     data_id_parse_path = models.CharField('Data ID to extract', max_length=128, null=True, blank=True)
-
-    @staticmethod
-    def is_success(response):
-        """
-        Returns False if the response status code is not in the http success range (200-299) or
-        if a gis service has returned a status code in the json that is not in the http success range.
-        """
-
-        data = response.json()
-        gis_status_code = data.get("error", {}).get("code", 200) if type(data) is dict else 200
-        return status.is_success(response.status_code) and status.is_success(gis_status_code)
 
     def refresh(self):
         """
@@ -79,7 +128,7 @@ class DataSource(models.Model):
         r = requests.get(url)
 
         # Test success and attempt to parse
-        if not self.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)
+        if not DataSet.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)
             raise Exception("Data source {} not available".format(self.name))
 
         data = r.json()
@@ -122,7 +171,7 @@ class DataSource(models.Model):
 
     def get(self, param=None):
         """
-        Refreshes the data (if needed) and returns the datavalue object.
+        Refreshes the data (if needed) and returns the datavalue objects.
         """
 
         # Retrieve the data, if necessary

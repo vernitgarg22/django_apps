@@ -6,7 +6,7 @@ from django.test import Client
 from django.test import TestCase
 from django.conf import settings
 
-from data_cache.models import DataCredential, DataSource, DataValue
+from data_cache.models import DataCredential, DataSource, DataValue, DataSet
 
 from cod_utils import util
 
@@ -17,6 +17,7 @@ def cleanup_model(model):
 
 def cleanup_db():
     cleanup_model(DataSource)
+    cleanup_model(DataSet)
 
 def init_creds(key):
 
@@ -25,34 +26,47 @@ def init_creds(key):
     credentials.save()
     return credentials
 
-def init_test_data():
+def init_test_data(url="https://jsonplaceholder.typicode.com/posts?userId=1"):
 
-    url = "https://jsonplaceholder.typicode.com/posts?userId=1"
-    DataSource(name='test', url=url).save()
+    data_set = DataSet.objects.get_or_create(name='test')
+    name="test{}".format(DataSource.objects.count())
+    DataSource(data_set=data_set[0], name=name, url=url).save()
 
 def init_test_data_invalid_auth():
+
+    data_set = DataSet(name="test")
+    data_set.save()
 
     credentials = DataCredential(username="invalid", password="invalid", referer="invalid", url="http://invalid")
     credentials.save()
 
     url = "http://jsonplaceholder.typicode.com/posts?userId=1"
-    DataSource(name='test', url=url, credentials=credentials).save()
+    DataSource(data_set=data_set, name='test', url=url, credentials=credentials).save()
 
 def init_hydrants_data():
 
+    data_set = DataSet(name='hydrants')
+    data_set.save()
+
     credentials = init_creds(key="HYDRANTS")
-    DataSource(name='hydrants', url="https://gisweb.glwater.org/arcgis/rest/services/Hydrants/dwsd_HydrantInspection_v2/MapServer/0?f=json", credentials=credentials).save()
+    DataSource(data_set=data_set, name='hydrants', url="https://gisweb.glwater.org/arcgis/rest/services/Hydrants/dwsd_HydrantInspection_v2/MapServer/0?f=json", credentials=credentials).save()
 
 def init_gis_data():
 
+    data_set = DataSet(name='bridging_neighborhoods')
+    data_set.save()
+
     credentials = init_creds(key="GIS")
     url = 'https://gis.detroitmi.gov/arcgis/rest/services/DoIT/bridging_neighborhoods/MapServer/0/query?where=1%3D1&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=FID%2C+parcelno%2C+programare&returnGeometry=false&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json'
-    DataSource(name='bridging_neighborhoods', url=url, credentials=credentials, data_parse_path="features", data_id_parse_path="attributes/FID").save()
+    DataSource(data_set=data_set, name='bridging_neighborhoods', url=url, credentials=credentials, data_parse_path="features", data_id_parse_path="attributes/FID").save()
 
 def init_test_data_invalid_source():
 
+    data_set = DataSet(name='test')
+    data_set.save()
+
     url = "https://invalid"
-    DataSource(name='test', url=url).save()
+    DataSource(data_set=data_set, name='test', url=url).save()
 
 class DataCacheTests(TestCase):
 
@@ -133,8 +147,30 @@ class DataCacheTests(TestCase):
         c = Client()
         response = c.get("/data_cache/test/", secure=True)
 
-        self.assertTrue(response.status_code == 200)
-        self.assertEqual(response.data['data'], {}, "Cached static empty data should get returned when data value is empty")
+        self.assertEqual(response.status_code, 503)
+
+    def test_data_cache_multiple_sources_per_set(self):
+
+        init_test_data()
+        init_test_data("https://jsonplaceholder.typicode.com/posts?userId=2")
+        # DataSource(data_set=DataSet.objects.first(), name='test2', url=url).save()
+
+        c = Client()
+        response = c.get("/data_cache/test/", secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['data']), 20, "Multiple data sources per data set can get returned")
+
+    def test_data_cache_multiple_dict_sources_per_set(self):
+
+        init_test_data(url="https://jsonplaceholder.typicode.com/posts/1")
+        init_test_data(url="https://jsonplaceholder.typicode.com/posts/2")
+
+        c = Client()
+        response = c.get("/data_cache/test/", secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['data']), 4, "Multiple data dict sources per data set can get returned")
 
     def test_data_cache_invalid_auth(self):
 
