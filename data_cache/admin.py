@@ -1,6 +1,20 @@
 from django.contrib import admin
 
-from .models import DataCredential, DataSource, DataValue
+from .models import DataSet, DataCredential, DataSource, DataValue
+
+
+class DataSetAdmin(admin.ModelAdmin):
+
+    fieldsets = [
+        (None, {'fields': ['name']}),
+    ]
+    list_display = ('name', )
+    list_filter = ['name']
+    list_editable = []
+    search_fields = []
+    ordering = ['name']
+
+admin.site.register(DataSet, DataSetAdmin)
 
 
 class DataCredentialAdmin(admin.ModelAdmin):
@@ -19,13 +33,13 @@ admin.site.register(DataCredential, DataCredentialAdmin)
 class DataSourceAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['name', 'url', 'credentials', 'data_parse_path', 'data_id_parse_path']}),
+        (None, {'fields': ['name', 'url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path']}),
     ]
-    list_display = ('name', 'url', 'credentials', 'data_parse_path', 'data_id_parse_path')
-    list_filter = ['url']
-    list_editable = ['url', 'credentials', 'data_parse_path', 'data_id_parse_path']
-    search_fields = ['url']
-    ordering = ['url']
+    list_display = ('name', 'url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path')
+    list_filter = []
+    list_editable = ['url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path']
+    search_fields = ['name']
+    ordering = ['name']
 
 admin.site.register(DataSource, DataSourceAdmin)
 

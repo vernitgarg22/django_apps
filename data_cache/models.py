@@ -14,7 +14,9 @@ class DataSet(models.Model):
     Represents a particular data set that has been cached.
     """
 
-    name = models.CharField('Name', max_length=64, unique=True, db_index=True)
+    app_label = 'data_cache'
+
+    name = models.CharField('Name', max_length=64, db_index=True)
 
     @staticmethod
     def add_data_json(data, json):
@@ -66,6 +68,9 @@ class DataSet(models.Model):
         data = response.json()
         gis_status_code = data.get("error", {}).get("code", 200) if type(data) is dict else 200
         return status.is_success(response.status_code) and status.is_success(gis_status_code)
+
+    def __str__(self):    # pragma: no cover (mostly for debugging)
+        return self.name
 
 
 class DataCredential(models.Model):
