@@ -172,6 +172,16 @@ class DataCacheTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['data']), 4, "Multiple data dict sources per data set can get returned")
 
+    def test_data_cache_url_cache(self):
+
+        url = "https%3A%2F%2Fjsonplaceholder.typicode.com%2Fposts%2F1"
+
+        c = Client()
+        response = c.get("/data_cache/url_cache/{}/".format(url), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['data']), 4, "")
+
     def test_data_cache_invalid_auth(self):
 
         init_test_data_invalid_auth()

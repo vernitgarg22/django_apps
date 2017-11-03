@@ -33,7 +33,7 @@ class DataSet(models.Model):
         else:
             data["data"] = json
 
-    def get(self, param=None):
+    def get(self, data_source_name=None, param=None):
         """
         Refresh this dataset (if needed) and returns the datavalue objects.
         """
@@ -42,8 +42,10 @@ class DataSet(models.Model):
 
         updated = None
 
+        data_sources = self.datasource_set.filter(name=data_source_name) if data_source_name else self.datasource_set.all()
+
         # combine the strings into 1 json object
-        for data_source in self.datasource_set.all():
+        for data_source in data_sources:
 
             data_value = data_source.get(param)
             if data_value and data_value.data:

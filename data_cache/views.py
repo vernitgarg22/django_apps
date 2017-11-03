@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from rest_framework.decorators import api_view
@@ -13,6 +11,39 @@ from cod_utils.messaging import MsgHandler
 from cod_utils.util import get_parcel_id
 
 from data_cache.models import DataSet, DataSource, DataValue
+
+
+@api_view(['GET'])
+def get_url(request, url=None):
+    """
+    Creates a data_source object for the given url, in the data set 'url_cache', if one doesn't already exist,
+    refreshes the data for it, if necessary, and returns the result.
+    """
+
+    # TODO let caller pass in key for this data?
+    # idea:  have 2 calls:  1 POST to create the cache, which returns data + key, and another GET that
+    # just gets data for the key (don't really want to let caller specify key for security reasons?)
+
+    if not url:
+        url = request.path[22:]
+
+    data_set, created = DataSet.objects.get_or_create(name='url_cache')
+
+    data_source_name = "url_cache_{}".format(data_set.datasource_set.count())
+    data_source = DataSource(name=data_source_name, url=url, data_set=data_set)
+    data_source.save()
+
+    # Retrieve the data values for this data set
+    try:
+        data = data_set.get(data_source_name=data_source_name)
+    except:
+        data = None
+
+    # Do correct error handling if not found
+    if not data:
+        return Response({ "error": "No data received" }, status.HTTP_404_NOT_FOUND)
+
+    return Response(data)
 
 
 @api_view(['GET'])
