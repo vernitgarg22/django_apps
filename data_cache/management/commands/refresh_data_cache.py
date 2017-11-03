@@ -12,10 +12,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        num_updated = 0
+        data_sets = set()
         data_sources = DataSource.objects.all()
         for data_source in data_sources:
-            data_source.refresh()
-            num_updated = num_updated + 1
 
-        return "Updated {} data cache values".format(num_updated)
+            data_source.refresh()
+            name = data_source.data_set.name if data_source.data_set else data_source.name
+            data_sets.add(name)
+
+            self.stdout.write("refreshed data set {}".format(name))
+            self.stdout.flush()
+
+        return "Updated {} data cache values".format(len(data_sets))
