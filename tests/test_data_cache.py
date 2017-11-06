@@ -174,10 +174,10 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_url_cache(self):
 
-        url = "https%3A%2F%2Fjsonplaceholder.typicode.com%2Fposts%2F1"
+        url = "https://jsonplaceholder.typicode.com/posts/1"
 
         c = Client()
-        response = c.post("/data_cache/url_cache/urls/{}/".format(url), secure=True)
+        response = c.post("/data_cache/url_cache/urls/", data={ "url": url }, secure=True)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(len(response.data['data']), 4, "Response should contain data")
@@ -185,11 +185,11 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_url_cache_persists(self):
 
-        url = "https%3A%2F%2Fjsonplaceholder.typicode.com%2Fposts%2F1"
+        url = "https://jsonplaceholder.typicode.com/posts/1"
 
         c = Client()
-        response = c.post("/data_cache/url_cache/urls/{}/".format(url), secure=True)
-
+        response = c.post("/data_cache/url_cache/urls/", data={ "url": url }, secure=True)
+        self.assertEqual(response.status_code, 201)
         key = response.data['key']
 
         response = c.get("/data_cache/url_cache/{}/".format(key), secure=True)
@@ -198,12 +198,19 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_url_cache_no_data(self):
 
-        url = "https%3A%2F%2Fhttpbin.org%2Fxml"
+        url = "https://httpbin.org/xml"
 
         c = Client()
-        response = c.post("/data_cache/url_cache/urls/{}/".format(url), secure=True)
+        response = c.post("/data_cache/url_cache/urls/", data={ "url": url }, secure=True)
 
         self.assertEqual(response.status_code, 404)
+
+    def test_data_cache_url_cache_no_url(self):
+
+        c = Client()
+        response = c.post("/data_cache/url_cache/urls/", secure=True)
+
+        self.assertEqual(response.status_code, 400)
 
     def test_data_cache_invalid_auth(self):
 

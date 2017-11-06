@@ -14,20 +14,21 @@ from data_cache.models import DataSet, DataSource, DataValue
 
 
 @api_view(['POST'])
-def add_url(request, url=None):
+def add_url(request):
     """
     Creates a data_source object for the given url, in the data set 'url_cache', if one doesn't already exist,
     refreshes the data for it, if necessary, and returns the result.
     """
 
+    url = request.data.get('url')
     if not url:
-        url = request.path[27:]
+        return Response({ "error": "url is required" }, status.HTTP_400_BAD_REQUEST)
 
     data_set, created = DataSet.objects.get_or_create(name='url_cache')
 
+    # Create a data source for this url.
     data_source_name = "url_cache_{}".format(data_set.datasource_set.count())
-    data_source = DataSource(name=data_source_name, url=url, data_set=data_set)
-    data_source.save()
+    data_source, created = DataSource.objects.get_or_create(name=data_source_name, url=url, data_set=data_set)
 
     # Retrieve the data values for this data set
     try:
