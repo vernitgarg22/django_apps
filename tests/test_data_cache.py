@@ -196,6 +196,28 @@ class DataCacheTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['data']), 4, "Response should contain data")
 
+    def test_data_cache_url_cache_not_secure(self):
+
+        url = "https://jsonplaceholder.typicode.com/posts/1"
+
+        c = Client()
+        response = c.post("/data_cache/url_cache/urls/", data={ "url": url })
+        self.assertEqual(response.status_code, 403)
+
+    def test_data_cache_url_cache_blocked_client(self):
+
+        url = "https://jsonplaceholder.typicode.com/posts/1"
+
+        # Force block_client to block us
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
+
+        c = Client()
+        response = c.post("/data_cache/url_cache/urls/", data={ "url": url }, secure=True)
+
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
+
+        self.assertTrue(response.status_code == 403)
+
     def test_data_cache_url_cache_no_data(self):
 
         url = "https://httpbin.org/xml"

@@ -20,6 +20,16 @@ def add_url(request):
     refreshes the data for it, if necessary, and returns the result.
     """
 
+    # Only allow certain servers to call this endpoint
+    if security.block_client(request):
+        remote_addr = request.META.get('REMOTE_ADDR')
+        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
+
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
     url = request.data.get('url')
     if not url:
         return Response({ "error": "url is required" }, status.HTTP_400_BAD_REQUEST)
