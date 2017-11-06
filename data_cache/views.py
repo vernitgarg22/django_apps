@@ -13,19 +13,15 @@ from cod_utils.util import get_parcel_id
 from data_cache.models import DataSet, DataSource, DataValue
 
 
-@api_view(['GET'])
-def get_url(request, url=None):
+@api_view(['POST'])
+def add_url(request, url=None):
     """
     Creates a data_source object for the given url, in the data set 'url_cache', if one doesn't already exist,
     refreshes the data for it, if necessary, and returns the result.
     """
 
-    # TODO let caller pass in key for this data?
-    # idea:  have 2 calls:  1 POST to create the cache, which returns data + key, and another GET that
-    # just gets data for the key (don't really want to let caller specify key for security reasons?)
-
     if not url:
-        url = request.path[22:]
+        url = request.path[27:]
 
     data_set, created = DataSet.objects.get_or_create(name='url_cache')
 
@@ -43,7 +39,10 @@ def get_url(request, url=None):
     if not data:
         return Response({ "error": "No data received" }, status.HTTP_404_NOT_FOUND)
 
-    return Response(data)
+    # add a key to the response, which caller can use to retrieve this cached data source.
+    data['key'] = data_source_name
+
+    return Response(data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
@@ -64,9 +63,15 @@ def get_data(request, name, param=None):
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
+    data_source_name = None
+
     # Parse parcel ids when necessary
     if param:
-        param = get_parcel_id(request.path, 3)
+        if name == 'url_cache':
+            data_source_name = param
+            param = None
+        else:
+            param = get_parcel_id(request.path, 3)
 
     # Retrieve the data set
     try:
@@ -76,7 +81,7 @@ def get_data(request, name, param=None):
 
     # Retrieve the data values for this data set
     try:
-        data = data_set.get(param=param)
+        data = data_set.get(data_source_name=data_source_name, param=param)
     except:
         data = None
 
