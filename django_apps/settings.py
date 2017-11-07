@@ -180,8 +180,7 @@ class DjangoAppsRouter(object):
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
         "Sales": "eql",
-        # TODO fix this
-        # "ParcelMaster": "eql",
+        "ParcelMaster": "eql",
         "RoleType": "tidemark",
         "Parcel": "tidemark",
         "CaseType": "tidemark",

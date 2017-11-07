@@ -50,6 +50,7 @@ def cleanup_db():
     cleanup_model(ParcelMaster, 'default')
     cleanup_model(Token)
     cleanup_model(User, using='photo_survey')
+    cleanup_model(ParcelMaster)
 
 def build_image_data(parcel_id='test_parcel_id'):
 

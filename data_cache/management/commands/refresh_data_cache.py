@@ -13,7 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         data_sets = set()
-        data_sources = DataSource.objects.all()
+        data_sources = DataSource.objects.all().order_by('name')
         for data_source in data_sources:
 
             data_source.refresh()
