@@ -6,18 +6,16 @@ from django.test import Client
 from django.test import TestCase
 from django.conf import settings
 
+from tests import test_util
+
 from data_cache.models import DataCredential, DataSource, DataValue, DataSet
 
 from cod_utils import util
 
 
-# TODO put this in a util.py file
-def cleanup_model(model):
-    model.objects.all().delete()
-
 def cleanup_db():
-    cleanup_model(DataSource)
-    cleanup_model(DataSet)
+    test_util.cleanup_model(DataSource)
+    test_util.cleanup_model(DataSet)
 
 def init_creds(key):
 

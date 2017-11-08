@@ -2,16 +2,15 @@ from django.test import Client
 from django.test import TestCase
 
 import cod_utils.util
+
 import tests.disabled
+from tests import test_util
 
 from waste_wizard.models import WasteItem
 
 
-def cleanup_model(model):
-    model.objects.all().delete()
-
 def cleanup_db():
-    cleanup_model(WasteItem)
+    test_util.cleanup_model(WasteItem)
 
 
 class WasteWizardTests(TestCase):

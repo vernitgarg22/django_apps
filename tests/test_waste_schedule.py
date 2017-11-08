@@ -7,7 +7,9 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 import cod_utils.util
+
 import tests.disabled
+from tests import test_util
 
 from waste_schedule.models import ScheduleDetail
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr, WeekRouteInfo
@@ -16,12 +18,8 @@ from waste_schedule import util
 import waste_schedule.views
 
 
-# TODO put this in a util.py file
-def cleanup_model(model):
-    model.objects.all().delete()
-
 def cleanup_db():
-    cleanup_model(ScheduleDetail)
+    test_util.cleanup_model(ScheduleDetail)
 
 def make_schedule_detail(detail_type='schedule', service_type='trash', normal_day=None, new_day=None, waste_area_ids=None):
     detail = ScheduleDetail(detail_type=detail_type, service_type=service_type, normal_day=normal_day, new_day=new_day, waste_area_ids=waste_area_ids)

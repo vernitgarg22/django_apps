@@ -13,7 +13,9 @@ from unittest.mock import patch
 import cod_utils.util
 import cod_utils.security
 from cod_utils.messaging import MsgHandler
+
 import tests.disabled
+from tests import test_util
 
 from waste_notifier.models import Subscriber
 from waste_notifier.util import *
@@ -24,12 +26,9 @@ from waste_notifier import views
 from waste_notifier import util
 
 
-def cleanup_model(model):
-    model.objects.all().delete()
-
 def cleanup_db():
-    cleanup_model(Subscriber)
-    cleanup_model(ScheduleDetail)
+    test_util.cleanup_model(Subscriber)
+    test_util.cleanup_model(ScheduleDetail)
 
 
 def add_meta(content, date = cod_utils.util.tomorrow()):

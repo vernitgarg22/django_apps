@@ -12,6 +12,7 @@ from django.test import Client
 from django.test import TestCase
 
 import tests.disabled
+from tests import test_util
 
 from photo_survey.models import Image, ImageMetadata
 from photo_survey.models import ParcelMetadata, Survey, SurveyType, SurveyQuestion, SurveyAnswer, SurveyQuestionAvailAnswer
@@ -23,12 +24,6 @@ import photo_survey.views
 from photo_survey.views import authenticate_user
 
 
-def cleanup_model(model, using=None):
-    if using:
-        model.objects.using(using).all().delete()
-    else:
-        model.objects.all().delete()
-
 def init_parcel_data(parcel_id = 'testparcelid'):
     data = {'resb_priceground': 29.04669, 'resb_occ': 0, 'cib_effage': 0, 'resb_depr': 38, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_floorarea': 0.0, 'resb_value': 37325.0, 'cib_numcib': 0, 'resb_style': 'SINGLE FAMILY', 'cib_calcvalue': 0.0, 'cib_pricefloor': 0.0, 'resb_heat': 2, 'resb_calcvalue': 106948.421875, 'resb_nbed': 0, 'resb_exterior': 3, 'ownerstate': 'MI', 'ownercity': 'DETROIT', 'resb_pricefloor': 13.31134, 'resb_gartype': 1, 'resb_yearbuilt': 1914, 'resb_garagearea': 504, 'resb_groundarea': 1285, 'resb_fireplaces': 1, 'resb_styhgt': 5, 'resb_basementarea': 1110, 'resb_bldgclass': 2, 'cib_yearbuilt': 0, 'ownername2': '', 'relatedpnum': '', 'resb_avestyht': 2.1821, 'resb_plusminus': 0, 'cib_bldgclass': 0, 'pnum': parcel_id, 'resb_effage': 52, 'resb_fullbaths': 2, 'resb_floorarea': 2804, 'cib_occ': 0, 'cibunits': 0, 'resb_halfbaths': 1, 'ownerstreetaddr': '7840 VAN DYKE PL', 'cibbedrooms': 0, 'ownerzip': '48214', 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'xstreetname_1': 'SEYBURN', 'xstreetname_0': 'VAN DYKE', 'resb_numresb': 1, 'cib_stories': 0, 'cib_value': 0.0}
     pm = ParcelMaster(**data)
@@ -39,18 +34,18 @@ def init_parcel_data(parcel_id = 'testparcelid'):
     return pm
 
 def cleanup_db():
-    cleanup_model(ImageMetadata)
-    cleanup_model(Image)
-    cleanup_model(SurveyAnswer)
-    cleanup_model(SurveyQuestionAvailAnswer)
-    cleanup_model(SurveyQuestion)
-    cleanup_model(Survey)
-    cleanup_model(SurveyType)
-    cleanup_model(ParcelMetadata)
-    cleanup_model(ParcelMaster, 'default')
-    cleanup_model(Token)
-    cleanup_model(User, using='photo_survey')
-    cleanup_model(ParcelMaster)
+    test_util.cleanup_model(ImageMetadata)
+    test_util.cleanup_model(Image)
+    test_util.cleanup_model(SurveyAnswer)
+    test_util.cleanup_model(SurveyQuestionAvailAnswer)
+    test_util.cleanup_model(SurveyQuestion)
+    test_util.cleanup_model(Survey)
+    test_util.cleanup_model(SurveyType)
+    test_util.cleanup_model(ParcelMetadata)
+    test_util.cleanup_model(ParcelMaster, 'default')
+    test_util.cleanup_model(Token)
+    test_util.cleanup_model(User, using='photo_survey')
+    test_util.cleanup_model(ParcelMaster)
 
 def build_image_data(parcel_id='test_parcel_id'):
 

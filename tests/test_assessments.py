@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 import tests.disabled
+from tests import test_util
 
 from assessments import util
 from assessments import views
@@ -17,17 +18,13 @@ from assessments.models import Sales, ParcelMaster
 from assessments.models import Parcel, RoleType, CaseType, CaseMain
 
 
-def cleanup_model(model):
-    model.objects.all().delete()
-
 def cleanup_db():
-    cleanup_model(Sales)
-    cleanup_model(ParcelMaster)
-
-    cleanup_model(CaseMain)
-    cleanup_model(RoleType)
-    cleanup_model(CaseType)
-    cleanup_model(Parcel)
+    test_util.cleanup_model(ParcelMaster)
+    test_util.cleanup_model(Sales)
+    test_util.cleanup_model(CaseMain)
+    test_util.cleanup_model(RoleType)
+    test_util.cleanup_model(CaseType)
+    test_util.cleanup_model(Parcel)
 
 
 def make_sale():
