@@ -1,3 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
+
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
@@ -10,17 +13,30 @@ class Command(BaseCommand):
         This command refreshes the data cache, e.g.,
         python manage.py refresh_data_cache"""
 
+    def refresh(self, data_source):
+        """
+        Refreshes the individual data source.
+        """
+
+        data_source.refresh()
+        name = data_source.data_set.name if data_source.data_set else data_source.name
+
+        self.stdout.write("refreshed data source {}".format(name))
+        self.stdout.flush()
+        return "refreshed data set {}".format(name)
+
     def handle(self, *args, **options):
 
-        data_sets = set()
-        data_sources = DataSource.objects.all().order_by('name')
-        for data_source in data_sources:
+        # Get all data sources
+        data_sources = [ data_source for data_source in DataSource.objects.all().order_by('name') ]
+        results = []
 
-            data_source.refresh()
-            name = data_source.data_set.name if data_source.data_set else data_source.name
-            data_sets.add(name)
+        # Kick off all the data source refreshes
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = executor.map(self.refresh, data_sources)
 
-            self.stdout.write("refreshed data set {}".format(name))
-            self.stdout.flush()
+        # Convert the results returned to a list just so we can
+        # do list stuff to it (like call len() on it)
+        results = [ result for result in results ]
 
-        return "Updated {} data cache values".format(len(data_sets))
+        return "Updated {} data cache sources".format(len(results))
