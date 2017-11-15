@@ -219,7 +219,7 @@ class DataSource(models.Model):
         if self.credentials:
             success, token = self.credentials.create_auth_token()
             if False == success:
-                raise Exception("Authentication failed")
+                raise Exception("Authentication failed on credential {}".format(self.credentials))
 
         # Add auth token to url?
         if token:
