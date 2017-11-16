@@ -102,7 +102,7 @@ class DataCredential(models.Model):
         return False, ''
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
-        return self.username
+        return self.url
 
 
 class DataSource(models.Model):
