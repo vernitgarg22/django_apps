@@ -17,7 +17,11 @@ class Command(BaseCommand):
         Refreshes the individual data source.
         """
 
-        data_source.refresh()
+        try:
+            data_source.refresh()
+        except Exception as error:
+            print("Exception {} occurred refreshing {}".format(error, data_source))
+
         name = data_source.data_set.name if data_source.data_set else data_source.name
 
         self.stdout.write("refreshed data source {}".format(name))
