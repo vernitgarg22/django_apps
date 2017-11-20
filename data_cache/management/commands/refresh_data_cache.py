@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         try:
             data_source.refresh()
-        except Exception as error:
+        except Exception as error:    # pragma: no cover (should not get here)
             print("Exception {} occurred refreshing {}".format(error, data_source))
 
         name = data_source.data_set.name if data_source.data_set else data_source.name

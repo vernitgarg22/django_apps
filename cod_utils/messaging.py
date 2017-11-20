@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from twilio.request_validator import RequestValidator
 from twilio.rest import Client
+from slackclient import SlackClient
 
 
 class MsgHandler():
@@ -113,7 +114,6 @@ class MsgHandler():
 
 class SlackMsgHandler():
 
-    WEBHOOK_URL = "https://hooks.slack.com/services/" + settings.AUTO_LOADED_DATA["SLACK_ZZZ_TOKEN"]
     DRY_RUN = settings.DEBUG or settings.DRY_RUN
 
     def send(self, message):
@@ -121,20 +121,10 @@ class SlackMsgHandler():
         Slack a message to the City of Detroit #zzz slack channel
         """
 
-        slack_data = { "text": message }
-        if SlackMsgHandler.DRY_RUN:
-            return False
-        response = requests.post(
-            SlackMsgHandler.WEBHOOK_URL, data=json.dumps(slack_data),
-            headers={'Content-Type': 'application/json'}
+        client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
+        result = client.api_call(
+            "chat.postMessage",
+            channel="#z_twilio",
+            text=message
         )
-        if response.status_code != 200:
-            # Don't raise an error, at least for now, just keep running
-            # raise ValueError(
-            #     'Request to slack returned {}, the response is:\n{}'.format(response.status_code, response.text)
-            # )
-            return False
-        else:
-            return True
-
-
+        return result.get('ok', False)

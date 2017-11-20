@@ -14,6 +14,8 @@ import cod_utils.util
 import cod_utils.security
 from cod_utils.messaging import MsgHandler
 
+from slackclient import SlackClient
+
 import tests.disabled
 from tests import test_util
 
@@ -317,20 +319,20 @@ class WasteNotifierTests(TestCase):
         message = util.get_service_detail_message(['all'], detail)
         self.assertEqual(message, 'City of Detroit Public Works:  Please note that service will be unaffected by Christmas Day - Please put trash and recycling bins on the curb on normal schedule (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
 
-    @mock.patch('requests.post')
-    def test_slack_msg_handler(self, mocked_requests_post):
+    @mock.patch('slackclient.SlackClient.api_call')
+    def test_slack_msg_handler(self, mocked_slackclient_api_call):
 
-        mocked_requests_post.return_value.status_code = 200
+        mocked_slackclient_api_call.return_value = {'ok': True}
 
         previous_dry_run = SlackMsgHandler.DRY_RUN
         SlackMsgHandler.DRY_RUN = False
         self.assertTrue(SlackMsgHandler().send('test message'), "SlackMsgHandler.send() sends messages")
         SlackMsgHandler.DRY_RUN = previous_dry_run
 
-    @mock.patch('requests.post')
-    def test_slack_msg_handler_error(self, mocked_requests_post):
+    @mock.patch('slackclient.SlackClient.api_call')
+    def test_slack_msg_handler_error(self, mocked_slackclient_api_call):
 
-        mocked_requests_post.return_value.status_code = 500
+        mocked_slackclient_api_call.return_value = {'ok': False}
 
         previous_dry_run = SlackMsgHandler.DRY_RUN
         SlackMsgHandler.DRY_RUN = False
