@@ -121,6 +121,9 @@ class SlackMsgHandler():
         Slack a message to the City of Detroit #zzz slack channel
         """
 
+        if SlackMsgHandler.DRY_RUN:
+            return False
+
         client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
         result = client.api_call(
             "chat.postMessage",
