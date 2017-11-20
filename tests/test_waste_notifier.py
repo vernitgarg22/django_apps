@@ -529,6 +529,20 @@ class WasteNotifierTests(TestCase):
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response, "Phone number should have gotten recycling reschedule alert")
 
+    def test_send_turkyday_schedule_change(self):
+
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber.activate()
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Thanksgiving', normal_day=datetime.date(2017, 11, 23), new_day=datetime.date(2017, 11, 24))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+
+        response = views.send_notifications_request(date_val="20171125")
+        # self.assertEqual(response.status_code, 200)
+        expected = {'trash': {8: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Saturday, November 25, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = add_meta(expected, date = datetime.date(2017, 11, 25))
+        self.assertDictEqual(expected, response, "Alerts during the week after thanksgiving get pushed back by 1 day")
+
     def test_send_no_schedule_change(self):
 
         # route 8 gets pickups on fridays, with recycling on 'a' weeks
