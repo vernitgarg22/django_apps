@@ -15,6 +15,7 @@ from waste_schedule.models import ScheduleDetail
 from waste_notifier.util import *
 import cod_utils.util
 import cod_utils.security
+from cod_utils.util import date_json
 from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
 
@@ -52,6 +53,29 @@ def subscribe_notifications(request):
     return Response({ "received": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
 
+def is_bad_address(location):
+    """
+    Returns True if location is not accurate enough or geocoder failed.
+    """
+
+    return not location or location['score'] < 50
+
+
+def handle_bad_address(address, phone_number):
+
+    invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(address, phone_number)
+
+    CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
+
+    MsgHandler().send_admin_alert(invalid_addr_msg)
+
+    msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(address)
+    text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
+    MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
+
+    return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['POST'])
 def subscribe_address(request):
     """
@@ -83,19 +107,8 @@ def subscribe_address(request):
     location = address.geocode()
 
     # TODO figure out how to handle 'address not found' or 'no address supplied'
-    if not location or location['score'] < 50:
-
-        invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
-
-        CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
-
-        MsgHandler().send_admin_alert(invalid_addr_msg)
-
-        msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
-        text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
-        MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
-
-        return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+    if is_bad_address(location):
+        return handle_bad_address(address=street_address, phone_number=phone_number)
 
     # Now look up waste areas for this location
     GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
@@ -273,6 +286,45 @@ def send_notifications(date, dry_run_param=False):
     slack_alerts_summary(content.get_content())
 
     return content.get_content()
+
+
+@api_view(['POST'])
+def get_address_service_info(request, format=None):
+    """
+    Return service information for a single address.
+    """
+
+    # TODO for security, verify call is from alexis / google home app?
+
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    # Verify required field(s) are present
+    if not request.data.get('address'):
+        return Response({"error": "Address is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    street_address = request.data['address']
+
+    # Parse address string and get result from AddressPoint geocoder
+    address = direccion.Address(input=street_address, notify_fail=True)
+    location = address.geocode()
+
+    # TODO figure out how to handle 'address not found' or 'no address supplied'
+    if is_bad_address(location):
+        return handle_bad_address(address=street_address, phone_number=phone_number)
+
+    # TODO get actual dates for each service
+    tomorrow = cod_utils.util.tomorrow()
+
+    content = {
+        ScheduleDetail.RECYCLING : date_json(tomorrow),
+        ScheduleDetail.BULK : date_json(tomorrow),
+        ScheduleDetail.TRASH : date_json(tomorrow),
+        ScheduleDetail.YARD_WASTE : date_json(tomorrow),
+    }
+
+    return Response(content, status=status.HTTP_201_CREATED)
 
 
 def get_route_subscribers(service_type, route_id):

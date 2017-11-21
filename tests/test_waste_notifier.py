@@ -13,6 +13,7 @@ from unittest.mock import patch
 import cod_utils.util
 import cod_utils.security
 from cod_utils.messaging import MsgHandler
+from cod_utils.util import date_json
 
 from slackclient import SlackClient
 
@@ -529,7 +530,7 @@ class WasteNotifierTests(TestCase):
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response, "Phone number should have gotten recycling reschedule alert")
 
-    def test_send_turkyday_schedule_change(self):
+    def test_send_turkeyday_schedule_change(self):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
@@ -894,3 +895,20 @@ class WasteNotifierTests(TestCase):
         summary = format_slack_alerts_summary(content)
         expected = 'DPW Waste Pickup Reminder Summary:\n\nbulk\n\troute 34 - 5 reminders\nrecycling\n\troute 22 - 5 reminders\ntrash\n\troute 5 - 2 reminders\n\troute 11 - 26 reminders\n\nTotal reminders sent out:  38'
         self.assertEqual(summary, expected, "format_slack_alerts_summary() formats notifications summary correctly")
+
+    def test_get_alexis_service_info(self):
+
+        c = Client()
+        response = c.post('/waste_notifier/address/', data={ "address": "7840 Van Dyke Pl" }, secure=True)
+
+        tomorrow = cod_utils.util.tomorrow()
+
+        expected = {
+            ScheduleDetail.RECYCLING : date_json(tomorrow),
+            ScheduleDetail.BULK : date_json(tomorrow),
+            ScheduleDetail.TRASH : date_json(tomorrow),
+            ScheduleDetail.YARD_WASTE : date_json(tomorrow),
+        }
+
+        self.assertEqual(response.status_code, 201)
+        self.assertDictEqual(expected, response.data, "Individual resident can request next service date")
