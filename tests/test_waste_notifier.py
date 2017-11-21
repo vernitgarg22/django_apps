@@ -899,7 +899,7 @@ class WasteNotifierTests(TestCase):
     def test_get_alexis_service_info(self):
 
         c = Client()
-        response = c.post('/waste_notifier/address/', data={ "address": "7840 Van Dyke Pl" }, secure=True)
+        response = c.get('/waste_notifier/address/7840 Van Dyke Pl/', secure=True)
 
         tomorrow = cod_utils.util.tomorrow()
 
@@ -910,5 +910,5 @@ class WasteNotifierTests(TestCase):
             ScheduleDetail.YARD_WASTE : date_json(tomorrow),
         }
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
         self.assertDictEqual(expected, response.data, "Individual resident can request next service date")

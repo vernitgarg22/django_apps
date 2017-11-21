@@ -288,8 +288,8 @@ def send_notifications(date, dry_run_param=False):
     return content.get_content()
 
 
-@api_view(['POST'])
-def get_address_service_info(request, format=None):
+@api_view(['GET'])
+def get_address_service_info(request, street_address, format=None):
     """
     Return service information for a single address.
     """
@@ -299,12 +299,6 @@ def get_address_service_info(request, format=None):
     # Only call via https...
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
-
-    # Verify required field(s) are present
-    if not request.data.get('address'):
-        return Response({"error": "Address is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-    street_address = request.data['address']
 
     # Parse address string and get result from AddressPoint geocoder
     address = direccion.Address(input=street_address, notify_fail=True)
@@ -324,7 +318,7 @@ def get_address_service_info(request, format=None):
         ScheduleDetail.YARD_WASTE : date_json(tomorrow),
     }
 
-    return Response(content, status=status.HTTP_201_CREATED)
+    return Response(content)
 
 
 def get_route_subscribers(service_type, route_id):
