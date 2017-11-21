@@ -292,6 +292,11 @@ def send_notifications(date, dry_run_param=False):
 def get_address_service_info(request, street_address, format=None):
     """
     Return service information for a single address.
+
+    Note:
+    - the address value can include alphanumeric characters and spaces.
+    - the call needs to be https.
+    - if the address cannot be matched (or gets a top match that has a score that is too low) an error gets returned.
     """
 
     # TODO for security, verify call is from alexis / google home app?
