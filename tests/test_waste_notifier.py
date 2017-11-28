@@ -926,15 +926,17 @@ class WasteNotifierTests(TestCase):
 
     def test_get_alexis_service_info(self):
 
-        c = Client()
-        response = c.get('/waste_notifier/address/7840 Van Dyke Pl/', secure=True)
+        today = "20171129"
 
-        tomorrow = cod_utils.util.tomorrow()
+        c = Client()
+        response = c.get("/waste_notifier/address/7840 Van Dyke Pl/{}/".format(today), secure=True)
+
+        tomorrow = '2017-12-01T00:00:00'
 
         expected = {
-            ScheduleDetail.RECYCLING : date_json(tomorrow),
-            ScheduleDetail.BULK : date_json(tomorrow),
-            ScheduleDetail.TRASH : date_json(tomorrow),
+            ScheduleDetail.RECYCLING : tomorrow,
+            ScheduleDetail.BULK : tomorrow,
+            ScheduleDetail.TRASH : tomorrow,
         }
 
         self.assertEqual(response.status_code, 200)
@@ -946,3 +948,10 @@ class WasteNotifierTests(TestCase):
 
         response = c.get('/waste_notifier/address/bad/', secure=True)
         self.assertEqual(response.status_code, 400)
+
+    def test_get_alexis_service_info_insecure(self):
+
+        c = Client()
+
+        response = c.get('/waste_notifier/address/7840 Van Dyke Pl/')
+        self.assertEqual(response.status_code, 403)

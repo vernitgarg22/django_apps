@@ -314,11 +314,13 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     # TODO for security, verify call is from alexis / google home app?
 
     # Only call via https...
-    # if not request.is_secure():
-    #     return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    if type(today) is str:
+        today = datetime.datetime.strptime(today, "%Y%m%d")
 
     # Parse address string and get result from AddressPoint geocoder
-
     location, address = geocode_address(street_address=street_address)
     if not location:
         invalid_addr_msg = 'Invalid address received in service info request: {}'.format(address)
@@ -332,20 +334,14 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
 
     service_info = get_waste_area_ids(location=location, ids_only=False)
 
-    # schedule_detail_mgr = ScheduleDetailMgr.instance()
-
-    tomorrow = cod_utils.util.tomorrow()
-
     content = {}
     for info in service_info:
-        # content[info['services']] = info['day']
 
-        services = add_additional_services([info['services']], tomorrow)
-
+        services = add_additional_services([info['services']], today)
         for service in services:
-            content[map_service_type(service)] = date_json(tomorrow)
-
-
+            diff = get_day_of_week_diff(today, info['day'])
+            next_date = today + datetime.timedelta(days = diff)
+            content[map_service_type(service)] = date_json(next_date)
 
     # for waste_area_id in waste_area_ids:
     #     route_info = schedule_detail_mgr.get_route_info(waste_area_id)
