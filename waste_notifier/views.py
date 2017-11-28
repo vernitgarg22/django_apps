@@ -13,6 +13,7 @@ from .models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
 from waste_notifier.util import *
+from waste_schedule.util import *
 import cod_utils.util
 import cod_utils.security
 from cod_utils.util import date_json
@@ -53,27 +54,36 @@ def subscribe_notifications(request):
     return Response({ "received": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
 
-def is_bad_address(location):
+def geocode_address(street_address):
     """
-    Returns True if location is not accurate enough or geocoder failed.
+    Returns geocoded location and address object if address can be geocoded
+    with enough accuracy. Otherwise, returns None.
     """
 
-    return not location or location['score'] < 50
+    # Parse address string and get result from AddressPoint geocoder
+    address = direccion.Address(input=street_address, notify_fail=True)
+    location = address.geocode()
+
+    if not location or location['score'] < 50:
+        return None, None
+    else:
+        return location, address
 
 
-def handle_bad_address(address, phone_number):
+def get_waste_area_ids(location, ids_only = True):
+    """
+    Returns waste area ids for the given location.
+    """
 
-    invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(address, phone_number)
+    # Now look up waste areas for this location
+    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
+    url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
+    response = requests.get(url)
 
-    CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
-
-    MsgHandler().send_admin_alert(invalid_addr_msg)
-
-    msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(address)
-    text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
-    MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
-
-    return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+    if ids_only:
+        return [ feature['attributes']['FID'] for feature in response.json()['features'] ]
+    else:
+        return [ feature['attributes'] for feature in response.json()['features'] ]
 
 
 @api_view(['POST'])
@@ -103,19 +113,21 @@ def subscribe_address(request):
         street_address = street_address[0:pos]
 
     # Parse address string and get result from AddressPoint geocoder
-    address = direccion.Address(input=street_address, notify_fail=True)
-    location = address.geocode()
+    location, address = geocode_address(street_address=street_address)
+    if not location:
+        invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
 
-    # TODO figure out how to handle 'address not found' or 'no address supplied'
-    if is_bad_address(location):
-        return handle_bad_address(address=street_address, phone_number=phone_number)
+        CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
 
-    # Now look up waste areas for this location
-    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
-    url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
-    response = requests.get(url)
+        MsgHandler().send_admin_alert(invalid_addr_msg)
 
-    waste_area_ids = [ feature['attributes']['FID'] for feature in response.json()['features'] ]
+        msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
+        text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
+        MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
+
+        return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+    waste_area_ids = get_waste_area_ids(location=location)
 
     # Create the subscriber and activate them
     subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids, "address": address.address, "latitude": location['location']['y'], "longitude": location['location']['x'] } )
@@ -239,7 +251,7 @@ def send_notifications(date, dry_run_param=False):
     routes = ScheduleDetailMgr.instance().get_day_routes(date)
     for route_id, route in routes.items():
 
-        service_type = ScheduleDetail.map_service_type(route['services'])
+        service_type = map_service_type(route['services'])
         if service_type == ScheduleDetail.ALL:
             service_type = ScheduleDetailMgr.instance().check_all_service_week(date, route)
 
@@ -289,7 +301,7 @@ def send_notifications(date, dry_run_param=False):
 
 
 @api_view(['GET'])
-def get_address_service_info(request, street_address, format=None):
+def get_address_service_info(request, street_address, today = datetime.date.today(), format=None):
     """
     Return service information for a single address.
 
@@ -302,26 +314,47 @@ def get_address_service_info(request, street_address, format=None):
     # TODO for security, verify call is from alexis / google home app?
 
     # Only call via https...
-    if not request.is_secure():
-        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+    # if not request.is_secure():
+    #     return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
     # Parse address string and get result from AddressPoint geocoder
-    address = direccion.Address(input=street_address, notify_fail=True)
-    location = address.geocode()
 
-    # TODO figure out how to handle 'address not found' or 'no address supplied'
-    if is_bad_address(location):
-        return handle_bad_address(address=street_address, phone_number=phone_number)
+    location, address = geocode_address(street_address=street_address)
+    if not location:
+        invalid_addr_msg = 'Invalid address received in service info request: {}'.format(address)
 
-    # TODO get actual dates for each service
+        CODLogger.instance().log_error(name=__name__, area="service info request", msg=invalid_addr_msg)
+
+        MsgHandler().send_admin_alert(invalid_addr_msg)
+
+        return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    service_info = get_waste_area_ids(location=location, ids_only=False)
+
+    # schedule_detail_mgr = ScheduleDetailMgr.instance()
+
     tomorrow = cod_utils.util.tomorrow()
 
-    content = {
-        ScheduleDetail.RECYCLING : date_json(tomorrow),
-        ScheduleDetail.BULK : date_json(tomorrow),
-        ScheduleDetail.TRASH : date_json(tomorrow),
-        ScheduleDetail.YARD_WASTE : date_json(tomorrow),
-    }
+    content = {}
+    for info in service_info:
+        # content[info['services']] = info['day']
+
+        services = add_additional_services([info['services']], tomorrow)
+
+        for service in services:
+            content[map_service_type(service)] = date_json(tomorrow)
+
+
+
+    # for waste_area_id in waste_area_ids:
+    #     route_info = schedule_detail_mgr.get_route_info(waste_area_id)
+    #     content[route_info['services']] = route_info['day']
+
+    # reschedule values based on holiday schedules, if any
+    # schedule_detail_mgr.get_week_schedule_changes()
+
+    # TODO add description of 'all' services so caller will know what that includes
 
     return Response(content)
 

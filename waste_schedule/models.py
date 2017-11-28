@@ -180,14 +180,6 @@ class ScheduleDetail(models.Model):
     # TODO might want to move some of these static methods to a util file
 
     @staticmethod
-    def map_service_type(service):
-        """
-        Maps gis server service names to the names in use here:
-        In particular 'recycle' becomes 'recycling'.
-        """
-        return ScheduleDetail.RECYCLING if service == 'recycle' else service
-
-    @staticmethod
     def is_same_service_type(ours, theirs):
         """
         Returns True if the 2 service types are the same.  In particular:

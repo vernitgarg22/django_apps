@@ -79,7 +79,7 @@ def get_next_pickups(route_ids, schedule_details, today=datetime.date.today()):
             if ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, today):
                 content[ScheduleDetail.YARD_WASTE] = route_info
         else:
-            service = ScheduleDetail.map_service_type(service)
+            service = util.map_service_type(service)
             route_info = add_route_pickup_info(route, service, today)
             content[service] = route_info
             if ScheduleDetail.BULK == service and ScheduleDetailMgr.instance().is_service_active(ScheduleDetail.YARD_WASTE, today):

@@ -170,13 +170,13 @@ class WasteScheduleTests(TestCase):
         self.assertDictEqual(expected, response.data, "Routes {} should get it's pickups predicted correctly".format(route_ids))
 
     def test_map_service_type(self):
-        self.assertTrue(ScheduleDetail.map_service_type('trash') == 'trash', "map_service_type() maps trash to trash")
+        self.assertTrue(util.map_service_type('trash') == 'trash', "map_service_type() maps trash to trash")
 
     def test_map_service_type_all(self):
-        self.assertTrue(ScheduleDetail.map_service_type('all') == 'all', "map_service_type() maps recycle to recycling")
+        self.assertTrue(util.map_service_type('all') == 'all', "map_service_type() maps recycle to recycling")
 
     def test_map_service_type_recycle(self):
-        self.assertTrue(ScheduleDetail.map_service_type('recycle') == 'recycling', "map_service_type() maps recycling to recycle")
+        self.assertTrue(util.map_service_type('recycle') == 'recycling', "map_service_type() maps recycling to recycle")
 
     def test_is_same_service_type(self):
         self.assertTrue(ScheduleDetail.is_same_service_type('trash', 'trash'), "is_same_service_type() equates 'trash' with 'trash'")

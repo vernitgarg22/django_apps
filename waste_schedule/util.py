@@ -51,3 +51,10 @@ def get_day_of_week_diff(today, next_day):
     if next_day_val < today_val:
         diff = diff + 7
     return diff
+
+def map_service_type(service):
+    """
+    Maps gis server service names to the names in use here:
+    In particular 'recycle' becomes 'recycling'.
+    """
+    return ScheduleDetail.RECYCLING if service == 'recycle' else service
