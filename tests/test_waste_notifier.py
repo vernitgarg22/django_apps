@@ -926,6 +926,10 @@ class WasteNotifierTests(TestCase):
 
     def test_get_alexis_service_info(self):
 
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Christmas', normal_day=datetime.date(2017, 12, 25), new_day=datetime.date(2017, 12, 26))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+
         today = "20171129"
 
         c = Client()
@@ -939,7 +943,15 @@ class WasteNotifierTests(TestCase):
                 ScheduleDetail.BULK : tomorrow,
                 ScheduleDetail.TRASH : tomorrow
             },
-            "details": {},
+            "details": { "schedule": [{
+                    'description': 'Christmas',
+                    'newDay': '2017-12-26T00:00:00',
+                    'normalDay': '2017-12-25T00:00:00',
+                    'note': None,
+                    'service': 'all',
+                    'wasteAreaIds': ''
+                }]
+            },
             "all_services": ["trash", "recycling", "bulk", "yard waste"]
         }
 
