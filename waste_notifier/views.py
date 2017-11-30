@@ -1,5 +1,6 @@
 import requests
 import datetime
+from datetime import date
 
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -19,6 +20,8 @@ import cod_utils.security
 from cod_utils.util import date_json
 from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
+
+from waste_schedule.models import ScheduleDetail
 
 import direccion
 
@@ -177,9 +180,10 @@ def add_subscriber_comment(phone_number, comment):
     if subscriber.comment:
         comment = subscriber.comment + ' - ' + comment
 
-    subscriber.comment = comment
-    subscriber.clean()
-    subscriber.save()
+    if len(comment) <= Subscriber._meta.get_field('comment').max_length:
+        subscriber.comment = comment
+        subscriber.clean()
+        subscriber.save()
 
 
 @api_view(['POST'])
@@ -320,6 +324,8 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     if type(today) is str:
         today = datetime.datetime.strptime(today, "%Y%m%d")
 
+    tomorrow = util.tomorrow(today)
+
     # Parse address string and get result from AddressPoint geocoder
     location, address = geocode_address(street_address=street_address)
     if not location:
@@ -327,21 +333,28 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
 
         CODLogger.instance().log_error(name=__name__, area="service info request", msg=invalid_addr_msg)
 
-        MsgHandler().send_admin_alert(invalid_addr_msg)
+        MsgHandler().send_admin_alert(text=invalid_addr_msg)
 
         return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
 
-
     service_info = get_waste_area_ids(location=location, ids_only=False)
 
-    content = {}
+    # Add in next pickups for each service
+    content = { "next_pickups": {}, "details": {}}
     for info in service_info:
 
-        services = add_additional_services([info['services']], today)
+        services = add_additional_services([info['services']], tomorrow)
         for service in services:
-            diff = get_day_of_week_diff(today, info['day'])
-            next_date = today + datetime.timedelta(days = diff)
-            content[map_service_type(service)] = date_json(next_date)
+            diff = get_day_of_week_diff(tomorrow, info['day'])
+            next_date = tomorrow + datetime.timedelta(days = diff)
+            content["next_pickups"][map_service_type(service)] = date_json(next_date)
+
+    # Add list of all services that currently exist
+    content["all_services"] = add_additional_services(services=ScheduleDetail.ALL, date=tomorrow, add_yard_waste_year_round=True)
+
+    # TODO Add in all schedule details for the next month?
+    # details = ScheduleDetail.objects.exclude
+    # filter(normal_day__lte=datetime.date(2017, 12,29))
 
     # for waste_area_id in waste_area_ids:
     #     route_info = schedule_detail_mgr.get_route_info(waste_area_id)

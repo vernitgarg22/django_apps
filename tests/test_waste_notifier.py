@@ -934,9 +934,13 @@ class WasteNotifierTests(TestCase):
         tomorrow = '2017-12-01T00:00:00'
 
         expected = {
-            ScheduleDetail.RECYCLING : tomorrow,
-            ScheduleDetail.BULK : tomorrow,
-            ScheduleDetail.TRASH : tomorrow,
+            "next_pickups": {
+                ScheduleDetail.RECYCLING : tomorrow,
+                ScheduleDetail.BULK : tomorrow,
+                ScheduleDetail.TRASH : tomorrow
+            },
+            "details": {},
+            "all_services": ["trash", "recycling", "bulk", "yard waste"]
         }
 
         self.assertEqual(response.status_code, 200)
