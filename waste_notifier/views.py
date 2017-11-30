@@ -340,7 +340,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     service_info = get_waste_area_ids(location=location, ids_only=False)
 
     # Add in next pickups for each service
-    content = { "next_pickups": {}, "details": {}}
+    content = { "next_pickups": {}}
     for info in service_info:
 
         services = add_additional_services([info['services']], tomorrow)
@@ -353,8 +353,18 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     content["all_services"] = add_additional_services(services=ScheduleDetail.ALL, date=tomorrow, add_yard_waste_year_round=True)
 
     # TODO Add in all schedule details for the next month?
-    # details = ScheduleDetail.objects.exclude
-    # filter(normal_day__lte=datetime.date(2017, 12,29))
+
+    details_content = {}
+    end_date = tomorrow + datetime.timedelta(days=30)
+    details = ScheduleDetail.objects.exclude(normal_day__lt=tomorrow).exclude(new_day__lt=tomorrow).exclude(normal_day__gt=end_date).exclude(new_day__gt=end_date)
+    for detail in details:
+        detail_json = detail.json()
+        detail_type = detail_json.pop('type')
+        if not details_content.get(detail_type):
+            details_content[detail_type] = []
+        details_content[detail_type].append(detail_json)
+
+    content["details"] = details_content
 
     # for waste_area_id in waste_area_ids:
     #     route_info = schedule_detail_mgr.get_route_info(waste_area_id)
