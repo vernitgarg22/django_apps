@@ -70,7 +70,7 @@ class ScheduleDetail(models.Model):
     app_label = 'waste_schedule'
     detail_type = models.CharField('Type of information', max_length = 128, choices=TYPE_CHOICES)
     service_type = models.CharField('Service', max_length=32, default=DEFAULT_SERVICE_TYPE, help_text="(comma-delimited combination of any of the following: " + SERVICES_LIST + ')')
-    description = models.CharField('Description of change', max_length = 256)
+    description = models.CharField('Description of change', max_length=512)
     normal_day = models.DateField('Normal day of service', db_index=True, null=True, blank=True)
     new_day = models.DateField('Rescheduled day of service', db_index=True, null=True, blank=True)
     note = models.CharField('Note', max_length = 256, null=True, blank=True)
