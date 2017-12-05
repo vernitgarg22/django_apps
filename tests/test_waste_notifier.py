@@ -921,8 +921,31 @@ class WasteNotifierTests(TestCase):
     def test_format_slack_alerts_summary(self):
         content = {'trash': {11: {'subscribers': ['3136102012', '9174538684', '3135068800', '2484992308', '2676300369', '3133202044', '5869133397', '3134923996', '2679700026', '5863228964', '3137062742', '3135504576', '3138190143', '3138080122', '7347485413', '3138025608', '2487015166', '3134546860', '3134832492', '3138623021', '3133198115', '3137015482', '3132058535', '3133462045', '2489104129', '3134737118'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 5: {'subscribers': ['3138504195', '3135803973'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {4: {'subscribers': ['5865638822', '3135498078', '3137195691', '3137581842', '3137587477'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'date_applicable': '2017-05-31', 'dry_run': True, 'week_type': 'b', 'current_time': '2017-05-26 10:51'}, 'recycling': {22: {'subscribers': ['3134495504', '3133201794', '3134780304', '3134150028', '3134617273'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {34: {'subscribers': ['8109624844', '3132084486', '3137283175', '3136139213', '3134784213'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
         summary = format_slack_alerts_summary(content)
-        expected = 'DPW Waste Pickup Reminder Summary:\n\nbulk\n\troute 34 - 5 reminders\nrecycling\n\troute 22 - 5 reminders\ntrash\n\troute 5 - 2 reminders\n\troute 11 - 26 reminders\n\nTotal reminders sent out:  38'
+        expected = 'DPW Waste Pickup Reminder Summary:\n\nall\n\troute 4 - 5 reminders\nbulk\n\troute 34 - 5 reminders\nrecycling\n\troute 22 - 5 reminders\ntrash\n\troute 5 - 2 reminders\n\troute 11 - 26 reminders\n\nTotal reminders sent out:  43'
+
         self.assertEqual(summary, expected, "format_slack_alerts_summary() formats notifications summary correctly")
+
+    def test_send_info_msg(self):
+
+        waste_area_id_sets = [ "14,27,31", "8" ]
+        dates = [ datetime.date(2017, 12, 2), datetime.date(2017, 12, 4) ]
+        expected = 'City of Detroit Public Works:  Curbside yard waste pickup will be suspended after Dec 15 until next spring. - Please set out yard waste in paper lawn bags or in 32-gallon containers labelled YARD WASTE ONLY the night before your pickup. (See http://www.detroitmi.gov/publicworks for more details.) (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'
+
+        for waste_area_ids in waste_area_id_sets:
+
+            for date in dates:
+
+                cleanup_db()
+
+                subscriber = Subscriber(phone_number="5005550006", waste_area_ids=waste_area_ids, service_type="all")
+                subscriber.activate()
+                detail = ScheduleDetail(detail_type='info', service_type='all', description='Curbside yard waste pickup will be suspended after Dec 15 until next spring.', note='Please set out yard waste in paper lawn bags or in 32-gallon containers labelled YARD WASTE ONLY the night before your pickup. (See http://www.detroitmi.gov/publicworks for more details.)', normal_day=date)
+                detail.clean()
+                detail.save(null_waste_area_ids=True)
+
+                response = views.send_notifications_request(date_val=date.strftime("%Y%m%d"))
+                self.assertEqual(response['citywide']['message'], expected, "Information can be sent out")
+
 
     def test_get_alexis_service_info(self):
 

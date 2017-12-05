@@ -17,8 +17,8 @@ def format_slack_alerts_summary(content):
 
     all_phone_numbers = {}
 
-    # summary notifications sent out for each service...
-    for service_type, desc in WasteItem.DESTINATION_CHOICES:
+    # summarize reminders sent out for each service...
+    for service_type, desc in ScheduleDetail.SERVICE_TYPE_CHOICES:
         service_desc_added = False
         service_details = content.get(service_type)
         if service_details:
@@ -50,6 +50,10 @@ def format_slack_alerts_summary(content):
                     # summary = summary + "\n\t\t{}".format(numbers_list)
 
     summary = summary + "\n\nTotal reminders sent out:  {}".format(len(all_phone_numbers))
+
+    # summarize information-only notices sent out
+    if content.get('citywide'):
+        summary = summary + "\n\nTotal information notices sent out:  {}".format(len(content['citywide'].get('subscribers', [])))
 
     return summary
 
