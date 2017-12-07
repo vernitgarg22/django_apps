@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
         # Kick off all the data source refreshes
         with ThreadPoolExecutor(max_workers=8) as executor:
-            results = executor.map(self.refresh, data_sources)
+            results = executor.map(self.refresh, data_sources, timeout=120)
 
         # Convert the results returned to a list just so we can
         # do list stuff to it (like call len() on it)
