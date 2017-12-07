@@ -132,7 +132,13 @@ class ScheduleDetailMgr():
         Returns all schedule details with new day or normal day matching the given date
         """
 
-        return ScheduleDetail.objects.filter(normal_day__exact=date) | ScheduleDetail.objects.filter(new_day__exact=date)
+        changes = ScheduleDetail.objects.filter(detail_type__in=['info', 'schedule']).filter(normal_day__exact=date)
+
+        start_end_range_query = ScheduleDetail.objects.filter(detail_type__in=['start-date', 'end-date'])
+
+        start_end_ranges = start_end_range_query.filter(normal_day__exact=date) | start_end_range_query.filter(new_day__exact=date)
+
+        return changes | start_end_ranges
 
     def get_citywide_schedule_changes(self, date):
         """
@@ -182,6 +188,8 @@ class ScheduleDetailMgr():
 
         return week_route_info
 
+    # TODO: alter this to return a range, beginning at the beginning of whatever
+    # week 'date' is in and ending N days from 'date'
     def get_week_schedule_changes(self, date):
         """
         Return schedule changes for the week that date belongs to.

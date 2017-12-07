@@ -44,6 +44,8 @@ def tomorrow(today = datetime.date.today()):
     return today + datetime.timedelta(days=1)
 
 
+# TODO: alter this to return a range, beginning at the beginning of whatever
+# week 'date' is in and ending N days from 'date'
 def get_week_start_end(date):
     """
     Return datetime date objects representing first and last date

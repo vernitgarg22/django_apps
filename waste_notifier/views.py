@@ -353,6 +353,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     content["all_services"] = add_additional_services(services=ScheduleDetail.ALL, date=tomorrow, add_yard_waste_year_round=True)
 
     # TODO Add in all schedule details for the next month?
+    # TODO Use ScheduleDetailMgr.get_week_schedule_changes for this ?
 
     details_content = {}
     end_date = tomorrow + datetime.timedelta(days=30)
