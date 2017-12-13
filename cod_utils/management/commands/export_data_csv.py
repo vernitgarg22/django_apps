@@ -45,10 +45,12 @@ class Command(BaseCommand):
             if value:
                 value = value.pk
             else:
-                value = obj.pk
 
-                klass = field.related_model()
-                Entry.objects.filter(pub_date__gt=timezone.now()).select_related('blog')
+                related = type(obj).objects.using(self.database).filter(pk=obj.pk).select_related(field.name)
+                if related:
+                    value = related.first().__getattribute__(field.name)
+                else:
+                    value = obj.pk
 
         # if type(field) == models.ForeignKey:
         #     klass = field.related_model()
