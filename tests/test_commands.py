@@ -1,10 +1,13 @@
 import csv, datetime, json, os, re
+from datetime import datetime
 
 from django.contrib.auth.models import User
+from django.db import models
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.test import TestCase
 from django.utils.six import StringIO
+from django.utils import timezone
 
 from cod_utils.util import get_local_time
 
@@ -15,7 +18,7 @@ from waste_notifier.models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
 from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
-from tests.models import TestDataA, TestDataB
+from tests.models import TestDataA, TestDataB, TestDupe
 from tests.test_data_cache import init_hydrants_data, init_gis_data
 
 
@@ -182,13 +185,19 @@ class ImportPhotoSurveyImagesTest(TestCase):
         os.remove(self.FILENAME)
 
 
+def cleanup_db_test_commands():
+
+    for model in ImageMetadata, Image, ParcelMetadata:
+        model.objects.using('photo_survey').delete()
+
+
 class ExportDataCSVTest(TestCase):
 
     def test_export(self):
 
         out = StringIO()
 
-        cleanup_db()
+        cleanup_db_test_commands()
 
         # flesh out images
         parcel, created = ParcelMetadata.objects.using('photo_survey').get_or_create(parcel_id='testparcelid')
@@ -198,6 +207,49 @@ class ExportDataCSVTest(TestCase):
         img_meta.save(using='photo_survey')
 
         call_command('export_data_csv', 'photo_survey', 'photo_survey', 'ImageMetadata', 'deleteme.csv', stdout=out)
+
+        self.assertEqual(out.getvalue(), 'Wrote 1 lines to deleteme.csv\n')
+
+        os.remove('deleteme.csv')
+
+    def test_export_query_params(self):
+
+        out = StringIO()
+
+        cleanup_db_test_commands()
+
+        # flesh out images
+        parcel, created = ParcelMetadata.objects.using('photo_survey').get_or_create(parcel_id='testparcelid')
+        image = Image(file_path='/path/file.png')
+        image.save(using='photo_survey')
+        img_meta = ImageMetadata(image=image, parcel=parcel, created_at=get_local_time(), latitude=42.351591, longitude=-82.9988157, altitude=50, note='Note')
+        img_meta.save(using='photo_survey')
+
+        call_command('export_data_csv', 'photo_survey', 'photo_survey', 'ParcelMetadata', 'deleteme.csv', '--query_params={ "parcel_id": "testparcelid" }', stdout=out)
+
+        self.assertEqual(out.getvalue(), 'Wrote 1 lines to deleteme.csv\n')
+
+        os.remove('deleteme.csv')
+
+    def test_export_dedupe(self):
+
+        out = StringIO()
+
+        cleanup_db()
+
+        updated_at = datetime.strptime("2017:12:01", "%Y:%m:%d")
+        updated_at = timezone.make_aware(updated_at)
+
+        test = TestDupe(dummy_id='xyz', updated_at=updated_at)
+        test.save()
+
+        updated_at = datetime.strptime("2017:12:02", "%Y:%m:%d")
+        updated_at = timezone.make_aware(updated_at)
+
+        test = TestDupe(dummy_id='xyz', updated_at=updated_at)
+        test.save(force_insert=True)
+
+        call_command('export_data_csv', 'tests', 'default', 'TestDupe', 'deleteme.csv', '--dedupe_key=dummy_id', '--order_by=updated_at', stdout=out)
 
         self.assertEqual(out.getvalue(), 'Wrote 1 lines to deleteme.csv\n')
 
@@ -232,10 +284,13 @@ class RefreshDataCacheTest(TestCase):
         """
 
         init_hydrants_data()
-        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 0)
+        self.assertEqual(DataSource.objects.first().datavalue_set.count(), 0)
 
         call_command('refresh_data_cache')
-        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 1)
+
+        # TODO we may be getting a race condition here - call shutdown first?
+
+        self.assertEqual(DataSource.objects.first().datavalue_set.count(), 1)
 
     def test_multiple_data(self):
         """
@@ -266,7 +321,7 @@ class SendWasteRemindersTest(TestCase):
 
         call_command('send_waste_reminders', '--today=20170521', stdout=out)
 
-        expected = {"status":200,"data":{"meta":{"date_applicable":"2017-05-22","week_type":"b","current_time":datetime.datetime.today().strftime("%Y-%m-%d %H:%M"),"dry_run":True},"all":{"0":{"message":"City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).","subscribers":["5005550006"]}}}}
+        expected = {"status":200,"data":{"meta":{"date_applicable":"2017-05-22","week_type":"b","current_time":datetime.today().strftime("%Y-%m-%d %H:%M"),"dry_run":True},"all":{"0":{"message":"City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, May 22, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).","subscribers":["5005550006"]}}}}
         data = json.loads(out.getvalue())
 
         self.assertEqual(data, expected)

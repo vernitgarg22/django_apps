@@ -188,6 +188,26 @@ class ScheduleDetailMgr():
 
         return week_route_info
 
+
+    # def get_schedule_changes(self, date, num_days = 7):
+    #     """
+    #     Return schedule changes, beginning at the beginning of the week
+    #     that date belongs to, ending num_days from 
+    #     """
+
+    #     schedule_changes = {}
+    #     start_date, end_date = cod_utils.util.get_week_start_end(date)
+    #     while start_date <= end_date:
+    #         changes_tmp = self.get_citywide_schedule_changes(start_date)
+    #         schedule_changes[start_date.strftime("%Y%m%d")] = changes_tmp
+    #         start_date = start_date + datetime.timedelta(days=1)
+
+    #     # TODO add in schedule changes that are not city-wide
+
+    #     return schedule_changes
+
+
+
     # TODO: alter this to return a range, beginning at the beginning of whatever
     # week 'date' is in and ending N days from 'date'
     def get_week_schedule_changes(self, date):

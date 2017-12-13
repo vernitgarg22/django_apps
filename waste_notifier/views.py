@@ -293,7 +293,6 @@ def send_notifications(date, dry_run_param=False):
 
             message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
 
-            # TODO disable this temporarily
             MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param)
@@ -347,7 +346,12 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
         for service in services:
             diff = get_day_of_week_diff(tomorrow, info['day'])
             next_date = tomorrow + datetime.timedelta(days = diff)
-            content["next_pickups"][map_service_type(service)] = date_json(next_date)
+            content["next_pickups"][map_service_type(service)] =  {
+                "date": date_json(next_date),
+                "provider": info['contractor']
+            }
+
+            # TODO add contractor here also
 
     # Add list of all services that currently exist
     content["all_services"] = add_additional_services(services=ScheduleDetail.ALL, date=tomorrow, add_yard_waste_year_round=True)

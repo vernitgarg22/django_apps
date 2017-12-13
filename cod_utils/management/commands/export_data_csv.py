@@ -1,5 +1,6 @@
 import csv
 import importlib
+import json
 import re
 from pydoc import locate
 
@@ -22,6 +23,9 @@ class Command(BaseCommand):
         parser.add_argument('database', type=str, help='Database to extract data from')
         parser.add_argument('model', type=str, help='Model to extract')
         parser.add_argument('output_file', type=str, help='File to output data to', default='')
+        parser.add_argument('--dedupe_key', default=None, help="Field to use for de-duping")
+        parser.add_argument('--order_by', default=None, help="Field to order by")
+        parser.add_argument('--query_params', default=None, help='JSON key value query params, e.g., {"detail_type": "info"}')
 
     @staticmethod
     def get_header(klass):
@@ -36,17 +40,25 @@ class Command(BaseCommand):
         Extract the value for 'field' from the object.
         """
 
-        value = None
-
+        value = obj.__getattribute__(field.name)
         if type(field) == models.ForeignKey:
-            klass = field.related_model()
-            values = type(klass).objects.using(self.database).filter(pk=obj.pk)
-            if values:
-                value = values[0]
+            if value:
+                value = value.pk
             else:
                 value = obj.pk
-        else:
-            value = obj.__getattribute__(field.name)
+
+                klass = field.related_model()
+                Entry.objects.filter(pub_date__gt=timezone.now()).select_related('blog')
+
+        # if type(field) == models.ForeignKey:
+        #     klass = field.related_model()
+        #     values = type(klass).objects.using(self.database).filter(pk=obj.pk)
+        #     if values:
+        #         value = values[0]
+        #     else:
+        #         value = obj.pk
+        # else:
+        #     value = obj.__getattribute__(field.name)
 
         if isinstance(value, models.Model):
             value = value.pk
@@ -65,11 +77,36 @@ class Command(BaseCommand):
         fields = type(obj)._meta.local_fields
         return [ self.get_data_value(obj, field) for field in fields ]
 
+    def write_all(self, objects, writer):
+        """
+        Write all objects to output.
+        """
+
+        for obj in objects:
+            try:
+                writer.writerow(self.get_data(obj))
+                self.lines = self.lines + 1
+            except:    # pragma: no cover (should never get here)
+                print('ignored a row for object {}'.format(obj))
+
+    def dedupe(self, objects, key):
+        """
+        Dedupe objects, based on key.
+        """
+
+        dedupe_key = key
+        deduped = { obj.__getattribute__(dedupe_key) : obj for obj in objects }
+        return [ obj for key, obj in deduped.items() ]
+
     def handle(self, *args, **options):
 
         self.application = options['application']
         self.database = options['database']
         model = options['model']
+
+        dedupe_key = options['dedupe_key']
+        order_by = options['order_by']
+        query_params = options['query_params']
 
         filename = self.database + '_' + model + '.csv'
         filename = options.get('output_file', filename)
@@ -81,16 +118,25 @@ class Command(BaseCommand):
 
         objects = klass.objects.using(self.database).all()
 
-        lines = 0
+        if query_params:
+            query_params = json.loads(query_params)
+            objects = objects.filter(**query_params)
+
+        if order_by:
+            if not dedupe_key:
+                raise Command("'order_by' and 'dedupe_key' must both be provided")    # pragma: no cover (should never get here)
+            objects = objects.order_by(dedupe_key, order_by)
+
+        self.lines = 0
+
         with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
 
             writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(Command.get_header(klass))
-            for obj in objects:
-                try:
-                    writer.writerow(self.get_data(obj))
-                    lines = lines + 1
-                except:    # pragma: no cover (should never get here)
-                    print('ignored a row for object {}'.format(obj))
 
-        return "Wrote {} lines to {}".format(lines, filename)
+            if dedupe_key:
+                objects = self.dedupe(objects, dedupe_key)
+
+            self.write_all(objects, writer)
+
+        return "Wrote {} lines to {}".format(self.lines, filename)

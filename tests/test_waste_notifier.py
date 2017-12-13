@@ -961,9 +961,9 @@ class WasteNotifierTests(TestCase):
 
         expected = {
             "next_pickups": {
-                ScheduleDetail.RECYCLING : tomorrow,
-                ScheduleDetail.BULK : tomorrow,
-                ScheduleDetail.TRASH : tomorrow
+                ScheduleDetail.RECYCLING : { "date": tomorrow, "provider": "gfl" },
+                ScheduleDetail.BULK : { "date": tomorrow, "provider": "gfl" },
+                ScheduleDetail.TRASH : { "date": tomorrow, "provider": "gfl" }
             },
             "details": { "schedule": [{
                     'description': 'Christmas',
