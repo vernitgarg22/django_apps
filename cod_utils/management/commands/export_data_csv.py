@@ -118,7 +118,7 @@ class Command(BaseCommand):
         if not klass:
             raise CommandError("Class {} not found".format(self.application + '.models.' + model))    # pragma: no cover (should never get here)
 
-        objects = klass.objects.using(self.database).all()
+        objects = klass.objects.using(self.database).all().select_related()
 
         if query_params:
             query_params = json.loads(query_params)
