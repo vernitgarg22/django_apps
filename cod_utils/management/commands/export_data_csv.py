@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 if related:
                     value = related.first().__getattribute__(field.name)
                 else:
-                    value = obj.pk
+                    value = obj.pk    # pragma: no cover (should never get here)
 
         # if type(field) == models.ForeignKey:
         #     klass = field.related_model()
@@ -63,7 +63,7 @@ class Command(BaseCommand):
         #     value = obj.__getattribute__(field.name)
 
         if isinstance(value, models.Model):
-            value = value.pk
+            value = value.pk    # pragma: no cover (should never get here)
 
         if type(value) == str:
             value = re.sub(r'[\r\n]', ' ', value)
