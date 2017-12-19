@@ -115,7 +115,7 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/hydrants/", secure=True)
 
         data_value = DataValue.objects.first()
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
     def test_data_cache_static(self):

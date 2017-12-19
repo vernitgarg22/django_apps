@@ -338,6 +338,8 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
 
     service_info = get_waste_area_ids(location=location, ids_only=False)
 
+    schedule_changes = ScheduleDetailMgr.instance().get_date_schedule_changes(tomorrow)
+
     # Add in next pickups for each service
     content = { "next_pickups": {}}
     for info in service_info:
@@ -345,13 +347,15 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
         services = add_additional_services([info['services']], tomorrow)
         for service in services:
             diff = get_day_of_week_diff(tomorrow, info['day'])
+
+            if schedule_changes:
+                diff += 1
+
             next_date = tomorrow + datetime.timedelta(days = diff)
             content["next_pickups"][map_service_type(service)] =  {
                 "date": date_json(next_date),
                 "provider": info['contractor']
             }
-
-            # TODO add contractor here also
 
     # Add list of all services that currently exist
     content["all_services"] = add_additional_services(services=ScheduleDetail.ALL, date=tomorrow, add_yard_waste_year_round=True)

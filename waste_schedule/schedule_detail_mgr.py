@@ -189,10 +189,10 @@ class ScheduleDetailMgr():
         return week_route_info
 
 
-    # def get_schedule_changes(self, date, num_days = 7):
+    # def get_time_period_schedule_changes(self, date, num_days = 7):
     #     """
     #     Return schedule changes, beginning at the beginning of the week
-    #     that date belongs to, ending num_days from 
+    #     that date belongs to, ending num_days after that date.
     #     """
 
     #     schedule_changes = {}
@@ -205,7 +205,6 @@ class ScheduleDetailMgr():
     #     # TODO add in schedule changes that are not city-wide
 
     #     return schedule_changes
-
 
 
     # TODO: alter this to return a range, beginning at the beginning of whatever
@@ -225,6 +224,20 @@ class ScheduleDetailMgr():
         # TODO add in schedule changes that are not city-wide
 
         return schedule_changes
+
+
+    def get_date_schedule_changes(self, date):
+        """
+        Returns any schedule changes affecting service on the given date.
+        """
+
+        # Get the beginning of the week which contains the date 
+        start_date, ignored = cod_utils.util.get_week_start_end(date)
+
+        # Get any schedule changes betwen start_date and date
+        details = ScheduleDetail.objects.filter(detail_type='schedule').exclude(normal_day__lt=start_date).exclude(normal_day__gt=date)
+
+        return details
 
     def get_week_routes(self, date):
         """
