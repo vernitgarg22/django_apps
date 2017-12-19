@@ -945,8 +945,7 @@ class WasteNotifierTests(TestCase):
                 response = views.send_notifications_request(date_val=date.strftime("%Y%m%d"))
                 self.assertEqual(response['citywide']['message'], expected, "Information can be sent out")
 
-
-    def test_get_alexis_service_info(self):
+    def test_get_alexa_service_info(self):
 
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Christmas', normal_day=datetime.date(2017, 12, 25), new_day=datetime.date(2017, 12, 26))
         detail.clean()
@@ -980,7 +979,44 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(expected, response.data, "Individual resident can request next service date")
 
-    def test_get_alexis_service_info_holiday(self):
+    def test_get_alexa_service_info_alt_week(self):
+
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Christmas', normal_day=datetime.date(2017, 12, 25), new_day=datetime.date(2017, 12, 26))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+
+        today = "20171221"
+
+        c = Client()
+        response = c.get("/waste_notifier/address/7840 Van Dyke Pl/{}/".format(today), secure=True)
+
+        tomorrow = '2017-12-22T00:00:00'
+
+        # reschedule for next week due to alt week and 1 day late due to holiday
+        next_week = '2017-12-30T00:00:00'
+
+        expected = {
+            "next_pickups": {
+                ScheduleDetail.RECYCLING : { "date": next_week, "provider": "gfl" },
+                ScheduleDetail.BULK : { "date": next_week, "provider": "gfl" },
+                ScheduleDetail.TRASH : { "date": tomorrow, "provider": "gfl" }
+            },
+            "details": { "schedule": [{
+                    'description': 'Christmas',
+                    'newDay': '2017-12-26T00:00:00',
+                    'normalDay': '2017-12-25T00:00:00',
+                    'note': None,
+                    'service': 'all',
+                    'wasteAreaIds': ''
+                }]
+            },
+            "all_services": ["trash", "recycling", "bulk", "yard waste"]
+        }
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(expected, response.data, "Individual resident can request next service date")
+
+    def test_get_alexa_service_info_holiday(self):
 
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
         detail.clean()
@@ -1018,14 +1054,14 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(expected, response.data, "Individual resident can request next service date")
 
-    def test_get_alexis_service_info_bad_address(self):
+    def test_get_alexa_service_info_bad_address(self):
 
         c = Client()
 
         response = c.get('/waste_notifier/address/bad/', secure=True)
         self.assertEqual(response.status_code, 400)
 
-    def test_get_alexis_service_info_insecure(self):
+    def test_get_alexa_service_info_insecure(self):
 
         c = Client()
 

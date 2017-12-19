@@ -314,7 +314,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     - if the address cannot be matched (or gets a top match that has a score that is too low) an error gets returned.
     """
 
-    # TODO for security, verify call is from alexis / google home app?
+    # TODO for security, verify call is from alexa / google home app?
 
     # Only call via https...
     if not request.is_secure():
@@ -346,12 +346,22 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
 
         services = add_additional_services([info['services']], tomorrow)
         for service in services:
+
+            # When is tentative date for next pickup for the service, ignoring
+            # holidays and alt weeks, for now?
             diff = get_day_of_week_diff(tomorrow, info['day'])
-
-            if schedule_changes:
-                diff += 1
-
             next_date = tomorrow + datetime.timedelta(days = diff)
+
+            # Check for alt week
+            if service != ScheduleDetail.TRASH:
+                if not ScheduleDetail.check_date_service(next_date, BiWeekType.from_str(info['week'])):
+                    next_date += datetime.timedelta(days = 7)
+
+            # Check for holiday schedule changes
+            schedule_changes = ScheduleDetailMgr.instance().get_date_schedule_changes(next_date)
+            if schedule_changes:
+                next_date += datetime.timedelta(days = 1)
+            
             content["next_pickups"][map_service_type(service)] =  {
                 "date": date_json(next_date),
                 "provider": info['contractor']
@@ -374,15 +384,6 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
         details_content[detail_type].append(detail_json)
 
     content["details"] = details_content
-
-    # for waste_area_id in waste_area_ids:
-    #     route_info = schedule_detail_mgr.get_route_info(waste_area_id)
-    #     content[route_info['services']] = route_info['day']
-
-    # reschedule values based on holiday schedules, if any
-    # schedule_detail_mgr.get_week_schedule_changes()
-
-    # TODO add description of 'all' services so caller will know what that includes
 
     return Response(content)
 
