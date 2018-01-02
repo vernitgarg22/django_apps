@@ -206,6 +206,22 @@ class WasteScheduleTests(TestCase):
         for route_id in values.keys():
             self.util_test_get_next_pickups(today, route_id, values[route_id])
 
+    def test_get_next_oneday_pickups_2018(self):
+        """
+        Test getting next pickups for routes that have all pickups on the same day (e.g., route 8)
+        """
+
+        values = {
+            0: {'next_pickups': {'recycling': {'route': 0, 'next_pickup': '2018-01-01T00:00:00', 'day': 'monday', 'contractor': 'gfl', 'week': 'b'}, 'trash': {'route': 0, 'next_pickup': '2018-01-01T00:00:00', 'day': 'monday', 'contractor': 'gfl', 'week': 'b'}, 'bulk': {'route': 0, 'next_pickup': '2018-01-01T00:00:00', 'day': 'monday', 'contractor': 'gfl', 'week': 'b'}}, 'details': []},
+            8: {'next_pickups': {'recycling': {'route': 8, 'next_pickup': '2018-01-12T00:00:00', 'day': 'friday', 'contractor': 'gfl', 'week': 'a'}, 'trash': {'route': 8, 'next_pickup': '2018-01-05T00:00:00', 'day': 'friday', 'contractor': 'gfl', 'week': 'a'}, 'bulk': {'route': 8, 'next_pickup': '2018-01-12T00:00:00', 'day': 'friday', 'contractor': 'gfl', 'week': 'a'}}, 'details': []},
+            9: {'next_pickups': {'recycling': {'route': 9, 'next_pickup': '2018-01-05T00:00:00', 'day': 'friday', 'contractor': 'gfl', 'week': 'b'}, 'trash': {'route': 9, 'next_pickup': '2018-01-05T00:00:00', 'day': 'friday', 'contractor': 'gfl', 'week': 'b'}, 'bulk': {'route': 9, 'next_pickup': '2018-01-05T00:00:00', 'day': 'friday', 'contractor': 'gfl', 'week': 'b'}}, 'details': []},
+        }
+
+        today = "20180101"
+
+        for route_id in values.keys():
+            self.util_test_get_next_pickups(today, route_id, values[route_id])
+
     def test_get_next_multiday_pickups(self):
         """
         Test getting next pickups for routes that have all pickups on different days (e.g., route 8)

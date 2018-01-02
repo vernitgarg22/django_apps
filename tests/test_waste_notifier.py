@@ -480,7 +480,7 @@ class WasteNotifierTests(TestCase):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
         subscriber.activate()
-        detail = ScheduleDetail(detail_type='info', service_type='recycling', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
+        detail = ScheduleDetail(detail_type='info', service_type='all', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
         detail.save(null_waste_area_ids=True)
 

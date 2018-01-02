@@ -166,7 +166,12 @@ class ScheduleDetail(models.Model):
 
         year_is_even = (date.year % 2 == 0)
         week_is_even = (date.isocalendar()[1] % 2 == 0)
-        return BiWeekType.B if year_is_even == week_is_even else BiWeekType.A
+
+        if year_is_even:
+            return BiWeekType.B if year_is_even != week_is_even else BiWeekType.A
+        else:
+            return BiWeekType.B if year_is_even == week_is_even else BiWeekType.A
+
 
     @staticmethod
     def check_date_service(date, week_type):
