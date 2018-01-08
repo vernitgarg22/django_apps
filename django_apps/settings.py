@@ -176,6 +176,7 @@ class DjangoAppsRouter(object):
         "DataCredential": "data_cache",
         "DataSource": "data_cache",
         "DataValue": "data_cache",
+        "DataCitySummary": "data_cache",
         "Subscriber": "waste_collection",
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",

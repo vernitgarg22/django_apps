@@ -265,3 +265,22 @@ class DataValue(models.Model):
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.data_source.name
+
+
+class DataCitySummary(models.Model):
+    """
+    Represents DataSets belonging to the 'city info' overview of important
+    stats for the mayor's office.
+    """
+
+    app_label = 'data_cache'
+
+    name = models.CharField('name', max_length=64)
+    description = models.CharField('description', max_length=1024)
+
+    data_set = models.ForeignKey(DataSet, null=True, blank=True)
+    url = models.CharField('url', max_length=2056, null=True, blank=True)
+    credentials = models.ForeignKey(DataCredential, null=True, blank=True)
+
+    class Meta:    # pragma: no cover
+        verbose_name_plural = "data city summaries"

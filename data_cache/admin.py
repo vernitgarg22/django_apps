@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DataSet, DataCredential, DataSource, DataValue
+from .models import DataSet, DataCredential, DataSource, DataValue, DataCitySummary
 
 
 class DataSetAdmin(admin.ModelAdmin):
@@ -55,3 +55,16 @@ class DataValueAdmin(admin.ModelAdmin):
     ordering = ['data_source']
 
 admin.site.register(DataValue, DataValueAdmin)
+
+class DataCitySummaryAdmin(admin.ModelAdmin):
+
+    fieldsets = [
+        (None, {'fields': ['name', 'description', 'data_set', 'url', 'credentials']}),
+    ]
+    list_display = ('name', 'description', 'data_set', 'url', 'credentials')
+    list_filter = ['name']
+    list_editable = ['description', 'data_set', 'url', 'credentials']
+    search_fields = ['name']
+    ordering = ['name']
+
+admin.site.register(DataCitySummary, DataCitySummaryAdmin)
