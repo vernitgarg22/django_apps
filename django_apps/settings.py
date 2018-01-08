@@ -72,6 +72,13 @@ add_vals_to_os()
 # Monkey-patch stuff that we want disabled locally
 if DEBUG:
     import tests.disabled
+else:
+
+    # TODO review following settings for security
+    # SESSION_COOKIE_SECURE = True
+    # CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r'^(?!admin/).*']
 
 # Application definition
 
