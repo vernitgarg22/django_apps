@@ -8,7 +8,7 @@ from django.conf import settings
 
 from tests import test_util
 
-from data_cache.models import DataCredential, DataSource, DataValue, DataSet
+from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataCitySummary
 
 from cod_utils import util
 
@@ -16,6 +16,7 @@ from cod_utils import util
 def cleanup_db():
     test_util.cleanup_model(DataSource)
     test_util.cleanup_model(DataSet)
+    test_util.cleanup_model(DataCitySummary)
 
 def init_creds(key):
 
@@ -349,3 +350,45 @@ class DataCacheTests(TestCase):
         c = Client()
         response = c.get("/data_cache/test/", secure=True)
         self.assertTrue(response.status_code == 503)
+
+
+class DataCitySummaryTests(TestCase):
+
+    def setUp(self):
+        cleanup_db()
+        self.maxDiff = None
+
+    def test_get_city_data_summaries(self):
+
+        init_test_data()
+
+        DataCitySummary(name="test", url="https://apis.detroitmi.gov/data_cache/test/").save()
+        DataCitySummary(name="test_data_set", data_set=DataSet.objects.first()).save()
+
+        expected = [
+            {
+                'name': 'test',
+                'description': '',
+                'data_set': None,
+                'url': 'https://apis.detroitmi.gov/data_cache/test/',
+                'credentials': None
+            },
+            {
+                'name': 'test_data_set',
+                'description': '',
+                'data_set': 'test',
+                'url': 'https://testserver/data_cache/test/',
+                'credentials': None
+            }
+        ]
+
+        c = Client()
+        response = c.get("/data_cache/city_data_summaries/", secure=True)
+        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.data, expected, "City data summaries contains info about city overview datasets")
+
+    def test_get_city_data_summaries_not_secure(self):
+
+        c = Client()
+        response = c.get("/data_cache/city_data_summaries/")
+        self.assertEqual(response.status_code, 403)
