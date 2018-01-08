@@ -74,6 +74,9 @@ class DataSet(models.Model):
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.name
 
+    def __str__(self):
+        return self.name
+
 
 class DataCredential(models.Model):
     """
@@ -282,5 +285,19 @@ class DataCitySummary(models.Model):
     url = models.CharField('url', max_length=2056, null=True, blank=True)
     credentials = models.ForeignKey(DataCredential, null=True, blank=True)
 
+    def json(self):
+        """
+        Returns json describing the DataCitySummary object.
+        """
+
+        return {
+            "name": self.name,
+            "description": self.description,
+            "dataset": str(self.data_set),
+            "url": self.url,
+            "credentials": self.credentials,
+        }
+
     class Meta:    # pragma: no cover
+        ordering = ["name"]
         verbose_name_plural = "data city summaries"

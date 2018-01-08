@@ -65,6 +65,5 @@ class DataCitySummaryAdmin(admin.ModelAdmin):
     list_filter = ['name']
     list_editable = ['description', 'data_set', 'url', 'credentials']
     search_fields = ['name']
-    ordering = ['name']
 
 admin.site.register(DataCitySummary, DataCitySummaryAdmin)

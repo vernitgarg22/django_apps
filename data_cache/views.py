@@ -10,7 +10,7 @@ from cod_utils.cod_logger import CODLogger
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import get_parcel_id
 
-from data_cache.models import DataSet, DataSource, DataValue
+from data_cache.models import DataSet, DataSource, DataValue, DataCitySummary
 
 
 @api_view(['POST'])
@@ -104,3 +104,19 @@ def get_data(request, name, param=None):
             return Response({ "error": "Data set {} not available".format(name) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 
     return Response(data)
+
+
+@api_view(['GET'])
+def get_city_data_summaries(request, param=None):
+    """
+    Returns list of data sets for overall 'city data summary' view.
+    """
+
+    summaries = DataCitySummary.objects.all()
+    content = []
+
+    for summary in summaries:
+
+        content.append(summary.json())
+
+    return Response(content)
