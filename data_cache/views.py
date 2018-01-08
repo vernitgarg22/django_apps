@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework import status
 
 from cod_utils import util
@@ -117,6 +118,12 @@ def get_city_data_summaries(request, param=None):
 
     for summary in summaries:
 
-        content.append(summary.json())
+        summary_json = summary.json()
+        if summary_json.get("data_set"):
+            data_set = summary_json["data_set"]
+            url = reverse("data_cache:data-set", args=[data_set], request=request)
+            summary_json['url'] = url
+
+        content.append(summary_json)
 
     return Response(content)

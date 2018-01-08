@@ -74,9 +74,6 @@ class DataSet(models.Model):
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.name
 
-    def __str__(self):
-        return self.name
-
 
 class DataCredential(models.Model):
     """
@@ -293,7 +290,7 @@ class DataCitySummary(models.Model):
         return {
             "name": self.name,
             "description": self.description,
-            "dataset": str(self.data_set),
+            "data_set": self.data_set.name if self.data_set else None,
             "url": self.url,
             "credentials": self.credentials,
         }
