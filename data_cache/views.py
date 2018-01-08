@@ -113,6 +113,10 @@ def get_city_data_summaries(request, param=None):
     Returns list of data sets for overall 'city data summary' view.
     """
 
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
     summaries = DataCitySummary.objects.all()
     content = []
 
