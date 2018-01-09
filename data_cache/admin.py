@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DataSet, DataCredential, DataSource, DataValue, DataCitySummary
+from .models import DataSet, DataCredential, DataSource, DataValue, DataDescriptor, DataCitySummary
 
 
 class DataSetAdmin(admin.ModelAdmin):
@@ -30,6 +30,7 @@ class DataCredentialAdmin(admin.ModelAdmin):
 
 admin.site.register(DataCredential, DataCredentialAdmin)
 
+
 class DataSourceAdmin(admin.ModelAdmin):
 
     fieldsets = [
@@ -42,6 +43,7 @@ class DataSourceAdmin(admin.ModelAdmin):
     ordering = ['name']
 
 admin.site.register(DataSource, DataSourceAdmin)
+
 
 class DataValueAdmin(admin.ModelAdmin):
 
@@ -56,14 +58,28 @@ class DataValueAdmin(admin.ModelAdmin):
 
 admin.site.register(DataValue, DataValueAdmin)
 
+
+class DataDescriptorAdmin(admin.ModelAdmin):
+
+    fieldsets = [
+        (None, {'fields': ['descriptor_type', 'value']}),
+    ]
+    list_display = ('descriptor_type', 'value')
+    list_editable = ['value']
+    search_fields = ['descriptor_type']
+    ordering = ['descriptor_type', 'value']
+
+admin.site.register(DataDescriptor, DataDescriptorAdmin)
+
+
 class DataCitySummaryAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['name', 'description', 'data_set', 'url', 'credentials']}),
+        (None, {'fields': ['name', 'description', 'data_set', 'url', 'descriptor', 'credentials']}),
     ]
-    list_display = ('name', 'description', 'data_set', 'url', 'credentials')
+    list_display = ('name', 'description', 'data_set', 'url', 'descriptor', 'credentials')
     list_filter = ['name']
-    list_editable = ['description', 'data_set', 'url', 'credentials']
+    list_editable = ['description', 'data_set', 'url', 'descriptor', 'credentials']
     search_fields = ['name']
 
 admin.site.register(DataCitySummary, DataCitySummaryAdmin)

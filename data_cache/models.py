@@ -285,6 +285,9 @@ class DataDescriptor(models.Model):
             "value": self.value,
         }
 
+    def __str__(self):    # pragma: no cover (mostly for debugging)
+        return self.descriptor_type + ": " + self.value
+
 
 class DataCitySummary(models.Model):
     """
