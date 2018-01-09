@@ -375,10 +375,12 @@ class DataCitySummaryTests(TestCase):
                 'data_set': None,
                 'url': 'https://apis.detroitmi.gov/data_cache/test/',
                 'credentials': None,
-                "descriptor": {
-                    "type": "Department",
-                    "value": "DPW"
-                }
+                "terms": [
+                    {
+                        "type": "Department",
+                        "value": "DPW"
+                    }
+                ]
             },
             {
                 'name': 'test_data_set',
@@ -386,7 +388,7 @@ class DataCitySummaryTests(TestCase):
                 'data_set': 'test',
                 'url': 'https://testserver/data_cache/test/',
                 'credentials': None,
-                "descriptor": {}
+                "terms": [{}]
             }
         ]
 

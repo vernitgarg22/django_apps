@@ -314,7 +314,7 @@ class DataCitySummary(models.Model):
             "data_set": self.data_set.name if self.data_set else None,
             "url": self.url,
             "credentials": self.credentials,
-            "descriptor": self.descriptor.json() if self.descriptor else {}
+            "terms": [ self.descriptor.json() if self.descriptor else {} ]
         }
 
     class Meta:    # pragma: no cover
