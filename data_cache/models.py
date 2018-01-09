@@ -272,7 +272,9 @@ class DataDescriptor(models.Model):
     Represents terms to describe data (e.g., categorize department that the dataset belongs to).
     """
 
-    descriptor_type = models.CharField('Descriptor type', max_length=64, choices=(('department', 'Department'), ))
+    DEPT = 'department'
+    BOUND = 'boundary'
+    descriptor_type = models.CharField('Descriptor type', max_length=64, choices=((DEPT, 'Department'), (BOUND, 'Boundary')), default=DEPT)
     value = models.CharField('value', max_length=64)
 
     def json(self):

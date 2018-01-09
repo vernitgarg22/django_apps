@@ -362,35 +362,40 @@ class DataCitySummaryTests(TestCase):
 
         init_test_data()
 
-        descriptor = DataDescriptor(descriptor_type="Department", value="DPW")
+        descriptor = DataDescriptor(descriptor_type="department", value="DPW")
         descriptor.save()
 
         DataCitySummary(name="test", url="https://apis.detroitmi.gov/data_cache/test/", descriptor=descriptor).save()
         DataCitySummary(name="test_data_set", data_set=DataSet.objects.first()).save()
 
-        expected = [
-            {
-                'name': 'test',
-                'description': '',
-                'data_set': None,
-                'url': 'https://apis.detroitmi.gov/data_cache/test/',
-                'credentials': None,
-                "terms": [
-                    {
-                        "type": "Department",
-                        "value": "DPW"
-                    }
-                ]
+        expected = {
+            "terms": {
+                "department":  [ "DPW" ]
             },
-            {
-                'name': 'test_data_set',
-                'description': '',
-                'data_set': 'test',
-                'url': 'https://testserver/data_cache/test/',
-                'credentials': None,
-                "terms": [{}]
-            }
-        ]
+            "summaries": [
+                {
+                    'name': 'test',
+                    'description': '',
+                    'data_set': None,
+                    'url': 'https://apis.detroitmi.gov/data_cache/test/',
+                    'credentials': None,
+                    "terms": [
+                        {
+                            "type": "department",
+                            "value": "DPW"
+                        }
+                    ]
+                },
+                {
+                    'name': 'test_data_set',
+                    'description': '',
+                    'data_set': 'test',
+                    'url': 'https://testserver/data_cache/test/',
+                    'credentials': None,
+                    "terms": [{}]
+                }
+            ]
+        }
 
         c = Client()
         response = c.get("/data_cache/city_data_summaries/", secure=True)
