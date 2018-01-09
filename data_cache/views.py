@@ -11,7 +11,7 @@ from cod_utils.cod_logger import CODLogger
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import get_parcel_id
 
-from data_cache.models import DataSet, DataSource, DataValue, DataCitySummary
+from data_cache.models import DataSet, DataSource, DataValue, DataDescriptor, DataCitySummary
 
 
 @api_view(['POST'])
@@ -117,10 +117,16 @@ def get_city_data_summaries(request, param=None):
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
-    summaries = DataCitySummary.objects.all()
-    content = []
+    content = { "terms": {}, "summaries": [] }
 
-    for summary in summaries:
+    # add all terms
+    for term in DataDescriptor.objects.all():
+        if not content["terms"].get(term.descriptor_type):
+            content["terms"][term.descriptor_type] = []
+        content["terms"][term.descriptor_type].append(term.value)
+
+    # add all summaries
+    for summary in DataCitySummary.objects.all():
 
         summary_json = summary.json()
         if summary_json.get("data_set"):
@@ -128,6 +134,6 @@ def get_city_data_summaries(request, param=None):
             url = reverse("data_cache:data-set", args=[data_set], request=request)
             summary_json['url'] = url
 
-        content.append(summary_json)
+        content["summaries"].append(summary_json)
 
     return Response(content)

@@ -272,7 +272,7 @@ class DataDescriptor(models.Model):
     Represents terms to describe data (e.g., categorize department that the dataset belongs to).
     """
 
-    descriptor_type = models.CharField('Descriptor type', max_length=64)
+    descriptor_type = models.CharField('Descriptor type', max_length=64, choices=(('department', 'Department'), ))
     value = models.CharField('value', max_length=64)
 
     def json(self):
@@ -287,6 +287,9 @@ class DataDescriptor(models.Model):
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.descriptor_type + ": " + self.value
+
+    class Meta:    # pragma: no cover
+        ordering = ["descriptor_type", "value"]
 
 
 class DataCitySummary(models.Model):
