@@ -267,6 +267,25 @@ class DataValue(models.Model):
         return self.data_source.name
 
 
+class DataDescriptor(models.Model):
+    """
+    Represents terms to describe data (e.g., categorize department that the dataset belongs to).
+    """
+
+    descriptor_type = models.CharField('Descriptor type', max_length=64)
+    value = models.CharField('value', max_length=64)
+
+    def json(self):
+        """
+        Returns json describing this descriptor.
+        """
+
+        return {
+            "type": self.descriptor_type,
+            "value": self.value,
+        }
+
+
 class DataCitySummary(models.Model):
     """
     Represents DataSets belonging to the 'city info' overview of important
@@ -282,6 +301,8 @@ class DataCitySummary(models.Model):
     url = models.CharField('url', max_length=2056, null=True, blank=True)
     credentials = models.ForeignKey(DataCredential, null=True, blank=True)
 
+    descriptor = models.ForeignKey(DataDescriptor, null=True, blank=True)
+
     def json(self):
         """
         Returns json describing the DataCitySummary object.
@@ -293,6 +314,7 @@ class DataCitySummary(models.Model):
             "data_set": self.data_set.name if self.data_set else None,
             "url": self.url,
             "credentials": self.credentials,
+            "descriptor": self.descriptor.json() if self.descriptor else {}
         }
 
     class Meta:    # pragma: no cover

@@ -72,7 +72,7 @@ add_vals_to_os()
 # Monkey-patch stuff that we want disabled locally
 if DEBUG:
     import tests.disabled
-else:
+else:    # pragma: no cover
 
     # TODO review following settings for security
     # SESSION_COOKIE_SECURE = True
@@ -183,6 +183,7 @@ class DjangoAppsRouter(object):
         "DataCredential": "data_cache",
         "DataSource": "data_cache",
         "DataValue": "data_cache",
+        "DataDescriptor": "data_cache",
         "DataCitySummary": "data_cache",
         "Subscriber": "waste_collection",
         "ScheduleDetail": "waste_collection",

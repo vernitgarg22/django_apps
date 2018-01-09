@@ -8,7 +8,7 @@ from django.conf import settings
 
 from tests import test_util
 
-from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataCitySummary
+from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataDescriptor, DataCitySummary
 
 from cod_utils import util
 
@@ -362,7 +362,10 @@ class DataCitySummaryTests(TestCase):
 
         init_test_data()
 
-        DataCitySummary(name="test", url="https://apis.detroitmi.gov/data_cache/test/").save()
+        descriptor = DataDescriptor(descriptor_type="Department", value="DPW")
+        descriptor.save()
+
+        DataCitySummary(name="test", url="https://apis.detroitmi.gov/data_cache/test/", descriptor=descriptor).save()
         DataCitySummary(name="test_data_set", data_set=DataSet.objects.first()).save()
 
         expected = [
@@ -371,14 +374,19 @@ class DataCitySummaryTests(TestCase):
                 'description': '',
                 'data_set': None,
                 'url': 'https://apis.detroitmi.gov/data_cache/test/',
-                'credentials': None
+                'credentials': None,
+                "descriptor": {
+                    "type": "Department",
+                    "value": "DPW"
+                }
             },
             {
                 'name': 'test_data_set',
                 'description': '',
                 'data_set': 'test',
                 'url': 'https://testserver/data_cache/test/',
-                'credentials': None
+                'credentials': None,
+                "descriptor": {}
             }
         ]
 
