@@ -64,8 +64,12 @@ class DataSet(models.Model):
     def is_success(response):
         """
         Returns False if the response status code is not in the http success range (200-299) or
-        if a gis service has returned a status code in the json that is not in the http success range.
+        if a gis service has returned a status code in the json that is not in the http success range
+        or if the response attribute 'ok' is False.
         """
+
+        if not response.ok:
+            return False
 
         data = response.json()
         gis_status_code = data.get("error", {}).get("code", 200) if type(data) is dict else 200
@@ -132,7 +136,15 @@ class DataSource(models.Model):
 
         # Get the data
         url = self.get_url()
-        r = requests.get(url)
+        headers = {}
+
+        # Add socrata app token?
+        # TODO: would be nice for this to not be hard-coded
+        if url.startswith("https://data.detroitmi.gov/"):
+            SOCRATA_APP_TOKEN = settings.AUTO_LOADED_DATA['SOCRATA_APP_TOKEN']
+            headers["X-App-Token"] = SOCRATA_APP_TOKEN
+
+        r = requests.get(url, headers=headers)
 
         # Test success and attempt to parse
         if not DataSet.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)
