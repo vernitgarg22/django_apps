@@ -34,11 +34,11 @@ admin.site.register(DataCredential, DataCredentialAdmin)
 class DataSourceAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['name', 'url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path']}),
+        (None, {'fields': ['name', 'url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path', 'socrata_where']}),
     ]
-    list_display = ('name', 'url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path')
+    list_display = ('name', 'url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path', 'socrata_where')
     list_filter = []
-    list_editable = ['url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path']
+    list_editable = ['url', 'credentials', 'data_set', 'data_parse_path', 'data_id_parse_path', 'socrata_where']
     search_fields = ['name']
     ordering = ['name']
 
