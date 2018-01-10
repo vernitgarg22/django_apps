@@ -351,6 +351,27 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/test/", secure=True)
         self.assertTrue(response.status_code == 503)
 
+    def test_socrata_where_clause(self):
+
+        url ="https://data.detroitmi.gov/resource/uzpg-2pfj.json"
+        socrata_where="demolition_date > '1_week_back'"
+        data_source = DataSource(name="demolitions", url=url, socrata_where=socrata_where)
+        data_source.save()
+
+        data_value = data_source.get()
+
+        self.assertTrue(data_value.data)
+
+    def test_socrata_where_clause_invalid(self):
+
+        url ="https://data.detroitmi.gov/resource/uzpg-2pfj.json"
+        socrata_where="demolition_date junk '1_week_back'"
+        data_source = DataSource(name="demolitions", url=url, socrata_where=socrata_where)
+        data_source.save()
+
+        with self.assertRaises(Exception, msg="DataSource.get() should flag failed get") as error:
+            data_value = data_source.get()
+
 
 class DataCitySummaryTests(TestCase):
 

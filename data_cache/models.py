@@ -1,5 +1,7 @@
+import datetime
 import json
 import requests
+from datetime import date
 
 from django.conf import settings
 from django.db import models
@@ -122,6 +124,7 @@ class DataSource(models.Model):
     credentials = models.ForeignKey(DataCredential, null=True, blank=True)
     data_parse_path = models.CharField('Data to extract', max_length=128, null=True, blank=True)
     data_id_parse_path = models.CharField('Data ID to extract', max_length=128, null=True, blank=True)
+    socrata_where = models.CharField('Where clause', max_length=128, null=True, blank=True)
 
     def refresh(self):
         """
@@ -227,6 +230,19 @@ class DataSource(models.Model):
 
         url = self.url
 
+        # Add a socrata syntax where clause?
+        if self.socrata_where:
+            if url.find("?") < 0:
+                url = url + "?"
+
+            where_clause = "$where={}".format(self.socrata_where)
+            if where_clause.find("1_week_back") > 0:
+                date_val = date.today() - datetime.timedelta(days=7)
+                where_clause = where_clause.replace("1_week_back", util.date_json(date_val))
+
+            url = url + where_clause
+
+        # Do we have credentials token for this data?
         token = None
         if self.credentials:
             success, token = self.credentials.create_auth_token()
@@ -340,3 +356,6 @@ class DataCitySummary(models.Model):
     class Meta:    # pragma: no cover
         ordering = ["name"]
         verbose_name_plural = "data city summaries"
+
+    def __str__(self):    # pragma: no cover (mostly for debugging)
+        return self.name
