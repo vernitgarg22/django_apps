@@ -78,7 +78,6 @@ class DataCitySummaryAdmin(admin.ModelAdmin):
         (None, {'fields': ['name', 'description', 'data_set', 'url', 'descriptor', 'credentials']}),
     ]
     list_display = ('name', 'description', 'data_set', 'url', 'descriptor', 'credentials')
-    list_filter = ['name']
     list_editable = ['description', 'data_set', 'url', 'descriptor', 'credentials']
     search_fields = ['name']
 
