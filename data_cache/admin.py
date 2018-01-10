@@ -65,6 +65,7 @@ class DataDescriptorAdmin(admin.ModelAdmin):
         (None, {'fields': ['descriptor_type', 'value']}),
     ]
     list_display = ('descriptor_type', 'value')
+    list_filter = ['descriptor_type']
     list_editable = ['value']
     search_fields = ['descriptor_type']
     ordering = ['descriptor_type', 'value']

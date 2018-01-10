@@ -274,7 +274,7 @@ class DataDescriptor(models.Model):
 
     DEPT = 'department'
     BOUND = 'boundary'
-    descriptor_type = models.CharField('Descriptor type', max_length=64, choices=((DEPT, 'Department'), (BOUND, 'Boundary')), default=DEPT)
+    descriptor_type = models.CharField('Type', max_length=64, choices=((DEPT, 'Department'), (BOUND, 'Boundary')), default=DEPT)
     value = models.CharField('value', max_length=64)
 
     def json(self):
