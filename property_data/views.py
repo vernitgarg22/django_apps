@@ -26,6 +26,8 @@ def get_dte_active_connection(request, parcel_id, param=None):
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
+    parcel_id = get_parcel_id(request.path, 4)
+
     # Only call via https...
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
