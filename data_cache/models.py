@@ -197,6 +197,7 @@ class DataSource(models.Model):
         """
 
         # Retrieve the data, if necessary
+        # TODO Force refresh if datavalue data attribute is emmpty?
         if not self.datavalue_set.exists():
             self.refresh()
 
@@ -359,3 +360,32 @@ class DataCitySummary(models.Model):
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.name
+
+
+# TODO move this to different app/database once we figure out where to put it
+
+
+class DTEActiveGasSite(models.Model):
+    """
+    Data related to active DTE gas connections.
+    """
+
+    app_label = 'data_cache'
+
+    business_partner = models.CharField('Business Partner', max_length=128, db_index=True)
+    contract_account = models.BigIntegerField('Contract Account')
+    installation_number = models.BigIntegerField('Installation Number')
+    contract_number = models.BigIntegerField('Contract Number')
+    connection_object = models.BigIntegerField('Connection Object')
+    premise = models.BigIntegerField('Premise')
+    house_number = models.CharField('House Number', max_length=32, help_text='Sometimes not numeric, e.g., "#"')
+    street = models.CharField('Street', max_length=128, db_index=True)
+    full_street_address = models.CharField('Street Address Combined', max_length=128, db_index=True, default='')
+    secondary_code = models.CharField('Secondary Code', max_length=16)
+    secondary_value = models.CharField('Secondary Value', max_length=16)
+    city = models.CharField('City', max_length=16)
+    postal_code = models.IntegerField('Postal Code')
+    active_date = models.DateField('Active Date')
+
+    def __str__(self):    # pragma: no cover (mostly for debugging)
+        return self.business_partner + " - " + str(self.contract_account)
