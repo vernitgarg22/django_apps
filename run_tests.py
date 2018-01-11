@@ -24,6 +24,7 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_data_cache.DataCitySummaryTests"]
     # test_labels = ["tests.test_data_cache.DataCacheTests.test_data_cache_invalid_source"]
     # test_labels = ["tests.test_photo_survey"]
+    # test_labels = ["tests.test_property_data"]
     # test_labels = ["tests.test_photo_survey.BridgingNeighborhoodsTests"]
     # test_labels = ["tests.test_waste_schedule"]
     # test_labels = ["tests.test_waste_notifier.WasteNotifierTests.test_sign_up_by_fone_virginia_park_st"]
@@ -31,6 +32,6 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_waste_notifier"]
     # test_labels = ["tests.test_waste_wizard"]
     # test_labels = ["tests.test_waste_notifier.WasteNotifierTests.test_confirm_invalid_phone_number"]
-    test_labels = ["tests.test_blight_tickets", "tests.test_assessments", "tests.test_cod_utils", "tests.test_commands", "tests.test_data_cache", "tests.test_photo_survey", "tests.test_waste_schedule", "tests.test_waste_notifier", "tests.test_waste_wizard", "tests.test_weather_info"]
+    test_labels = ["tests.test_blight_tickets", "tests.test_assessments", "tests.test_cod_utils", "tests.test_commands", "tests.test_data_cache", "tests.test_photo_survey", "tests.test_property_data", "tests.test_waste_schedule", "tests.test_waste_notifier", "tests.test_waste_wizard", "tests.test_weather_info"]
     failures = test_runner.run_tests(test_labels)
     sys.exit(bool(failures))
