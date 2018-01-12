@@ -386,7 +386,7 @@ class DTEActiveGasSite(models.Model):
     city = models.CharField('City', max_length=16)
     postal_code = models.IntegerField('Postal Code')
     active_date = models.DateField('Active Date')
-    parcel_id = models.DateField('Parcel ID')
+    parcel_id = models.CharField('Parcel ID', max_length=32, default='')
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.business_partner + " - " + str(self.contract_account)
