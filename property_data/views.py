@@ -26,16 +26,13 @@ def get_dte_active_connection(request, parcel_id, param=None):
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
-    parcel_id = get_parcel_id(request.path, 4)
-
     # Only call via https...
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
-    content = {}
+    parcel_id = get_parcel_id(request.path, 4)
 
-    sites = DTEActiveGasSite.objects.filter(parcel_id=parcel_id)
-    if sites:
-        content["owner"] = sites[0].business_partner
-
-    return Response(content)
+    if DTEActiveGasSite.objects.filter(parcel_id=parcel_id).exists():
+        return Response({ "active": True })
+    else:
+        return Response({ "active": False })

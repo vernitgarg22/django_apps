@@ -31,4 +31,4 @@ class PropertyDataTests(TestCase):
         response = c.get("/property_data/dte/active_connections/123./", secure=True)
 
         self.assertTrue(response.status_code == 200)
-        self.assertEqual(response.data, { "owner": "partner" }, "property_data dte active connections indicates parcel has power")
+        self.assertEqual(response.data, { "active": True }, "property_data dte active connections indicates parcel has power")

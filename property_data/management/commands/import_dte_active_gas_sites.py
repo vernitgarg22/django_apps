@@ -36,27 +36,42 @@ class Command(BaseCommand):
         self.stdout.write(value)
         self.stdout.flush()
 
+    def clean_bigint(value):
+        pos = value.find('.')
+        if pos >= 0:
+            value = value[0: pos]
+        return value
+
     def parse_row(self, row):
 
-        business_partner = row[0]
-        contract_account = row[1]
-        installation_number = row[2]
-        contract_number = row[3]
-        connection_object = row[4]
-        premise = row[5]
-        house_number = row[6]
-        street = row[7]
-        secondary_code = row[8]
-        secondary_value = row[9]
-        city = row[10]
-        postal_code = row[11]
+        ignored = row[0]
+        business_partner = row[1]
+        contract_account = row[2]
+        installation_number = Command.clean_bigint(row[3])
+        contract_number = Command.clean_bigint(row[4])
+        connection_object = Command.clean_bigint(row[5])
+        premise = Command.clean_bigint(row[6])
+        house_number = row[7]
+        street = row[8]
+        full_street_address = row[9]
+        secondary_code = row[10]
+        secondary_value = row[11]
+        city = row[12]
+        postal_code = row[13]
+        ignored = row[14]
+        parcel_id = row[15]
 
         return DTEActiveGasSite(business_partner=business_partner, contract_account=contract_account, installation_number=installation_number, 
             contract_number=contract_number, connection_object=connection_object, premise=premise, house_number=house_number,
-            street=street, secondary_code=secondary_code, secondary_value=secondary_value, city=city, postal_code=postal_code,
-            active_date=date.today())
+            street=street, full_street_address=full_street_address, secondary_code=secondary_code, secondary_value=secondary_value, 
+            city=city, postal_code=postal_code, active_date=date.today(), parcel_id=parcel_id)
 
     def handle(self, *args, **options):
+
+
+        # # TODO remove this
+        # DTEActiveGasSite.objects.all().delete()
+
 
         file_path = options['file_path']
         first_line = True
@@ -64,7 +79,7 @@ class Command(BaseCommand):
 
         with open(file_path, newline='') as csvfile:
 
-            datareader = csv.reader(csvfile, delimiter='\t')
+            datareader = csv.reader(csvfile, delimiter=',', quotechar='"')
             row_data = []
             row_count = 0
             BATCHSIZE = 2500
