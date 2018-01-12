@@ -34,7 +34,7 @@ def get_dte_active_connection(request, parcel_id, param=None):
 
     content = {}
 
-    sites = DTEActiveGasSite.objects.filter(id=parcel_id)
+    sites = DTEActiveGasSite.objects.filter(parcel_id=parcel_id)
     if sites:
         content["owner"] = sites[0].business_partner
 

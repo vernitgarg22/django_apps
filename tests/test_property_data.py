@@ -24,7 +24,7 @@ class PropertyDataTests(TestCase):
         site = DTEActiveGasSite(business_partner="partner", contract_account=1, installation_number=1,
                     contract_number=1, connection_object=1, premise=1, house_number=1, street="woodward",
                     full_street_address="1 woodward", secondary_code="code", secondary_value="value",
-                    city="Detroit", postal_code="48214", active_date=date(2018, 1, 1))
+                    city="Detroit", postal_code="48214", active_date=date(2018, 1, 1), parcel_id="123.")
         site.save()
 
         c = Client()
