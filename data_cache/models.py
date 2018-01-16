@@ -390,3 +390,13 @@ class DTEActiveGasSite(models.Model):
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.business_partner + " - " + str(self.contract_account)
+
+
+class DNNKeyword(models.Model):
+    """
+    Represents a particular data set that has been cached.
+    """
+
+    app_label = 'data_cache'
+
+    keyword = models.CharField('Keyword', max_length=256, db_index=True)
