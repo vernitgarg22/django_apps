@@ -392,6 +392,9 @@ class DTEActiveGasSite(models.Model):
         return self.business_partner + " - " + str(self.contract_account)
 
 
+# TODO move this elsewhere or delete when no longer needed
+
+
 class DNNKeyword(models.Model):
     """
     Represents a particular data set that has been cached.
