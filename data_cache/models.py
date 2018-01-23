@@ -20,6 +20,10 @@ class DataSet(models.Model):
 
     name = models.CharField('Name', max_length=64, db_index=True)
 
+    # TODO might want to replace this with fancier caching (which might be harder to invalidate)?
+    # TODO remember to refresh this whenever the DataSource values themselves are refreshed?
+    cache = {}
+
     @staticmethod
     def add_data_json(data, json):
         """
@@ -40,25 +44,31 @@ class DataSet(models.Model):
         Refresh this dataset (if needed) and returns the datavalue objects.
         """
 
-        data = {}
+        if not param:
+            data = DataSet.cache.get(self.name, {})
+        else:
+            data = {}
 
-        updated = None
+        if not data:
+            updated = None
 
-        data_sources = self.datasource_set.filter(name=data_source_name) if data_source_name else self.datasource_set.all()
+            data_sources = self.datasource_set.filter(name=data_source_name) if data_source_name else self.datasource_set.all()
 
-        # combine the strings into 1 json object
-        for data_source in data_sources:
+            # combine the strings into 1 json object
+            for data_source in data_sources:
 
-            data_value = data_source.get(param)
-            if data_value and data_value.data:
-                json_curr = json.loads(data_value.data)
-                self.add_data_json(data, json_curr)
+                data_value = data_source.get(param)
+                if data_value and data_value.data:
+                    json_curr = json.loads(data_value.data)
+                    self.add_data_json(data, json_curr)
 
-                if not updated or data_value.updated < updated:
-                    updated = data_value.updated
+                    if not updated or data_value.updated < updated:
+                        updated = data_value.updated
 
-        if updated:
-            data["updated"] = util.date_json(data_value.updated)
+            if updated:
+                data["updated"] = util.date_json(data_value.updated)
+
+            DataSet.cache[self.name] = data
 
         return data
 
@@ -79,6 +89,17 @@ class DataSet(models.Model):
 
     def __str__(self):    # pragma: no cover (mostly for debugging)
         return self.name
+
+    def save(self, *args, **kwargs):
+        """
+        Saves this DataSet object, making sure to clear out cache if necessary.
+        """
+
+        if self.name and DataSet.cache.get(self.name):
+            del DataSet.cache[self.name]
+
+        # Call the "real" save() method in base class
+        super().save(*args, **kwargs)
 
 
 class DataCredential(models.Model):
