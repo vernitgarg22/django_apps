@@ -30,7 +30,7 @@ class PropertyDataTests(TestCase):
         c = Client()
         response = c.get("/property_data/dte/active_connections/123./", secure=True)
 
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, { "active": True }, "property_data dte active connections indicates parcel has power")
 
     def test_get_dte_active_connections_notsecure(self):
@@ -38,7 +38,7 @@ class PropertyDataTests(TestCase):
         c = Client()
         response = c.get("/property_data/dte/active_connections/123./")
 
-        self.assertTrue(response.status_code == 403)
+        self.assertEqual(response.status_code, 403)
 
     def test_get_dte_active_connections_badclient(self):
 
@@ -48,7 +48,7 @@ class PropertyDataTests(TestCase):
         c = Client()
         response = c.get("/property_data/dte/active_connections/123./", secure=True)
 
-        self.assertTrue(response.status_code == 403)
+        self.assertEqual(response.status_code, 403)
 
         settings.ALLOWED_HOSTS.append("127.0.0.1")
 
@@ -57,5 +57,4 @@ class PropertyDataTests(TestCase):
         c = Client()
         response = c.get("/property_data/dte/active_connections/123./", secure=True)
 
-        self.assertTrue(response.status_code == 200)
-        self.assertEqual(response.data, { "active": False }, "property_data dte active connections indicates parcel might not have power")
+        self.assertEqual(response.status_code, 404)

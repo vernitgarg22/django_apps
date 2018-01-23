@@ -33,7 +33,7 @@ def get_dte_active_connection(request, parcel_id, param=None):
 
     parcel_id = get_parcel_id(request.path, 4)
 
-    if DTEActiveGasSite.objects.filter(parcel_id=parcel_id).exists():
-        return Response({ "active": True })
-    else:
-        return Response({ "active": False })
+    if not DTEActiveGasSite.objects.filter(parcel_id=parcel_id).exists():
+        raise Http404("No parcel " + parcel_id + " found with active connection")
+
+    return Response({ "active": True })
