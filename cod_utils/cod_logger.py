@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.conf import settings
 
@@ -56,3 +57,19 @@ class CODLogger():
         # TODO should configure log level better ...
         if not settings.RUNNING_UNITTESTS:
             logger.error("ERROR in " + area + ": " + msg)    # pragma: no cover
+
+    def log_trace(self, start, end, msg=None):    # pragma: no cover (this is for dev only)
+        """
+        Trace information.
+        """
+
+        logger = self.get_logger("trace")
+
+        delta = end - start
+
+        output = "TRACE: "
+        if msg:
+            output = output + msg
+        output = output + " - time elapsed: " + "{0:.4f}".format(delta.total_seconds())
+
+        logger.error(output)
