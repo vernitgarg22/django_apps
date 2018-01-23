@@ -57,6 +57,27 @@ def add_url(request):
     return Response(data, status=status.HTTP_201_CREATED)
 
 
+class DataCache():
+
+    cache = {}
+
+    def get(name):
+
+        return DataCache.cache.get(name, {})
+
+    def set(name, data):
+
+        DataCache.cache[name] = data
+
+    def clear(name):
+
+        DataCache.cache[name] = {}
+
+    def clear_all():
+
+        DataCache.cache = {}
+
+
 @api_view(['GET'])
 def get_data(request, name, param=None):
     """
@@ -85,24 +106,32 @@ def get_data(request, name, param=None):
         else:
             param = get_parcel_id(request.path, 3)
 
-    # Retrieve the data set
-    try:
-        data_set = DataSet.objects.get(name=name)
-    except ObjectDoesNotExist:
-        return Response({ "error": "Data set does not exist" }, status=status.HTTP_404_NOT_FOUND)
+    data = {}
+    if not param:
+        data = DataCache.get(name)
 
-    # Retrieve the data values for this data set
-    try:
-        data = data_set.get(data_source_name=data_source_name, param=param)
-    except:
-        data = None
-
-    # Do correct error handling if not found
     if not data:
-        if param:
-            return Response({ "error": "Data value {} not found".format(param) }, status.HTTP_404_NOT_FOUND)
-        else:
-            return Response({ "error": "Data set {} not available".format(name) }, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # Retrieve the data set
+        try:
+            data_set = DataSet.objects.get(name=name)
+        except ObjectDoesNotExist:
+            return Response({ "error": "Data set does not exist" }, status=status.HTTP_404_NOT_FOUND)
+
+        # Retrieve the data values for this data set
+        try:
+            data = data_set.get(data_source_name=data_source_name, param=param)
+        except:
+            data = None
+
+        # Do correct error handling if not found
+        if not data:
+            if param:
+                return Response({ "error": "Data value {} not found".format(param) }, status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({ "error": "Data set {} not available".format(name) }, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        DataCache.set(name, data)
 
     return Response(data)
 

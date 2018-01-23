@@ -9,6 +9,7 @@ from django.conf import settings
 from tests import test_util
 
 from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataDescriptor, DataCitySummary
+from data_cache.views import DataCache
 
 from cod_utils import util
 
@@ -17,6 +18,9 @@ def cleanup_db():
     test_util.cleanup_model(DataSource)
     test_util.cleanup_model(DataSet)
     test_util.cleanup_model(DataCitySummary)
+
+    DataCache.clear_all()
+
 
 def init_creds(key):
 
