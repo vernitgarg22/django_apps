@@ -72,6 +72,14 @@ class DataSet(models.Model):
 
         return data
 
+    def flush_cache(self):
+        """
+        Removes the data for this dataset from the cache.
+        """
+
+        if self.name and DataSet.cache.get(self.name):
+            del DataSet.cache[self.name]
+
     @staticmethod
     def is_success(response):
         """
@@ -95,8 +103,7 @@ class DataSet(models.Model):
         Saves this DataSet object, making sure to clear out cache if necessary.
         """
 
-        if self.name and DataSet.cache.get(self.name):
-            del DataSet.cache[self.name]
+        self.flush_cache()
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
@@ -211,6 +218,10 @@ class DataSource(models.Model):
                 data_value = DataValue(data_source=self)
             data_value.data = json.dumps(data)
             data_value.save()
+
+        # flush the cache for the dataset.
+        if self.data_set:
+            self.data_set.flush_cache()
 
     def get(self, param=None):
         """
