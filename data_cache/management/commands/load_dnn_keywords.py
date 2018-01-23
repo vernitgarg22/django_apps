@@ -37,13 +37,17 @@ def get_keywords(html):
     # \xbf
     #
 
-    replacements = { 
+    replacements = {
+        'r\\': '', 'n\\': '',
         '\n': '', '\r': '', '\t': '', '\xa0': '', '\u2022': '', '\u201c': '', '\u201d': '', '\u2018': '', '\u2019': '', '\u2014': '', '\u25a1': '', '\u037e': '', '\u2011': '', '\u2026': '', '&#xbf;': '', '&#xad': '',
         '&nbsp;': ' ', '|': ' ', '\u2010': ' ', '\u2013': ' ', '&#xbb': ' ', '&#xad': ' ', ':': ' ', '/': ' ', '.': ' ', '-': ' ', '(': ' ', ')': ' ',
         '\u2019': '\'',
         '&amp;': '&', 'amp;': '&',
         '&lt;': '<',
         '&gt;': '>',
+        '\\': '',
+        'ttt': ' ',
+        '&bull;': ' ',
     }
 
     tmp = html
@@ -55,20 +59,27 @@ def get_keywords(html):
         if ord(val) > 128:
             tmp = tmp.replace(val, ' ')
 
+    removals = [ string.digits, string.punctuation ]
+    for remove in removals:
+
+        trans_table = str.maketrans(remove, ' ' * len(remove))
+        output = tmp.translate(trans_table)
+        tmp = output
+
     keywords = [ keyword for keyword in tmp.split(' ') if keyword ]
     keywords = [ keyword.strip(string.punctuation).lower() for keyword in keywords if keyword ]
     keywords = [ keyword for keyword in keywords if keyword ]
 
+    removals = [ 'n', 'r' ]
+    keywords = [ keyword for keyword in keywords if keyword not in removals ]
+
+    for keyword in keywords:
+        if len(keyword) >= 64:
+            # pdb.set_trace()
+            keywords.remove(keyword)
+
+
     keyword_objects = [ DNNKeyword(keyword=keyword) for keyword in keywords ]
-
-    # for keyword in keywords:
-    #     if len(keyword) >= 128:
-    #         pdb.set_trace()
-
-
-    # if "officeadministrationcorrespondenceoffice" in keywords:
-    #     pdb.set_trace()
-
 
     return keywords, keyword_objects
 
@@ -96,31 +107,37 @@ class Command(BaseCommand):
         with open(filename, newline='', encoding="utf8") as input_file:
 
             content = input_file.read()
-            content_json = json.loads(content)
 
-            for page in content_json:
+            if True:
 
-                page_content = page['result']
-                page_content_json = json.loads(page_content)
-
-                html = page_content_json['lossyHTML']
-
-                keywords, keyword_objects = get_keywords(html)
+                keywords, keyword_objects = get_keywords(content)
 
                 DNNKeyword.objects.bulk_create(keyword_objects)
 
-                keywords_all.extend(keywords)
+            else:
 
-                for keyword in keywords:
+                content_json = json.loads(content)
 
-                    if not keywords_map.get(keyword):
-                        keywords_map[keyword] = 0
+                for page in content_json:
 
-                    keywords_map[keyword] = keywords_map[keyword] + 1
+                    page_content = page['result']
+                    page_content_json = json.loads(page_content)
 
-                page_cnt = page_cnt + 1
+                    html = page_content_json['lossyHTML']
 
-        keywords_sorted = sorted(keywords_map.items(), key=operator.itemgetter(1))
+                    keywords, keyword_objects = get_keywords(html)
 
+                    DNNKeyword.objects.bulk_create(keyword_objects)
 
-        
+                    keywords_all.extend(keywords)
+
+                    for keyword in keywords:
+
+                        if not keywords_map.get(keyword):
+                            keywords_map[keyword] = 0
+
+                        keywords_map[keyword] = keywords_map[keyword] + 1
+
+                    page_cnt = page_cnt + 1
+
+                keywords_sorted = sorted(keywords_map.items(), key=operator.itemgetter(1))
