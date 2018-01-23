@@ -77,8 +77,13 @@ class DataSet(models.Model):
         Removes the data for this dataset from the cache.
         """
 
-        if self.name and DataSet.cache.get(self.name):
-            del DataSet.cache[self.name]
+        # remove old data from cache
+        if self.name:
+            if DataSet.cache.get(self.name):
+                del DataSet.cache[self.name]
+
+        # repopulate the cache with this dataset
+        self.get()
 
     @staticmethod
     def is_success(response):
