@@ -57,44 +57,24 @@ def add_url(request):
     return Response(data, status=status.HTTP_201_CREATED)
 
 
-class DataCache():
+class SimpleJSONCache():
 
     cache = {}
 
     def get(name):
 
-        return DataCache.cache.get(name, {})
+        return SimpleJSONCache.cache.get(name, {})
 
     def set(name, data):
 
-        DataCache.cache[name] = data
-
-    def clear(name):
-
-        DataCache.cache[name] = {}
+        SimpleJSONCache.cache[name] = data
 
     def clear_all():
 
-        DataCache.cache = {}
+        SimpleJSONCache.cache = {}
 
 
-@api_view(['GET'])
-def get_data(request, name, param=None):
-    """
-    Returns data cached for the given data source, updating the data whenever necessary.
-    """
-
-    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
-
-    # Only allow certain servers to call this endpoint
-    if security.block_client(request):
-        remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
-        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
-
-    # Only call via https...
-    if not request.is_secure():
-        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+def get_data_impl(name, param=None, path=None, force_refresh=False):
 
     data_source_name = None
 
@@ -104,11 +84,11 @@ def get_data(request, name, param=None):
             data_source_name = param
             param = None
         else:
-            param = get_parcel_id(request.path, 3)
+            param = get_parcel_id(path, 3)
 
     data = {}
-    if not param:
-        data = DataCache.get(name)
+    if not force_refresh and not param:
+        data = SimpleJSONCache.get(name)
 
     if not data:
 
@@ -131,9 +111,30 @@ def get_data(request, name, param=None):
             else:
                 return Response({ "error": "Data set {} not available".format(name) }, status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        DataCache.set(name, data)
+        SimpleJSONCache.set(name, data)
 
     return Response(data)
+
+
+@api_view(['GET'])
+def get_data(request, name, param=None):
+    """
+    Returns data cached for the given data source, updating the data whenever necessary.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    # Only allow certain servers to call this endpoint
+    if security.block_client(request):
+        remote_addr = request.META.get('REMOTE_ADDR')
+        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
+
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    return get_data_impl(name=name, param=param, path=request.path)
 
 
 @api_view(['GET'])

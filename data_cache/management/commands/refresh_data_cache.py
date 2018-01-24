@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 
 from data_cache.models import DataSource
+from data_cache.views import get_data_impl
 
 
 class Command(BaseCommand):
@@ -23,6 +24,8 @@ class Command(BaseCommand):
             print("Exception {} occurred refreshing {}".format(error, data_source))
 
         name = data_source.data_set.name if data_source.data_set else data_source.name
+
+        get_data_impl(name=data_source.name, force_refresh=True)
 
         self.stdout.write("refreshed data source {}".format(name))
         self.stdout.flush()

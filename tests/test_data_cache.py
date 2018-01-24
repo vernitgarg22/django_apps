@@ -9,7 +9,7 @@ from django.conf import settings
 from tests import test_util
 
 from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataDescriptor, DataCitySummary
-from data_cache.views import DataCache
+from data_cache.views import SimpleJSONCache
 
 from cod_utils import util
 
@@ -19,7 +19,7 @@ def cleanup_db():
     test_util.cleanup_model(DataSet)
     test_util.cleanup_model(DataCitySummary)
 
-    DataCache.clear_all()
+    SimpleJSONCache.clear_all()
 
 
 def init_creds(key):
@@ -85,7 +85,7 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/test/", secure=True)
 
         data_value = DataValue.objects.first()
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code,  200)
         self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
     def test_data_cache_refresh(self):
@@ -109,7 +109,7 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/test/", secure=True)
 
         data_value = DataValue.objects.first()
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code,  200)
         self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
     def test_hydrant_data(self):
@@ -136,7 +136,7 @@ class DataCacheTests(TestCase):
         c = Client()
         response = c.get("/data_cache/test/", secure=True)
 
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['data'], {'foo': 'bar'}, "Cached static data should get returned")
 
     def test_data_cache_static_no_data(self):
@@ -219,7 +219,7 @@ class DataCacheTests(TestCase):
 
         settings.ALLOWED_HOSTS.append("127.0.0.1")
 
-        self.assertTrue(response.status_code == 403)
+        self.assertEqual(response.status_code, 403)
 
     def test_data_cache_url_cache_no_data(self):
 
@@ -245,7 +245,7 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/test/", secure=True)
 
         data_value = DataValue.objects.first()
-        self.assertTrue(response.status_code == 503)
+        self.assertEqual(response.status_code, 503)
 
     def test_data_cache_invalid_source1(self):
 
@@ -258,7 +258,7 @@ class DataCacheTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/hydrants/", secure=True)
-        self.assertTrue(response.status_code == 503)
+        self.assertEqual(response.status_code, 503)
 
     def test_data_cache_invalid_source2(self):
 
@@ -271,7 +271,7 @@ class DataCacheTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/hydrants/", secure=True)
-        self.assertTrue(response.status_code == 503)
+        self.assertEqual(response.status_code, 503)
 
     def test_data_cache_value_rejects_bad_json(self):
 
@@ -289,7 +289,7 @@ class DataCacheTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/invalid/", secure=True)
-        self.assertTrue(response.status_code == 404)
+        self.assertEqual(response.status_code, 404)
 
     def test_data_cache_param_404(self):
 
@@ -297,13 +297,13 @@ class DataCacheTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/test/invalid/", secure=True)
-        self.assertTrue(response.status_code == 404)
+        self.assertEqual(response.status_code, 404)
 
     def test_data_cache_not_secure(self):
 
         c = Client()
         response = c.get("/data_cache/test/")
-        self.assertTrue(response.status_code == 403)
+        self.assertEqual(response.status_code, 403)
 
     def test_data_cache_blocked_client(self):
 
@@ -315,7 +315,7 @@ class DataCacheTests(TestCase):
 
         settings.ALLOWED_HOSTS.append("127.0.0.1")
 
-        self.assertTrue(response.status_code == 403)
+        self.assertEqual(response.status_code, 403)
 
     def test_data_cache_params(self):
 
@@ -323,7 +323,7 @@ class DataCacheTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/bridging_neighborhoods/100/", secure=True)
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['data']['attributes']['FID'], 100, "Data cache can be queried with a parameter")
 
     def test_data_cache_params_remove_orphans(self):
@@ -353,7 +353,7 @@ class DataCacheTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/test/", secure=True)
-        self.assertTrue(response.status_code == 503)
+        self.assertEqual(response.status_code, 503)
 
     def test_socrata_where_clause(self):
 
@@ -424,7 +424,7 @@ class DataCitySummaryTests(TestCase):
 
         c = Client()
         response = c.get("/data_cache/city_data_summaries/", secure=True)
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected, "City data summaries contains info about city overview datasets")
 
     def test_get_city_data_summaries_not_secure(self):
