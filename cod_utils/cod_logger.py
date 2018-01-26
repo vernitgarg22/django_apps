@@ -58,6 +58,14 @@ class CODLogger():
         if not settings.RUNNING_UNITTESTS:
             logger.error("ERROR in " + area + ": " + msg)    # pragma: no cover
 
+    def log_msg(self, msg):    # pragma: no cover (this is for dev only)
+        """
+        Log a message.
+        """
+
+        self.get_logger("trace").error(msg)
+
+
     def log_trace(self, start, end, msg=None):    # pragma: no cover (this is for dev only)
         """
         Trace information.
