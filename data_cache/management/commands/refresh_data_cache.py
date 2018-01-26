@@ -25,8 +25,6 @@ class Command(BaseCommand):
 
         name = data_source.data_set.name if data_source.data_set else data_source.name
 
-        get_data_impl(name=data_source.name, force_refresh=True)
-
         self.stdout.write("refreshed data source {}".format(name))
         self.stdout.flush()
         return "refreshed data set {}".format(name)

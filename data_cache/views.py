@@ -24,7 +24,6 @@ def add_url(request):
     # Only allow certain servers to call this endpoint
     if security.block_client(request):
         remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # Only call via https...
@@ -127,7 +126,6 @@ def get_data(request, name, param=None):
     # Only allow certain servers to call this endpoint
     if security.block_client(request):
         remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # Only call via https...
@@ -135,6 +133,29 @@ def get_data(request, name, param=None):
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
     return get_data_impl(name=name, param=param, path=request.path)
+
+
+@api_view(['POST'])
+def refresh_cache(request):
+    """
+    Rebuilds data set cache.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    # Only allow certain servers to call this endpoint
+    if security.block_client(request):
+        remote_addr = request.META.get('REMOTE_ADDR')
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
+
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    for data_set in DataSet.objects.all():
+        get_data_impl(name=data_set.name, force_refresh=True)
+
+    return Response({}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
