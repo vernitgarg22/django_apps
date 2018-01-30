@@ -208,6 +208,7 @@ class WasteNotifierTests(TestCase):
             response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "0", "service_type": service } )
             self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
+            self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'inactive')
 
 
     def test_confirm_subscription_msg(self):
@@ -228,7 +229,20 @@ class WasteNotifierTests(TestCase):
             response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
             self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "Subscription confirmation returns correct message")
+            self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'active')
 
+    def test_confirm_deactivate(self):
+
+        Subscriber(phone_number="5005550006", waste_area_ids='0', service_type='all', status='active').save()
+
+        c = Client()
+
+        expected = {'subscriber': '5005550006 - routes: ,0, - status: inactive - services: all', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been cancelled (reply to this message at any time with ADD ME to start receiving reminders again)'}
+
+        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
+        self.assertEqual(response.status_code, 201)
+        self.assertDictEqual(response.data, expected, "Subscription confirmation returns correct message")
+        self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'inactive')
 
     def test_sign_up_by_fone(self):
 
