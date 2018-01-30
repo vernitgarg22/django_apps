@@ -146,7 +146,7 @@ class DataSource(models.Model):
             SOCRATA_APP_TOKEN = settings.AUTO_LOADED_DATA['SOCRATA_APP_TOKEN']
             headers["X-App-Token"] = SOCRATA_APP_TOKEN
 
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=headers, timeout=120)
 
         # Test success and attempt to parse
         if not DataSet.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)

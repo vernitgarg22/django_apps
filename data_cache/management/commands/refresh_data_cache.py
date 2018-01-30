@@ -31,13 +31,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        TIMEOUT = 120
+
         # Get all data sources
         data_sources = [ data_source for data_source in DataSource.objects.all().order_by('name') ]
         results = []
 
         # Kick off all the data source refreshes
         with ThreadPoolExecutor(max_workers=8) as executor:
-            results = executor.map(self.refresh, data_sources, timeout=120)
+            results = executor.map(self.refresh, data_sources, timeout=TIMEOUT)
 
         # Convert the results returned to a list just so we can
         # do list stuff to it (like call len() on it)
