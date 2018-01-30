@@ -432,3 +432,36 @@ class DataCitySummaryTests(TestCase):
         c = Client()
         response = c.get("/data_cache/city_data_summaries/")
         self.assertEqual(response.status_code, 403)
+
+
+class DataCacheRefreshTests(TestCase):
+
+    def setUp(self):
+        cleanup_db()
+        self.maxDiff = None
+
+    def test_refresh(self):
+
+        init_test_data()
+
+        c = Client()
+        response = c.post("/data_cache/refresh/", secure=True)
+        self.assertEqual(response.status_code, 201)
+
+    def test_refresh_not_secure(self):
+
+        c = Client()
+        response = c.post("/data_cache/refresh/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_refresh_blocked_client(self):
+
+        # Force block_client to block us
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
+
+        c = Client()
+        response = c.post("/data_cache/refresh/")
+
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
+
+        self.assertEqual(response.status_code, 403)
