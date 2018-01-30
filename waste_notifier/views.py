@@ -214,12 +214,12 @@ def confirm_notifications(request):
     response = {}
 
     # Update user status
-    if "remove me" in body:
-        response = update_subscription(phone_number, False)
+    if remove_me:
+        response = update_subscription(phone_number=phone_number, activate=False)
     else:
-        response = update_subscription(phone_number, True)
+        response = update_subscription(phone_number=phone_number, activate=True)
 
-    add_subscriber_comment(phone_number, "User's response to confirmation was: {}".format(body))
+    add_subscriber_comment(phone_number=phone_number, comment="User's response to confirmation was: {}".format(body))
     return response
 
 
