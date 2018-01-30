@@ -231,6 +231,13 @@ class DataSource(models.Model):
         url = self.url
 
         # Add a socrata syntax where clause?
+        #
+        # examples of where clause usage:
+        #
+        # https://data.detroitmi.gov/resource/uzpg-2pfj.json?demolition_date=2018-01-09T00:00:00.000
+        # https://data.detroitmi.gov/resource/uzpg-2pfj.json?$where=demolition_date between '2018-01-03T00:00:00.000' and '2018-01-10T00:00:00.000'
+        # https://data.detroitmi.gov/resource/uzpg-2pfj.json?$where=demolition_date > '2018-01-03T00:00:00.000'
+        #
         if self.socrata_where:
             if url.find("?") < 0:
                 url = url + "?"
