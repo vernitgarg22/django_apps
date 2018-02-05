@@ -137,20 +137,23 @@ def subscribe_address(request):
     if error:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)    # pragma: no cover (should never get here)
 
-    add_subscriber_comment(phone_number=phone_number, comment='signed up via text')
-    return update_subscription(phone_number, True)
+    add_subscriber_comment(subscriber=subscriber, comment='signed up via text')
+    subscriber, response = update_subscription(phone_number=phone_number, activate=True, subscriber=subscriber)
+    return response
 
 
-def update_subscription(phone_number, activate):
+def update_subscription(phone_number, activate, subscriber=None):
     """
     Find the subscriber and activate / deactivate them
     """
 
-    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
-    if not subscribers.exists():
-        raise Http404("Subscriber not found")
+    if not subscriber:
+        subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
+        if not subscribers.exists():
+            raise Http404("Subscriber not found")
 
-    subscriber = subscribers[0]
+        subscriber = subscribers[0]
+
     subscriber.activate() if activate else subscriber.deactivate()
 
     # Get proper response
@@ -168,15 +171,14 @@ def update_subscription(phone_number, activate):
     # send the subscriber a confirmation message
     MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
 
-    return Response({ "subscriber": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
+    return subscriber, Response({ "subscriber": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
 
-def add_subscriber_comment(phone_number, comment):
-    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
-    if not subscribers.exists():
-        return     # pragma: no cover (should never get here)
+def add_subscriber_comment(subscriber, comment):
+    """
+    Update / add comment to the subscriber.
+    """
 
-    subscriber = subscribers[0]
     if subscriber.comment:
         comment = subscriber.comment + ' - ' + comment
 
@@ -210,16 +212,13 @@ def confirm_notifications(request):
     body = body.lower()
 
     # unless user wants to be removed, add them
-    remove_me = "remove me" in body
+    add_me = "remove me" not in body
     response = {}
 
     # Update user status
-    if remove_me:
-        response = update_subscription(phone_number=phone_number, activate=False)
-    else:
-        response = update_subscription(phone_number=phone_number, activate=True)
+    subscriber, response = update_subscription(phone_number=phone_number, activate=add_me)
 
-    add_subscriber_comment(phone_number=phone_number, comment="User's response to confirmation was: {}".format(body))
+    add_subscriber_comment(subscriber=subscriber, comment="User's response to confirmation was: {}".format(body))
     return response
 
 

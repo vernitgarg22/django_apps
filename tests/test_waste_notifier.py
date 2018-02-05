@@ -72,7 +72,7 @@ class WasteNotifierTests(TestCase):
         """
         s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
         s.save()
-        views.add_subscriber_comment("1234567890", "testing")
+        views.add_subscriber_comment(subscriber=s, comment="testing")
         s = Subscriber.objects.all()[0]
         self.assertTrue(str(s).find("testing"), "add_subscriber_comment() adds a comment to the subscriber")
 
