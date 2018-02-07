@@ -1,4 +1,5 @@
 import datetime
+import requests
 
 from waste_schedule.models import ScheduleDetail
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
@@ -6,6 +7,8 @@ from cod_utils import util
 from cod_utils.messaging import SlackMsgHandler
 
 from waste_wizard.models import WasteItem
+
+import direccion
 
 
 def format_slack_alerts_summary(content):
@@ -154,6 +157,36 @@ def get_service_detail_message(services, detail):
     message = add_message_instructions(message)
 
     return message
+
+def geocode_address(street_address):
+    """
+    Returns geocoded location and address object if address can be geocoded
+    with enough accuracy. Otherwise, returns None.
+    """
+
+    # Parse address string and get result from AddressPoint geocoder
+    address = direccion.Address(input=street_address, notify_fail=True)
+    location = address.geocode()
+
+    if not location or location['score'] < 50:
+        return None, None
+    else:
+        return location, address
+
+def get_waste_area_ids(location, ids_only = True):
+    """
+    Returns waste area ids for the given location.
+    """
+
+    # Now look up waste areas for this location
+    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
+    url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
+    response = requests.get(url)
+
+    if ids_only:
+        return [ feature['attributes']['FID'] for feature in response.json()['features'] ]
+    else:
+        return [ feature['attributes'] for feature in response.json()['features'] ]
 
 
 class SubscriberServices:

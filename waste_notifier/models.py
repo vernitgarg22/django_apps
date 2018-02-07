@@ -4,10 +4,16 @@ import re
 from django.db import models
 from django.core import validators
 from django.core.exceptions import ValidationError
+from django.conf import settings
+
+from rest_framework.response import Response
 
 from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
+from waste_notifier.util import geocode_address, get_waste_area_ids
 from cod_utils import util
+from cod_utils.messaging import MsgHandler
+from cod_utils.cod_logger import CODLogger
 
 
 class Subscriber(models.Model):
@@ -57,6 +63,9 @@ class Subscriber(models.Model):
         # validate each comma-delimited value in service_type
         if not ScheduleDetail.is_valid_service_type(self.service_type):
             raise ValidationError({'service_type': "Invalid service type: " + self.service_type})
+
+        if not self.address:
+            raise ValidationError({'address': "Address is required"})
 
     def save(self, *args, **kwargs):
 
@@ -136,13 +145,31 @@ class Subscriber(models.Model):
         Using dictionary of form data, update existing subscriber or create new one
         """
 
-        if not data.get('phone_number') or not data.get('waste_area_ids'):
-            # TODO replace this with error 403 or something like that
-            return None, {"error": "phone_number and waste_area_ids are required"}
+        if not data.get('phone_number') or not data.get('address'):
+            return None, {"error": "address and phone_number are required"}
 
         phone_number = data['phone_number']
+        street_address = data['address']
 
         waste_area_ids = data.get('waste_area_ids')
+        if not waste_area_ids:
+            # Parse address string and get result from AddressPoint geocoder
+            location, address = geocode_address(street_address=street_address)
+            if not location:
+                invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
+
+                CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
+
+                MsgHandler().send_admin_alert(invalid_addr_msg)
+
+                msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
+                text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
+                MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
+
+                return None, { "error": "Address not found" }
+
+            waste_area_ids = get_waste_area_ids(location=location)
+
         if type(waste_area_ids) == list:
             waste_area_ids = ''.join( [ str(num) + ',' for num in waste_area_ids ] )
 

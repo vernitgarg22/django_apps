@@ -23,8 +23,6 @@ from cod_utils.cod_logger import CODLogger
 
 from waste_schedule.models import ScheduleDetail
 
-import direccion
-
 
 @api_view(['POST'])
 def subscribe_notifications(request):
@@ -55,38 +53,6 @@ def subscribe_notifications(request):
     MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
 
     return Response({ "received": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
-
-
-def geocode_address(street_address):
-    """
-    Returns geocoded location and address object if address can be geocoded
-    with enough accuracy. Otherwise, returns None.
-    """
-
-    # Parse address string and get result from AddressPoint geocoder
-    address = direccion.Address(input=street_address, notify_fail=True)
-    location = address.geocode()
-
-    if not location or location['score'] < 50:
-        return None, None
-    else:
-        return location, address
-
-
-def get_waste_area_ids(location, ids_only = True):
-    """
-    Returns waste area ids for the given location.
-    """
-
-    # Now look up waste areas for this location
-    GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/All_Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
-    url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
-    response = requests.get(url)
-
-    if ids_only:
-        return [ feature['attributes']['FID'] for feature in response.json()['features'] ]
-    else:
-        return [ feature['attributes'] for feature in response.json()['features'] ]
 
 
 @api_view(['POST'])
