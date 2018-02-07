@@ -28,6 +28,13 @@ def make_schedule_detail(detail_type='schedule', service_type='trash', normal_da
     return detail
 
 
+class WasteScheduleUtilTests(TestCase):
+
+    def test_is_valid_service_type(self):
+
+        self.assertFalse(ScheduleDetail.is_valid_service_type(''))
+
+
 class WasteScheduleInitTests(TestCase):
 
     def setUp(self):

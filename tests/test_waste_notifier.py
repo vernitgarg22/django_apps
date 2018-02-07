@@ -51,8 +51,8 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
     content.update(meta)
     return content
 
-def make_subscriber(waste_area_ids, service_type="all", phone_number="5005550006"):
-    subscriber = Subscriber(phone_number=phone_number, waste_area_ids=waste_area_ids, service_type=service_type)
+def make_subscriber(waste_area_ids, service_type="all", address="7840 Van Dyke Pl", phone_number="5005550006"):
+    subscriber = Subscriber(phone_number=phone_number, waste_area_ids=waste_area_ids, address=address, service_type=service_type)
     subscriber.activate()
     return subscriber
 
@@ -70,7 +70,7 @@ class WasteNotifierTests(TestCase):
         """
         Test subscriber with comment
         """
-        s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
+        s = Subscriber(phone_number="1234567890", waste_area_ids="1", address="7840 van dyke pl", service_type="all")
         s.save()
         views.add_subscriber_comment(subscriber=s, comment="testing")
         s = Subscriber.objects.all()[0]
@@ -80,7 +80,7 @@ class WasteNotifierTests(TestCase):
         """
         Verify that deleting a subscriber does a 'soft delete'
         """
-        s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
+        s = Subscriber(phone_number="1234567890", waste_area_ids="1", address="7840 van dyke pl", service_type="all")
         s.delete()
         self.assertEqual(s.status, 'inactive', "Deleting a subscriber causes a 'soft delete'")
 
@@ -88,7 +88,7 @@ class WasteNotifierTests(TestCase):
         """
         Test creating a subscriber from a dict object
         """
-        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "waste_area_ids": "1", "service_type": "all" } )
+        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "address": "1104 Military St", "service_type": "all" } )
         self.assertEqual(error, None, "Subscriber can be created from a dict (form) object")
         self.assertEqual(s.phone_number, "1234567890", "Subscriber can be created from a dict (form) object")
 
@@ -96,7 +96,7 @@ class WasteNotifierTests(TestCase):
         """
         Test subscriber with all service types
         """
-        s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="bulk,recycling,trash,")
+        s = Subscriber(phone_number="1234567890", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="bulk,recycling,trash,")
         s.save()
         s = Subscriber.objects.all()[0]
         self.assertEqual(s.service_type, 'all', "Saving subscriber combines all service types into 'all'")
@@ -105,18 +105,18 @@ class WasteNotifierTests(TestCase):
         """
         Test updating existing subscriber from a dict object
         """
-        s = Subscriber(phone_number="1234567890", waste_area_ids="1", service_type="all")
+        s = Subscriber(phone_number="1234567890", waste_area_ids="1", address="1104 Military St", service_type="all")
         s.save()
-        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "waste_area_ids": "2", "service_type": "all" } )
+        s, error = Subscriber.update_or_create_from_dict( { "phone_number": "1234567890", "address": "7840 Van Dyke Pl", "service_type": "all" } )
         self.assertEqual(error, None, "Subscriber can be updated from a dict (form) object")
-        self.assertEqual(s.waste_area_ids, ",2,", "Subscriber can be updated from a dict (form) object")
+        self.assertEqual(s.waste_area_ids, ",8,", "Subscriber can be updated from a dict (form) object")
 
     def test_update_or_create_from_dict_invalid(self):
         """
         Test creating a subscriber from a dict object when dict is missing data
         """
         s, error = Subscriber.update_or_create_from_dict( { "waste_area_ids": "1", "service_type": "all" } )
-        self.assertDictEqual(error, {"error": "phone_number and waste_area_ids are required"}, "Subscriber can only be created from a valid dict (form) object")
+        self.assertDictEqual(error, {"error": "address and phone_number are required"}, "Subscriber can only be created from a valid dict (form) object")
         self.assertEqual(s, None, "Subscriber can only be created from a valid dict (form) object")
 
     def test_waste_area_ids(self):
@@ -152,6 +152,7 @@ class WasteNotifierTests(TestCase):
             { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": None },
             { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": "on" },
             { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all", "status": "off" },
+            { "phone_number": "2345678911",   "waste_area_ids": "1,2,3", "service_type": "all" },
         ]
 
         for data in INVALID_DATA:
@@ -205,7 +206,7 @@ class WasteNotifierTests(TestCase):
 
         for service, expected in values:
             cleanup_db()
-            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "0", "service_type": service } )
+            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "1104 Military St", "service_type": service } )
             self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
             self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'inactive')
@@ -223,7 +224,7 @@ class WasteNotifierTests(TestCase):
 
         for service, expected in values:
             cleanup_db()
-            subscriber = Subscriber(phone_number="5005550006", waste_area_ids='0', service_type=service)
+            subscriber = Subscriber(phone_number="5005550006", waste_area_ids='0', address="1104 Military St", service_type=service)
             subscriber.save()
 
             response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
@@ -233,7 +234,7 @@ class WasteNotifierTests(TestCase):
 
     def test_confirm_deactivate(self):
 
-        Subscriber(phone_number="5005550006", waste_area_ids='0', service_type='all', status='active').save()
+        Subscriber(phone_number="5005550006", waste_area_ids='0', service_type='all', address="1104 Military St", status='active').save()
 
         c = Client()
 
@@ -381,7 +382,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "16772 Sunderland Rd", "service_type": "all" } )
         self.assertEqual(response.status_code, 201)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
@@ -409,6 +410,13 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/subscribe/', { "Body": "oops" } )
         self.assertEqual(response.status_code, 400, "/waste_notifier/subscribe/ rejects malformed content")
 
+    def test_subscribe_invalid_address(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "Invalid Address", "service_type": "all" } )
+        self.assertEqual(response.status_code, 400, "/waste_notifier/subscribe/ rejects malformed content")
+
     def test_subscribe_extra_values(self):
         """
         Test creating a subscriber with extra values
@@ -416,10 +424,10 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        for value in [ 'address', 'latitude', 'longitude' ]:
+        for value in [ 'latitude', 'longitude' ]:
 
             cleanup_db()
-            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all", value: "test value" } )
+            response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl", "service_type": "all", value: "test value" } )
             self.assertEqual(response.status_code, 201)
             subscriber = Subscriber.objects.all()[0]
             self.assertEqual(getattr(subscriber, value), 'test value', "Subscribing can set {}".format(value))
@@ -442,7 +450,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke pl", "service_type": "all" } )
         self.assertEqual(response.status_code, 201)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
@@ -457,7 +465,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", comment="test comment")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", address="1104 Military St", comment="test comment")
         subscriber.save()
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
 
@@ -469,7 +477,7 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "waste_area_ids": "2,3,14,", "service_type": "all" } )
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl", "service_type": "all" } )
         self.assertEqual(response.status_code == 201, True)
 
         response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
@@ -481,7 +489,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_reminder(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", address="1104 Military St", service_type="all")
         subscriber.activate()
 
         # 20170522 is a monday - week 'b', so route 0 should get picked up
@@ -492,7 +500,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_info(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='all', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
@@ -505,7 +513,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_no_info(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='recycling', description='Special quarterly dropoff', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
@@ -517,7 +525,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_info_all_services(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='info', service_type='all', description='City services have not been affected by snow storm', normal_day=datetime.date(2018, 1, 1))
         detail.clean()
@@ -532,7 +540,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_schedule_change(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='recycling', description='test holiday', normal_day=datetime.date(2017, 4, 7), new_day=datetime.date(2017, 4, 8))
         detail.clean()
@@ -546,7 +554,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_turkeyday_schedule_change1(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Thanksgiving', normal_day=datetime.date(2017, 11, 23), new_day=datetime.date(2017, 11, 24))
         detail.clean()
@@ -560,7 +568,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_turkeyday_schedule_change2(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Thanksgiving', normal_day=datetime.date(2017, 11, 23), new_day=datetime.date(2017, 11, 24))
         detail.clean()
@@ -573,7 +581,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_turkeyday_schedule_change3(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Thanksgiving', normal_day=datetime.date(2017, 11, 23), new_day=datetime.date(2017, 11, 24))
         detail.clean()
@@ -588,7 +596,7 @@ class WasteNotifierTests(TestCase):
     def test_send_no_schedule_change(self):
 
         # route 8 gets pickups on fridays, with recycling on 'a' weeks
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         # reschedule recycling citywide from friday to saturday for a 'b' week
@@ -607,7 +615,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_ab_onweek(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request(date_val="20170407")
@@ -618,7 +626,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_ab_offweek(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         # get a week where only trash should be pickup up
@@ -630,7 +638,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_mix_days(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="12,14,22", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="12,14,22", address="16252 Wyoming St", service_type="all")
         subscriber.activate()
 
         date_results = {
@@ -647,7 +655,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_eastside_wednesday_trash(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", address="1465 Chicago Blvd", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request(date_val="20170419")
@@ -658,7 +666,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_eastside_thursday_bulk_a(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", address="1465 Chicago Blvd", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request(date_val="20170420")
@@ -669,7 +677,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_eastside_thursday_recycling_b(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", address="1465 Chicago Blvd", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request(date_val="20170413")
@@ -679,7 +687,7 @@ class WasteNotifierTests(TestCase):
         self.assertDictEqual(expected, response, "Eastside thursday recycling B residents should have gotten alerts")
 
     def test_send_bulk_yard_waste(self):
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
@@ -697,7 +705,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_start_date(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts Monday, April 17, 2017', new_day=datetime.date(2017, 4, 17))
         detail.clean()
@@ -711,7 +719,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_end_date(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
         detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts Monday, March 15, 2017', new_day=datetime.date(2017, 3, 15))
         detail.clean()
@@ -728,7 +736,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_auto(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request()
@@ -739,7 +747,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_date_name_tomorrow(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request(date_name="tomorrow")
@@ -750,7 +758,7 @@ class WasteNotifierTests(TestCase):
 
     def test_send_today_query_param(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
         subscriber.activate()
 
         response = views.send_notifications_request(today="20170420")
@@ -950,7 +958,7 @@ class WasteNotifierTests(TestCase):
 
                 cleanup_db()
 
-                subscriber = Subscriber(phone_number="5005550006", waste_area_ids=waste_area_ids, service_type="all")
+                subscriber = Subscriber(phone_number="5005550006", waste_area_ids=waste_area_ids, address="7840 Van Dyke Pl", service_type="all")
                 subscriber.activate()
                 detail = ScheduleDetail(detail_type='info', service_type='all', description='Curbside yard waste pickup will be suspended after Dec 15 until next spring.', note='Please set out yard waste in paper lawn bags or in 32-gallon containers labelled YARD WASTE ONLY the night before your pickup. (See http://www.detroitmi.gov/publicworks for more details.)', normal_day=date)
                 detail.clean()

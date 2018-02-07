@@ -316,7 +316,7 @@ class SendWasteRemindersTest(TestCase):
 
         out = StringIO()
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", service_type="all")
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", address="1105 Military St", service_type="all")
         subscriber.activate()
 
         call_command('send_waste_reminders', '--today=20170521', stdout=out)
