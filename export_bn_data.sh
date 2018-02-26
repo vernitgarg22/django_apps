@@ -1,0 +1,1 @@
+python manage.py export_bn_data output.csv
