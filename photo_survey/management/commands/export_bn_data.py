@@ -7,6 +7,14 @@ from photo_survey.models import ParcelMetadata, SurveyType, Survey
 from assessments.models import ParcelMaster
 
 
+def get_user_name(user):
+    """
+    Return properly-formatted user name.
+    """
+
+    return user.first_name + user.last_name
+
+
 class Command(BaseCommand):
     help = """
         Use this to export bridging neighborhoods data, e.g.,
@@ -28,6 +36,7 @@ class Command(BaseCommand):
         surveys = survey_type.survey_set.all().order_by('-created_at', 'user_id')
 
         existing_surveys = {}
+        missing_emails = {}
 
         with open(filename, 'w', newline='') as csvfile:
 
@@ -43,20 +52,22 @@ class Command(BaseCommand):
                     parcel_master = ParcelMaster.objects.filter(pnum = parcel.parcel_id).first()
                     ranking = survey.survey_answers[2]
 
-                    if not user.email:
-                        raise CommandError("User id {} needs email added".format(user.id))
-
-                    if existing_surveys.get(parcel.parcel_id) or survey.status == 'deleted':
+                    if not get_user_name(user) and not user.email:
+                        missing_emails[int(user.username)] = True
+                    elif existing_surveys.get(parcel.parcel_id) or survey.status == 'deleted':
                         continue
+                    elif not missing_emails:
 
-                    existing_surveys[parcel.parcel_id] = True
+                        existing_surveys[parcel.parcel_id] = True
+                        data = {
+                            'Email': user.email,
+                            'Full Name': get_user_name(user),
+                            'Address': parcel_master.propstreetcombined,
+                            'Date Selected': survey.created_at.strftime("%b %d, %Y"),
+                            'Ranking': int(ranking.answer) + 1,
+                        }
 
-                    data = { 
-                        'Email': user.email,
-                        'Full Name': user.first_name + ' ' + user.last_name,
-                        'Address': parcel_master.propstreetcombined,
-                        'Date Selected': survey.created_at.strftime("%b %d, %Y"),
-                        'Ranking': int(ranking.answer) + 1,
-                    }
+                        writer.writerow(data)
 
-                    writer.writerow(data)
+            if missing_emails:
+                raise CommandError("User ids {} need email added".format(list(missing_emails.keys())))
