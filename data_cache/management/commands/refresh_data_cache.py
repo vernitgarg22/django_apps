@@ -13,20 +13,25 @@ class Command(BaseCommand):
         This command refreshes the data cache, e.g.,
         python manage.py refresh_data_cache"""
 
+    def trace(self, value):
+        self.stdout.write(value)
+        self.stdout.flush()
+
     def refresh(self, data_source):
         """
         Refreshes the individual data source.
         """
+
+        name = data_source.data_set.name if data_source.data_set else data_source.name
+
+        self.trace("starting data source {}".format(name))
 
         try:
             data_source.refresh()
         except Exception as error:    # pragma: no cover (should not get here)
             print("Exception {} occurred refreshing {}".format(error, data_source))
 
-        name = data_source.data_set.name if data_source.data_set else data_source.name
-
-        self.stdout.write("refreshed data source {}".format(name))
-        self.stdout.flush()
+        self.trace("refreshed data source {}".format(name))
         return "refreshed data set {}".format(name)
 
     def handle(self, *args, **options):
@@ -45,4 +50,7 @@ class Command(BaseCommand):
         # do list stuff to it (like call len() on it)
         results = [ result for result in results ]
 
-        return "Updated {} data cache sources".format(len(results))
+        msg = "Updated {} data cache sources".format(len(results))
+        self.trace(msg)
+
+        return msg
