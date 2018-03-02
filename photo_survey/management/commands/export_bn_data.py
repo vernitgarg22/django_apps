@@ -12,7 +12,25 @@ def get_user_name(user):
     Return properly-formatted user name.
     """
 
-    return user.first_name + user.last_name
+    return user.first_name + " " + user.last_name
+
+
+class ParcelFavoriteMap():
+
+    def __init__(self):
+        self.map = {}
+
+    def add(self, user, parcel):
+
+        if not self.map.get(user.id):
+            self.map[user.id] = {}
+        self.map[user.id][parcel.parcel_id] = True
+
+    def exists(self, user, parcel):
+
+        if self.map.get(user.id):
+            return self.map[user.id].get(parcel.parcel_id)
+        return False
 
 
 class Command(BaseCommand):
@@ -35,7 +53,7 @@ class Command(BaseCommand):
 
         surveys = survey_type.survey_set.all().order_by('-created_at', 'user_id')
 
-        existing_surveys = {}
+        parcel_map = ParcelFavoriteMap()
         missing_emails = {}
 
         with open(filename, 'w', newline='') as csvfile:
@@ -54,11 +72,11 @@ class Command(BaseCommand):
 
                     if not get_user_name(user) and not user.email:
                         missing_emails[int(user.username)] = True
-                    elif existing_surveys.get(parcel.parcel_id) or survey.status == 'deleted':
+                    elif parcel_map.exists(user, parcel) or survey.status == 'deleted':
                         continue
                     elif not missing_emails:
 
-                        existing_surveys[parcel.parcel_id] = True
+                        parcel_map.add(user, parcel)
                         data = {
                             'Email': user.email,
                             'Full Name': get_user_name(user),
