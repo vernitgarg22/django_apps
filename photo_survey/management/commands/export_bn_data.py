@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
         filename = options['output_file']
 
-        ignored_users = [ 44, 46, 47, 1047, 1048, 1049, 1051, 1052, 1054 ]
+        ignored_users = [ 44, 46, 47, 101, 1047, 1048, 1049, 1051, 1052, 1054 ]
 
         survey_type = SurveyType.objects.get(survey_template_id = 'bridging_neighborhoods')
 

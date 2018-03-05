@@ -77,21 +77,24 @@ class SurveyorAdmin(UserAdmin):
     app_label = 'photo_survey'
 
     list_display = ('username', 'email', 'first_name', 'last_name')
-    list_filter = ()
 
-    def get_queryset(self, request):    # pragma: no cover  (only used in admin page)
-        """
-        Filter the objects displayed in the change_list to not show bridging_neighborhoods users.
-        """
+    # REVIEW:  Allow sort by group (so that we can separate bridging neighborhoods from surveyors)
+    list_filter = ('groups', )
 
-        # surveyor_group = SurveyorGroup.objects.filter(name="surveyors")[0]
-        # surveyors = Surveyor.objects.filter(username__contains='@')
-        # for surveyor in surveyors:
-        #     surveyor_group.user_set.db_manager('photo_survey').add(surveyor)
+    # REVIEW:  Allow bridging neighborhoods users to show up
+    # def get_queryset(self, request):    # pragma: no cover  (only used in admin page)
+    #     """
+    #     Filter the objects displayed in the change_list to not show bridging_neighborhoods users.
+    #     """
+
+    #     # surveyor_group = SurveyorGroup.objects.filter(name="surveyors")[0]
+    #     # surveyors = Surveyor.objects.filter(username__contains='@')
+    #     # for surveyor in surveyors:
+    #     #     surveyor_group.user_set.db_manager('photo_survey').add(surveyor)
 
 
-        qs = super(SurveyorAdmin, self).get_queryset(request)
-        return qs.filter(groups__name = "surveyors")
+    #     qs = super(SurveyorAdmin, self).get_queryset(request)
+    #     return qs.filter(groups__name = "surveyors")
 
 admin.site.register(Surveyor, SurveyorAdmin)
 
