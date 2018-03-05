@@ -40,14 +40,19 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('output_file', type=str, help="Output file")
+        parser.add_argument('--export_username', type=str, help="Output username [y|n]", default='n')
 
     field_names = [ 'Email', 'Full Name', 'Address', 'Date Selected', 'Ranking' ]
 
     def handle(self, *args, **options):
 
         filename = options['output_file']
+        export_username = options['export_username'] == 'y'
 
-        ignored_users = [ 44, 46, 47, 101, 1047, 1048, 1049, 1051, 1052, 1054 ]
+        ignored_users = [ 44, 46, 47, 1047, 1048, 1049, 1051, 1052, 1054, 1067 ]
+
+        if export_username:
+            self.field_names.append('Username')
 
         survey_type = SurveyType.objects.get(survey_template_id = 'bridging_neighborhoods')
 
@@ -84,6 +89,9 @@ class Command(BaseCommand):
                             'Date Selected': survey.created_at.strftime("%b %d, %Y"),
                             'Ranking': int(ranking.answer) + 1,
                         }
+
+                        if export_username:
+                            data['Username'] = user.username
 
                         writer.writerow(data)
 
