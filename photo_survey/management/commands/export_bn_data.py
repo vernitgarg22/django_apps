@@ -87,7 +87,7 @@ class Command(BaseCommand):
                             'Full Name': get_user_name(user),
                             'Address': parcel_master.propstreetcombined,
                             'Date Selected': survey.created_at.strftime("%b %d, %Y"),
-                            'Ranking': int(ranking.answer) + 1,
+                            'Ranking': int(ranking.answer),
                         }
 
                         if export_username:
