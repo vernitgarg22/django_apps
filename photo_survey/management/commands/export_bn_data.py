@@ -41,6 +41,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('output_file', type=str, help="Output file")
         parser.add_argument('--export_username', type=str, help="Output username [y|n]", default='n')
+        parser.add_argument('--export_survey_id', type=str, help="Output survey id [y|n]", default='n')
 
     field_names = [ 'Email', 'Full Name', 'Address', 'Date Selected', 'Ranking' ]
 
@@ -48,11 +49,14 @@ class Command(BaseCommand):
 
         filename = options['output_file']
         export_username = options['export_username'] == 'y'
+        export_survey_id = options['export_survey_id'] == 'y'
 
-        ignored_users = [ 44, 46, 47, 1047, 1048, 1049, 1051, 1052, 1054, 1067 ]
+        ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 216, 9999 ]
 
         if export_username:
             self.field_names.append('Username')
+        if export_survey_id:
+            self.field_names.append('Survey id')
 
         survey_type = SurveyType.objects.get(survey_template_id = 'bridging_neighborhoods')
 
@@ -68,12 +72,16 @@ class Command(BaseCommand):
 
             for survey in surveys:
 
-                if int(survey.user_id) not in ignored_users:
+                user = survey.user
 
-                    user = survey.user
-                    parcel = survey.parcel
-                    parcel_master = ParcelMaster.objects.filter(pnum = parcel.parcel_id).first()
+                if int(user.username) not in ignored_users:
+
+                    if len(survey.survey_answers) < 3:
+                        continue
+
                     ranking = survey.survey_answers[2]
+                    parcel = survey.parcel
+                    parcel_master = ParcelMaster.objects.get(pnum = parcel.parcel_id)
 
                     if not get_user_name(user) and not user.email:
                         missing_emails[int(user.username)] = True
@@ -87,11 +95,14 @@ class Command(BaseCommand):
                             'Full Name': get_user_name(user),
                             'Address': parcel_master.propstreetcombined,
                             'Date Selected': survey.created_at.strftime("%b %d, %Y"),
-                            'Ranking': int(ranking.answer),
+                            'Ranking': int(ranking.answer) + 1,
                         }
 
                         if export_username:
                             data['Username'] = user.username
+
+                        if export_survey_id:
+                            data['Survey id'] = survey.id
 
                         writer.writerow(data)
 
