@@ -91,7 +91,7 @@ class MsgHandler():
         admin_numbers = settings.AUTO_LOADED_DATA['ADMIN_PHONE_NUMBERS']
 
         client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if dry_run_param:
+        if MsgHandler.DRY_RUN or dry_run_param:
             return False    # pragma: no cover
 
         success = True

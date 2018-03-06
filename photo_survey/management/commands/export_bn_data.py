@@ -6,6 +6,8 @@ from django.core.management.base import BaseCommand, CommandError
 from photo_survey.models import ParcelMetadata, SurveyType, Survey
 from assessments.models import ParcelMaster
 
+from cod_utils.messaging import MsgHandler
+
 
 def get_user_name(user):
     """
@@ -107,4 +109,6 @@ class Command(BaseCommand):
                         writer.writerow(data)
 
             if missing_emails:
-                raise CommandError("User ids {} need email added".format(list(missing_emails.keys())))
+                msg = "User ids {} need email added".format(list(missing_emails.keys()))
+                MsgHandler().send_admin_alert(text=msg)
+                raise CommandError(msg)
