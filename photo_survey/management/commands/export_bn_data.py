@@ -14,7 +14,7 @@ def get_user_name(user):
     Return properly-formatted user name.
     """
 
-    return user.first_name + " " + user.last_name
+    return user.first_name + " " + user.last_name if user.first_name and user.last_name else ""
 
 
 class ParcelFavoriteMap():
