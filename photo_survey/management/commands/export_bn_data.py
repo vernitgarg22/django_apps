@@ -1,5 +1,8 @@
 import csv
+import requests
+from requests.auth import HTTPBasicAuth
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 
@@ -15,6 +18,31 @@ def get_user_name(user):
     """
 
     return user.first_name + " " + user.last_name if user.first_name and user.last_name else ""
+
+
+def init_user_name(user):
+    """
+    Try to init user info.
+    """
+
+    auth_values = tuple(settings.CREDENTIALS['BRIDGING_NEIGHBORHOODS'].values())
+
+    url = "https://bridgingneighborhoods.org/user/{}?_format=json".format(user.username)
+    response = requests.get(url, auth=HTTPBasicAuth(*auth_values))
+    if response.status_code == 200:
+
+        data = response.json()
+        names = data['field_full_name'][0]['value'].split(' ')
+        if not names:
+            return
+
+        if len(names) < 2:
+            user.last_name = names[0]
+        else:
+            user.first_name = names[0]
+            user.last_name = names[1]
+
+        user.save()
 
 
 class ParcelFavoriteMap():
@@ -53,6 +81,10 @@ class Command(BaseCommand):
         export_username = options['export_username'] == 'y'
         export_survey_id = options['export_survey_id'] == 'y'
 
+        if settings.DEBUG:
+            export_username = True
+            export_survey_id = True
+
         ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 216, 9999 ]
 
         if export_username:
@@ -78,6 +110,10 @@ class Command(BaseCommand):
 
                 if int(user.username) not in ignored_users:
 
+                    # First check if we need to try to init user name.
+                    if not get_user_name(user):
+                        init_user_name(user)
+
                     if len(survey.survey_answers) < 3:
                         continue
 
@@ -85,6 +121,7 @@ class Command(BaseCommand):
                     parcel = survey.parcel
                     parcel_master = ParcelMaster.objects.get(pnum = parcel.parcel_id)
 
+                    # Now try to output our information.
                     if not get_user_name(user) and not user.email:
                         missing_emails[int(user.username)] = True
                     elif parcel_map.exists(user, parcel) or survey.status == 'deleted':
