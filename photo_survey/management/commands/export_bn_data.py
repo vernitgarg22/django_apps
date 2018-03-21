@@ -86,6 +86,8 @@ class Command(BaseCommand):
             export_survey_id = True
 
         ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 216, 9999 ]
+        deleted_users = [ 541, 542 ]
+        ignored_users.extend(deleted_users)
 
         if export_username:
             self.field_names.append('Username')
