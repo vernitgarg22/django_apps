@@ -34,20 +34,22 @@ def init_user_name(user):
 
     url = "https://bridgingneighborhoods.org/user/{}?_format=json".format(user.username)
     response = requests.get(url, auth=HTTPBasicAuth(*auth_values))
-    if response.status_code == 200:
+    if response.status_code != 200:
+        return False
 
-        data = response.json()
-        names = data['field_full_name'][0]['value'].split(' ')
-        if not names:
-            return
+    data = response.json()
+    names = data['field_full_name'][0]['value'].split(' ')
+    if not names:
+        return False
 
-        if len(names) < 2:
-            user.last_name = names[0]
-        else:
-            user.first_name = names[0]
-            user.last_name = names[1]
+    if len(names) < 2:
+        user.last_name = names[0]
+    else:
+        user.first_name = names[0]
+        user.last_name = names[1]
 
-        user.save()
+    user.save()
+    return True
 
 
 class ParcelFavoriteMap():
@@ -91,8 +93,6 @@ class Command(BaseCommand):
             export_survey_id = True
 
         ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 216, 9999 ]
-        deleted_users = [ 541, 542 ]
-        ignored_users.extend(deleted_users)
 
         if export_username:
             self.field_names.append('Username')
@@ -118,8 +118,8 @@ class Command(BaseCommand):
                 if int(user.username) not in ignored_users:
 
                     # First check if we need to try to init user name.
-                    if not get_user_name(user):
-                        init_user_name(user)
+                    if not get_user_name(user) and not init_user_name(user):
+                        continue
 
                     if len(survey.survey_answers) < 3:
                         continue
