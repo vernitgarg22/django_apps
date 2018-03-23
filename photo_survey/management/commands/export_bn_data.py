@@ -17,7 +17,12 @@ def get_user_name(user):
     Return properly-formatted user name.
     """
 
-    return user.first_name + " " + user.last_name if user.first_name and user.last_name else ""
+    name = user.first_name if user.first_name else ''
+    if user.last_name:
+        if name:
+            name = name + ' '
+        name = name + user.last_name
+    return name
 
 
 def init_user_name(user):
