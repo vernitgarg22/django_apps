@@ -8,6 +8,9 @@ import django
 from django.conf import settings
 
 
+import pdb
+
+
 # REVIEW:  remove all medical marijuana links?
 # REVIEW:  remove all FAQ links?  or change them to actually pull the contents of the faq content (not the page that the faq lives in)
 
@@ -212,11 +215,86 @@ def in_review(content):
 
     return False
 
+def strip_html(content):
+
+    begin = content.find("<")
+    if begin == -1:
+        return content
+
+    end = content.find(">", begin + 1)
+    if end == -1:
+        return content
+
+    new_content = content[0 : begin] + content[end + 1 : ]
+    return strip_html(content=new_content)
+
+def get_div(content, content_id):
+
+    # Try to find the identifier
+    id_pos = content.find(content_id)
+    if id_pos == -1:
+        pdb.set_trace()
+        return []
+
+    # Now try to find the beginning of the div containing it
+    begin = content.rfind("<div", 0, id_pos)
+    if begin == -1:
+        pdb.set_trace()
+        return []
+
+    # Find end of <div tag
+    content_begin = content.find(">", begin + 4)
+    if content_begin == -1:
+        pdb.set_trace()
+        return []
+
+    # Finally, try to find closing </div>
+    end = content.find("</div>", content_begin + 1)
+    if end == -1:
+        pdb.set_trace()
+        return []
+
+    sub_string = content[content_begin + 1 : end]
+    return [ sub_string ]
+
+def do_export_faq_pair(faq_pair):
+
+    target_id = faq_pair['target_id']
+
+    url = "{}/rest/translation/paragraph/{}?_format=json".format(server, target_id)
+
+    response = requests.get(url)
+    if response.status_code != 200:
+        report_err("url {} got status code {}".format(url, response.status_code))
+        return;
+
+    json = response.json()
+    content = json[0]['bp_accordion_section']
+
+    question = get_div(content=content, content_id="field--name-bp-accordion-section-title")
+    answer = get_div(content=content, content_id="field--name-bp-text")
+
+    if not question:
+        # Somehow the question could not be parsed - this should never happen.
+        pdb.set_trace()
+
+    question = strip_html(content=question[0])
+
+    if len(answer) == 1:
+        answer = strip_html(content=answer[0])
+    else:
+        # We got unexpected # of answers:  try to handle this
+        pdb.set_trace()
+
+    return { "question": question, "answer": answer }
+
 def do_export(url):
 
     auth_values = tuple(settings.CREDENTIALS['DETROITMI'].values())
 
-    response = requests.get(url + "?_format=json", auth=HTTPBasicAuth(*auth_values))
+    url = "{}{}?_format=json".format(server, url)
+
+    response = requests.get(url, auth=HTTPBasicAuth(*auth_values))
     if response.status_code != 200:
         report_err("url {} got status code {}".format(url, response.status_code))
         return;
@@ -226,6 +304,17 @@ def do_export(url):
     if in_review(json):
         report_err("url {} is still in REVIEW".format(url))
         return
+
+    # Handle any faq pairs
+    for idx, faq_pair in enumerate(json.get('field_faq_pair', [])):
+
+        if faq_pair['target_type'] == 'paragraph':
+
+            parsed_faq_pair = do_export_faq_pair(faq_pair=faq_pair)
+            json['field_faq_pair'][idx].update(parsed_faq_pair)
+
+        else:
+            pdb.set_trace()
 
     print("url: " + url)
 
@@ -240,4 +329,4 @@ if __name__ == '__main__':
 
     for url in urls:
 
-        do_export(url = server + url)
+        do_export(url=url)
