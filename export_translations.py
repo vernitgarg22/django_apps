@@ -12,7 +12,6 @@ import pdb
 
 
 # REVIEW:  remove all medical marijuana links?
-# REVIEW:  remove all FAQ links?  or change them to actually pull the contents of the faq content (not the page that the faq lives in)
 
 
 server = "http://detroitmi.theneighborhoods.org"
@@ -199,11 +198,19 @@ urls = [
 ]
 
 output_errs = True
+error_cnt = {}
 
 
-def report_err(msg):
+def report_err(msg, desc):
     if output_errs:
-        print(msg)
+        print("ERROR:  " + msg)
+    cnt = error_cnt.get(desc, 1)
+    error_cnt[desc] = cnt + 1
+
+def report_err_cnt():
+    if output_errs:
+        print('\n**************************************************************************************\n')
+        print('errors:  ' + str(error_cnt))
 
 def in_review(content):
 
@@ -261,11 +268,11 @@ def do_export_faq_pair(faq_pair):
 
     target_id = faq_pair['target_id']
 
-    url = "{}/rest/translation/paragraph/{}?_format=json".format(server, target_id)
+    url = "{}/rest/translation/paragraph/{}".format(server, target_id)
 
-    response = requests.get(url)
+    response = requests.get(url + "?_format=json")
     if response.status_code != 200:
-        report_err("url {} got status code {}".format(url, response.status_code))
+        report_err("url {} got status code {}".format(url, response.status_code), response.status_code)
         return;
 
     json = response.json()
@@ -292,17 +299,17 @@ def do_export(url):
 
     auth_values = tuple(settings.CREDENTIALS['DETROITMI'].values())
 
-    url = "{}{}?_format=json".format(server, url)
+    url = "{}{}".format(server, url)
 
-    response = requests.get(url, auth=HTTPBasicAuth(*auth_values))
+    response = requests.get(url + "?_format=json", auth=HTTPBasicAuth(*auth_values))
     if response.status_code != 200:
-        report_err("url {} got status code {}".format(url, response.status_code))
+        report_err("url {} got status code {}".format(url, response.status_code), response.status_code)
         return;
 
     json = response.json()
 
     if in_review(json):
-        report_err("url {} is still in REVIEW".format(url))
+        report_err("url {} is still in REVIEW".format(url), "REVIEW status")
         return
 
     # Handle any faq pairs
@@ -330,3 +337,5 @@ if __name__ == '__main__':
     for url in urls:
 
         do_export(url=url)
+
+    report_err_cnt()
