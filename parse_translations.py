@@ -112,8 +112,8 @@ class TranslationsDecoder():
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2:
-        print("usage:  parse_translations.py <input file>")
+    if len(sys.argv) < 3:
+        raise Exception("usage:  parse_translations.py <input file> <output file>")
 
     filename = sys.argv[1]
     output = sys.argv[2]
