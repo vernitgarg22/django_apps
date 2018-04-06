@@ -165,5 +165,7 @@ if __name__ == '__main__':
                 page = translation.get(url)
                 if page:
                     page.write(file)
+                else:
+                    print("no translation available in {} for {}".format(language, url))
 
             Page.end_urL(url)
