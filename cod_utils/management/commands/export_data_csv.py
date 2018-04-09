@@ -133,7 +133,7 @@ class Command(BaseCommand):
 
         with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
 
-            writer = csv.writer(csvfile, delimiter='\t', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(Command.get_header(klass))
 
             if dedupe_key:
