@@ -130,7 +130,9 @@ class TranslationsDecoder():
 if __name__ == '__main__':
 
     if len(sys.argv) < 5:
-        raise Exception("usage:  parse_translations.py <ar input> <bn input> <es input> <output file>")
+        raise Exception("""
+            usage:  parse_translations.py <ar input> <bn input> <es input> <output file>
+            e.g., ./parse_trans_all.py translations/ar/translations.txt translations/bn/translations.txt translations/es/translations.txt combined.txt""")
 
     inputs = {
         "ar": sys.argv[1],
