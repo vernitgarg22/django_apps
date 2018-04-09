@@ -49,6 +49,8 @@ def subscribe_notifications(request):
     body = "City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive {} pickup reminders"
     body = body.format(services_desc)
 
+    add_subscriber_comment(subscriber=subscriber, comment='signed up via web')
+
     # text the subscriber to ask them to confirm
     MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
 
@@ -145,13 +147,17 @@ def add_subscriber_comment(subscriber, comment):
     Update / add comment to the subscriber.
     """
 
-    if subscriber.comment:
-        comment = subscriber.comment + ' - ' + comment
+    # Build new comment at end of any previous comments
+    new_comment = subscriber.comment + ' - ' + comment if subscriber.comment else comment
 
-    if len(comment) <= Subscriber._meta.get_field('comment').max_length:
-        subscriber.comment = comment
-        subscriber.clean()
-        subscriber.save()
+    # Truncate if necessary.
+    if len(new_comment) >= Subscriber._meta.get_field('comment').max_length:
+        new_comment = "(previous comments truncated) ... " + comment
+
+    # Save new comment
+    subscriber.comment = new_comment
+    subscriber.clean()
+    subscriber.save()
 
 
 @api_view(['POST'])

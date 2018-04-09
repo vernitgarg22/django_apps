@@ -198,10 +198,10 @@ class WasteNotifierTests(TestCase):
         c = Client()
 
         values = [
-            ("all", {'received': '5005550006 - routes: ,0, - status: inactive - services: all', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling, trash and yard waste pickup reminders'}),
-            ("trash", {'received': '5005550006 - routes: ,0, - status: inactive - services: trash', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash pickup reminders'}),
-            ("recycling", {'received': '5005550006 - routes: ,0, - status: inactive - services: recycling', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive recycling pickup reminders'}),
-            ("bulk,recycling,", {'received': '5005550006 - routes: ,0, - status: inactive - services: bulk,recycling,', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling and yard waste pickup reminders'}),
+            ("all", {'received': '5005550006 - routes: ,0, - status: inactive - services: all (signed up via web)', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling, trash and yard waste pickup reminders'}),
+            ("trash", {'received': '5005550006 - routes: ,0, - status: inactive - services: trash (signed up via web)', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive trash pickup reminders'}),
+            ("recycling", {'received': '5005550006 - routes: ,0, - status: inactive - services: recycling (signed up via web)', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive recycling pickup reminders'}),
+            ("bulk,recycling,", {'received': '5005550006 - routes: ,0, - status: inactive - services: bulk,recycling, (signed up via web)', 'message': 'City of Detroit Public Works:  reply with ADD ME to confirm that you want to receive bulk, recycling and yard waste pickup reminders'}),
         ]
 
         for service, expected in values:
@@ -459,7 +459,7 @@ class WasteNotifierTests(TestCase):
         subscriber = Subscriber.objects.first()
 
         self.assertEqual(subscriber.status, 'active', "User's status should be active (cos remove me not present)")
-        self.assertEqual(subscriber.comment, "User's response to confirmation was: oops", "User's comment should contain their response")
+        self.assertEqual(subscriber.comment, "signed up via web - User's response to confirmation was: oops", "User's comment should contain their response")
 
     def test_invalid_confirm_sets_comment(self):
 
