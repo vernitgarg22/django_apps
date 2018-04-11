@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import sys
+from datetime import date
+from datetime import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -197,7 +199,8 @@ urls = [
     "/News",
 ]
 
-output_errs = True
+output_errs = False
+export_cnt = {}
 error_cnt = {}
 
 
@@ -211,6 +214,7 @@ def report_err_cnt():
     if output_errs:
         print('\n**************************************************************************************\n')
         print('errors:  ' + str(error_cnt))
+        print('num successful exports: ' + str(len(export_cnt)))
 
 def in_review(content):
 
@@ -221,6 +225,21 @@ def in_review(content):
             return True
 
     return False
+
+def needs_translation(content):
+
+    tmp = content['changed'][0]['value']
+    date_changed = datetime.strptime(tmp[0 : 10], '%Y-%m-%d').date()
+
+    for key in [ "field_dept_translation_date", "field_gov_translation_date" ]:
+
+        if content.get(key):
+
+            tmp = content[key][0]['value']
+            translation_date = datetime.strptime(tmp, '%Y-%m-%d').date()
+            return translation_date < date_changed
+
+    return True
 
 def strip_html(content):
 
@@ -308,6 +327,9 @@ def do_export(url):
 
     json = response.json()
 
+    if not needs_translation(json):
+        return
+
     if in_review(json):
         report_err("url {} is still in REVIEW".format(url), "REVIEW status")
         return
@@ -326,10 +348,14 @@ def do_export(url):
     print("url: " + url)
 
     print(json)
+    export_cnt[url] = True
     print("")
 
 
 if __name__ == '__main__':
+
+    if len(sys.argv) == 2:
+        output_errs = sys.argv[1] == '--debug=true'
 
     os.environ['DJANGO_SETTINGS_MODULE'] = 'django_apps.settings'
     django.setup()
