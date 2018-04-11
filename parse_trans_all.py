@@ -28,9 +28,9 @@ class Page():
 
     def write(self, file):
 
-        file.write("\ntitle:  " + self.title)
-        file.write("\ndescription:  " + self.description)
-        file.write("\nsummary:   " + self.summary)
+        file.write("\ntitle:  " + self.title.rstrip())
+        file.write("\ndescription:  " + self.description.rstrip())
+        file.write("\nsummary:   " + self.summary.rstrip())
         file.write("\n")
 
     def end_urL(url):
