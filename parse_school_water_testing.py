@@ -2,6 +2,7 @@
 
 import os
 import json
+import sys
 
 
 class WaterTestInfo():
@@ -20,7 +21,10 @@ class WaterTestInfo():
         """
 
         if "href" not in line:
-            return '', ''
+            if 'Pending' == line:
+                return '', 'Pending'
+            else:
+                return '', ''
 
         begin = 25
         end = line.find('"', begin)
@@ -39,7 +43,11 @@ class WaterTestInfo():
         begin = line.find('>')
         end = line.find('<', begin)
 
-        status = line[begin + 1 : end]
+        if begin > 0 and end > 0:
+            status = line[begin + 1 : end]
+        else:
+            status = line
+        
         return status
 
     def add_val(self, line):
@@ -49,7 +57,12 @@ class WaterTestInfo():
         elif not self.path:
 
             # parse url
-            self.path, junk = WaterTestInfo.parse_url(line)
+            self.path, tmp = WaterTestInfo.parse_url(line)
+
+            # usually we throw away 'tmp', but sometimes there is no actually url (no report) if 
+            # results are pending - in this case, store tmp as the status.
+            if not self.path and tmp:
+                self.status = tmp
 
         elif not self.status:
             self.status = WaterTestInfo.parse_status(line)
@@ -60,7 +73,15 @@ class WaterTestInfo():
 
     def is_complete(self):
 
-        return self.name and self.path and self.status
+        # name and status always required
+        if not self.name and self.status:
+            return False
+
+        # sometimes the report is not available if the location is 'Pending'
+        if not self.path:
+            return self.status == 'Pending'
+
+        return True
 
     def __str__(self):
 
@@ -79,10 +100,14 @@ class WaterTestInfo():
 
 def ignore_line(line):
 
-    ignores = [ "<table", "</table", "<thead", "</thead", "<tbody", "</tbody", "<td>", "</td>", ]
-
-    for val in ignores:
+    ignore_starts = [ "<table", "</table", "<thead", "</thead", "<tbody", "</tbody", ]
+    for val in ignore_starts:
         if line.startswith(val):
+            return True
+
+    ignores = [ "<td>", "</td>" ]
+    for val in ignores:
+        if line == val:
             return True
 
     return False
@@ -121,8 +146,11 @@ def parse_lines(input_file):
 
 if __name__ == "__main__":
 
-    filename = "website_data/dps_water_testing.htm"
+    if len(sys.argv) < 2:
+        msg = "usage:  {} input_file\n(e.g., {} website_data/water_testing_dps.htm".format(sys.argv[0], sys.argv[0])
+        raise Exception(msg)
 
+    filename = sys.argv[1]
     with open(filename, newline='', encoding="utf8") as input_file:
 
         water_test_info = parse_lines(input_file)
