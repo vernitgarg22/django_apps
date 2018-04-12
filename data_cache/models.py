@@ -333,6 +333,9 @@ class DataCitySummary(models.Model):
     """
     Represents DataSets belonging to the 'city info' overview of important
     stats for the mayor's office.
+
+    Note:  only datasets that are supposed to show up in the stats for the mayor's
+    office (i.e., the "cheeseboard") should be added here.
     """
 
     app_label = 'data_cache'
