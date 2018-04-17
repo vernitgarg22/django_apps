@@ -1,11 +1,3 @@
-# REVIEW:  remove this ?
-import base64
-
-# REVIEW:  remove this
-import chardet
-
-from django.utils.translation import gettext as _
-
 from django.db import models
 from django.conf import settings
 
@@ -293,6 +285,9 @@ class Sketch(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     pnum = models.CharField(max_length=25)
+
+    # REVIEW:  finish adding fields when the data itself is ready.
+
     #    NO foreignKey
     #    NO foreignType
     # caption
@@ -307,36 +302,39 @@ class Sketch(models.Model):
 
     # REVIEW TODO : use upload_to=upload_to ?
 
-    sketchData = models.ImageField('sketchData', blank=True, null=True, upload_to='sketches')
-    imageData = models.ImageField('imageData', blank=True, null=True, upload_to='images')
+    sketchData = models.ImageField('sketchData', blank=True, null=True, upload_to='assessments/sketches')
+    imageData = models.ImageField('imageData', blank=True, null=True, upload_to='assessments/images')
     # zoomFactor
     # guid
     # isPrimarySketch
 
-    # ordering = [ 'date' ]
+    def move_files(self):
+        """
+        Move image files to correct location.
+        REVIEW:  Handle this properly via file handling logic of ImageField.
+        """
 
-    class Meta:    # pragma: no cover
-        managed = False
-        db_table = 'Sketches'
+        DATA_PATH = settings.MEDIA_ROOT
+        DATA_URL = settings.MEDIA_URL
+
+        file_location = "{}/image_{}_{}.jpg".format('assessments/images', self.pnum, self.date.strftime('%Y%m%d_%H%M'))
+        filename = DATA_PATH + file_location
+        fileurl = DATA_URL + file_location
+
+        # REVIEW add sketches when they are ready (appear to be corrupted right now)
+
+        with open(filename, 'wb+') as file:
+            file.write(self.imageData)
+
+        return filename, fileurl
 
     def get_json(self):
 
-        # REVIEW this should work (but maybe only in apache, not runserver)
-        # result_val = self.imageData.save('foobar')
-
-
-        # encoding = chardet.detect(self.imageData)
-        # decoded = base64.decodebytes(self.imageData)
-        # print("date is " + str(self.date))
-
-        with open("image.jpg", 'wb+') as image_file:
-            image_file.write(self.imageData)
-
-        # with open("sketch.jpg", 'wb+') as sketch_file:
-        #     sketch_file.write(self.sketchData)
+        filename, fileurl = self.move_files()
 
         return {
-            "date": date_json(self.date)
+            "date": date_json(self.date),
+            "image_url": fileurl,
         }
 
     @staticmethod
@@ -349,3 +347,8 @@ class Sketch(models.Model):
         sketches = Sketch.objects.filter(pnum=pnum).order_by('-date')
         if sketches:
             return sketches.first().get_json()
+
+
+    class Meta:    # pragma: no cover
+        managed = False
+        db_table = 'Sketches'

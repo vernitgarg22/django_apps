@@ -17,6 +17,7 @@ import json
 
 from django.core.exceptions import ImproperlyConfigured
 
+
 DJANGO_HOME = env['DJANGO_HOME']
 RUNNING_UNITTESTS = True if os.environ.get('RUNNING_UNITTESTS') == 'yes' else False
 
@@ -41,12 +42,8 @@ def get_databases():
         tmp['default']['NAME'] = os.path.join(BASE_DIR, 'db.sqlite3')
     return tmp
 
-def add_secrets(setting, secrets=secrets, default=None):
-    values = get_secret(setting, secrets=secrets, default=default)
-    for key, value in values.items():
-        env[key] = value
-
-add_secrets('MEDIA_SETTINGS')
+MEDIA_ROOT = get_secret('MEDIA_SETTINGS')['MEDIA_ROOT']
+MEDIA_URL = get_secret('MEDIA_SETTINGS')['MEDIA_URL']
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_secret("SECRET_KEY")
