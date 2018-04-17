@@ -32,7 +32,7 @@ def get_secret(setting, secrets=secrets, default=None):
             secrets[setting] = default
             return secrets[setting]
         else:
-            error_msg = "Set the {0} environment variable".format(setting)
+            error_msg = "Set the environment variable '{0}'".format(setting)
             raise ImproperlyConfigured(error_msg)
 
 def get_databases():
@@ -40,6 +40,13 @@ def get_databases():
     if tmp['default']['NAME'] == 'db.sqlite3':       # pragma: no cover
         tmp['default']['NAME'] = os.path.join(BASE_DIR, 'db.sqlite3')
     return tmp
+
+def add_secrets(setting, secrets=secrets, default=None):
+    values = get_secret(setting, secrets=secrets, default=default)
+    for key, value in values.items():
+        env[key] = value
+
+add_secrets('MEDIA_SETTINGS')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -201,6 +208,8 @@ class DjangoAppsRouter(object):
         "ImageMetadata": "photo_survey",
         "ParcelMetadata": "photo_survey",
         "PublicPropertyData": "photo_survey",
+        "Sales": "eql",
+        "Sketch": "eql",
         "Survey": "photo_survey",
         "Surveyor": "photo_survey",
         "SurveyorGroup": "photo_survey",

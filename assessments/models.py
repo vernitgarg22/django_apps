@@ -1,4 +1,10 @@
-from __future__ import unicode_literals
+# REVIEW:  remove this ?
+import base64
+
+# REVIEW:  remove this
+import chardet
+
+from django.utils.translation import gettext as _
 
 from django.db import models
 from django.conf import settings
@@ -6,6 +12,7 @@ from django.conf import settings
 from django.db.models.fields import BigAutoField
 
 from assessments import util
+from cod_utils.util import date_json
 
 
 class Sales(models.Model):
@@ -269,7 +276,7 @@ class CaseMain(models.Model):
     if not settings.RUNNING_UNITTESTS:
         class Meta:    # pragma: no cover
             managed = False
-            db_table = 'casemain'
+            db_table = 'CaseMain'
 
     def json(self):
         return {
@@ -280,3 +287,65 @@ class CaseMain(models.Model):
             "csm_target_date": self.csm_target_date,
             "prc_avp_no": self.prc_avp_no.prc_parcel_no,
         }
+
+
+class Sketch(models.Model):
+
+    id = models.BigAutoField(primary_key=True)
+    pnum = models.CharField(max_length=25)
+    #    NO foreignKey
+    #    NO foreignType
+    # caption
+    # prgid
+    # numrecs
+    # size
+
+    date = models.DateTimeField(blank=True, null=True)
+
+    # author
+    # bprint
+
+    # REVIEW TODO : use upload_to=upload_to ?
+
+    sketchData = models.ImageField('sketchData', blank=True, null=True, upload_to='sketches')
+    imageData = models.ImageField('imageData', blank=True, null=True, upload_to='images')
+    # zoomFactor
+    # guid
+    # isPrimarySketch
+
+    # ordering = [ 'date' ]
+
+    class Meta:    # pragma: no cover
+        managed = False
+        db_table = 'Sketches'
+
+    def get_json(self):
+
+        # REVIEW this should work (but maybe only in apache, not runserver)
+        # result_val = self.imageData.save('foobar')
+
+
+        # encoding = chardet.detect(self.imageData)
+        # decoded = base64.decodebytes(self.imageData)
+        # print("date is " + str(self.date))
+
+        with open("image.jpg", 'wb+') as image_file:
+            image_file.write(self.imageData)
+
+        # with open("sketch.jpg", 'wb+') as sketch_file:
+        #     sketch_file.write(self.sketchData)
+
+        return {
+            "date": date_json(self.date)
+        }
+
+    @staticmethod
+    def load(pnum='17000074.001'):
+
+        # pnum = '22084716.'
+
+        # pnum = get_parcel_id(request.path, 3)
+
+        sketches = Sketch.objects.filter(pnum=pnum).order_by('-date')
+        if sketches:
+            return sketches.first().get_json()

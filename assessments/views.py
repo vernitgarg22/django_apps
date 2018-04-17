@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.http import Http404
 
-from assessments.models import Sales, ParcelMaster
+from assessments.models import Sales, ParcelMaster, Sketch
 
 # TODO clean this up
 from assessments.models import Parcel, CaseMain
@@ -122,6 +122,7 @@ def get_sales_property_address_recent(request, address=None, format=None):
 
     return get_sales_property_address(request, address=address, years_back=5, format=format)
 
+
 @api_view(['GET'])
 def get_parcel(request, pnum=None, format=None):
     """
@@ -142,6 +143,27 @@ def get_parcel(request, pnum=None, format=None):
     content['field_descriptions'] = util.get_parcel_descriptions()
 
     return Response(content)
+
+
+@api_view(['GET'])
+def get_images(request, pnum=None, format=None):
+    """
+    Retrieve all images for the given parcel.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    # clean up the pnum
+    pnum = get_parcel_id(request.path, 2)
+    sketch_data = Sketch.objects.filter(pnum=pnum).order_by('-date')
+    content = []
+
+    for sketch in sketch_data:
+
+        content.append(sketch.get_json())
+
+    return Response(content)
+
 
 # @api_view(['GET'])
 # def get_parcel_ownership_groups(request, owners=None, format=None):
