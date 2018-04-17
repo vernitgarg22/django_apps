@@ -126,17 +126,17 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(db_column='role_type', to='assessments.RoleType'),
         ),
         migrations.AddField(
-            model_name='casemain',
+            model_name='CaseMain',
             name='case_type',
             field=models.ForeignKey(db_column='case_type', related_name='type', to='assessments.CaseType'),
         ),
         migrations.AddField(
-            model_name='casemain',
+            model_name='CaseMain',
             name='prc_avp_no',
             field=models.ForeignKey(db_column='prc_avp_no', related_name='avp_no', to='assessments.Parcel'),
         ),
         migrations.AddField(
-            model_name='casemain',
+            model_name='CaseMain',
             name='prc_parcel_no',
             field=models.ForeignKey(db_column='prc_parcel_no', related_name='parcel_no', to='assessments.Parcel'),
         ),
