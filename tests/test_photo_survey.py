@@ -1043,6 +1043,7 @@ def build_survey_bridging_neighborhoods_template():
         { "survey_type": survey_type, "question_id": "street_address", "question_number": 1,  "question_text": "What is the street address?", "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
         { "survey_type": survey_type, "question_id": "node_id",        "question_number": 2,  "question_text": "What is the drupal node id?", "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
         { "survey_type": survey_type, "question_id": "rating",         "question_number": 3,  "question_text": "What is the house rating?",   "valid_answers": "[0-4]", "required_by": "", "required_by_answer": "" },
+        { "survey_type": survey_type, "question_id": "confirmation",   "question_number": 4,  "question_text": "Confirmation Timestamp",      "valid_answers": ".*", "required_by": "", "required_by_answer": "" },
     ]
 
     for row in data:
@@ -1064,6 +1065,10 @@ def get_bridging_neighborhoods_survey_answers():
             {
                 "question_id": "rating",
                 "answer": "1"
+            },
+            {
+                "question_id": "confirmation",
+                "answer": "2018-04-24 12:31"
             }
         ],
         "parcel_ids": ['testparcelid']
@@ -1129,7 +1134,7 @@ class BridgingNeighborhoodsTests(TestCase):
 
         c = Client()
 
-        expected = {'favorites': {'testparcelid': {'node_id': '99', 'street_address': '1104 Military Street', 'rating': '1'}}}
+        expected = {'favorites': {'testparcelid': {'node_id': '99', 'street_address': '1104 Military Street', 'rating': '1', 'confirmation': '2018-04-24 12:31'}}}
 
         response = c.get('/photo_survey/bridging_neighborhoods/karlos/favorites/', secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1141,7 +1146,6 @@ class BridgingNeighborhoodsTests(TestCase):
 
         response = c.get('/photo_survey/bridging_neighborhoods/karlos/favorites/', secure=False)
         self.assertEqual(response.status_code, 403)
-
 
     def test_get_user_likes_user_not_found(self):
 
