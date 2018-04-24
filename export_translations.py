@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import json
 from datetime import date
 from datetime import datetime
 import requests
@@ -84,6 +85,7 @@ urls = [
     "/Government/City-Council/Janee-L-Ayers",
     "/Government/City-Council/Mary-Sheffield",
     "/Government/City-Council/Raquel-Castaneda-Lopez",
+    "/Government/City-Council/Roy-McCalister",
     "/Government/City-Council/Scott-Benson",
     "/Government/Commissions",
     "/Government/Departments-and-Agencies/Detroit-Department-of-Transportation/DDOT-News-and-Alerts",
@@ -218,8 +220,11 @@ def report_err_cnt():
 
 def in_review(content):
 
-    tmp_content = str(content)
+    for key in [ 'field_need_review', 'field_need_reviewed' ]:
+        if content.get(key) and content[key][0]['value']:
+            return True
 
+    tmp_content = str(content)
     for word in [ 'TODO', 'REVIEW' ]:
         if word in tmp_content:
             return True
@@ -325,29 +330,29 @@ def do_export(url):
         report_err("url {} got status code {}".format(url, response.status_code), response.status_code)
         return;
 
-    json = response.json()
+    data = response.json()
 
-    if not needs_translation(json):
+    if not needs_translation(data):
         return
 
-    if in_review(json):
+    if in_review(data):
         report_err("url {} is still in REVIEW".format(url), "REVIEW status")
         return
 
     # Handle any faq pairs
-    for idx, faq_pair in enumerate(json.get('field_faq_pair', [])):
+    for idx, faq_pair in enumerate(data.get('field_faq_pair', [])):
 
         if faq_pair['target_type'] == 'paragraph':
 
             parsed_faq_pair = do_export_faq_pair(faq_pair=faq_pair)
-            json['field_faq_pair'][idx].update(parsed_faq_pair)
+            data['field_faq_pair'][idx].update(parsed_faq_pair)
 
         else:
             pdb.set_trace()
 
     print("url: " + url)
 
-    print(json)
+    print(json.dumps(data))
     export_cnt[url] = True
     print("")
 
