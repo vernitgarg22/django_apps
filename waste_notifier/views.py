@@ -26,9 +26,12 @@ from waste_schedule.models import ScheduleDetail
 
 
 service_note_expressions = {
-    'SEND FREE RECYCLE BIN': [
-        'recycl.*bin',
-    ],
+    'SEND FREE RECYCLE BIN': {
+        "expressions": [
+            'recycl.*bin',
+        ],
+        "response": "You have been signed up for a free recycling bin"
+    }
 }
 
 
@@ -40,23 +43,23 @@ def handle_service_notes(phone_number, message):
 
     subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
     if not subscribers:
-        return None
+        return None, None
 
     subscriber = subscribers[0]
 
     # Check if any services are requested
-    for service_note, expressions in service_note_expressions.items():
+    for service_note, data in service_note_expressions.items():
 
-        for expression in expressions:
+        for expression in data['expressions']:
 
             if re.search(expression, message):
 
                 # We found one - add it and return the service note
                 subscriber.add_service_note(service_note)
-                return subscriber.service_notes
+                return subscriber.service_notes, data['response']
 
     # No service requested
-    return None
+    return None, None
 
 
 @api_view(['POST'])
@@ -219,8 +222,9 @@ def confirm_notifications(request):
     body = body.lower()
 
     # Is user requesting a free recycling bin (or some other particular service)?
-    service_notes = handle_service_notes(phone_number=phone_number, message=body)
+    service_notes, response = handle_service_notes(phone_number=phone_number, message=body)
     if service_notes:
+        MsgHandler().send_text(phone_number=phone_number, text=response)
         return Response({ "service_notes": service_notes })
 
     # unless user wants to be removed, add them
