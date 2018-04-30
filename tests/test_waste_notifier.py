@@ -287,6 +287,20 @@ class WasteNotifierTests(TestCase):
         expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
         self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
 
+    def test_request_free_bin(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl" }, secure=True)
+        self.assertEqual(response.status_code, 201)
+        expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
+        self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
+
+        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "RECYCLE BIN" } )
+        self.assertEqual(response.status_code, 200)
+        subscriber = Subscriber.objects.first()
+        self.assertEqual(subscriber.service_notes, 'SEND FREE RECYCLE BIN')
+
     def test_includes_yard_waste_all(self):
         self.assertTrue(views.includes_yard_waste(['all']))
 

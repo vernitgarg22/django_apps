@@ -37,6 +37,7 @@ class Subscriber(models.Model):
     latitude = models.CharField('Latitude', max_length = 32, blank=True, null=True)
     longitude = models.CharField('Longitude', max_length = 32, blank=True, null=True)
     address = models.CharField('Home address', max_length = 128, blank=True, null=True)
+    service_notes = models.CharField('Services Notes', max_length = 128, blank=True, null=True)
 
     def __str__(self):
         string = self.phone_number + ' - routes: ' + self.waste_area_ids + ' - status: ' + self.status + ' - services: ' + self.service_type
@@ -114,6 +115,17 @@ class Subscriber(models.Model):
         Do a soft-delete (i.e., set status to 'inactive')
         """
         self.deactivate()
+
+    def add_service_note(self, service_note):
+        """
+        Add the given service note to the subscriber,
+        make sure subscriber is active, and save them.
+        """
+
+        self.service_notes = service_note
+
+        # Make sure subscriber is active (this also saves the subscriber).
+        self.activate()
 
     def has_service_on_date_week(self, service_type, date):
         """

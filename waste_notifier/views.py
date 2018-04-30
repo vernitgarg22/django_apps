@@ -1,4 +1,5 @@
 import requests
+import re
 import datetime
 from datetime import date
 
@@ -22,6 +23,40 @@ from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
 
 from waste_schedule.models import ScheduleDetail
+
+
+service_note_expressions = {
+    'SEND FREE RECYCLE BIN': [
+        'recycl.*bin',
+    ],
+}
+
+
+def handle_service_notes(phone_number, message):
+    """
+    If the given subscriber exists, check if they have requested a
+    particular service (e.g., free recycling bin).
+    """
+
+    subscribers = Subscriber.objects.filter(phone_number__exact=phone_number)
+    if not subscribers:
+        return None
+
+    subscriber = subscribers[0]
+
+    # Check if any services are requested
+    for service_note, expressions in service_note_expressions.items():
+
+        for expression in expressions:
+
+            if re.search(expression, message):
+
+                # We found one - add it and return the service note
+                subscriber.add_service_note(service_note)
+                return subscriber.service_notes
+
+    # No service requested
+    return None
 
 
 @api_view(['POST'])
@@ -182,6 +217,11 @@ def confirm_notifications(request):
 
     body = request.data['Body']
     body = body.lower()
+
+    # Is user requesting a free recycling bin (or some other particular service)?
+    service_notes = handle_service_notes(phone_number=phone_number, message=body)
+    if service_notes:
+        return Response({ "service_notes": service_notes })
 
     # unless user wants to be removed, add them
     add_me = "remove me" not in body
