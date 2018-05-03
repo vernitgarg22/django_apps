@@ -132,11 +132,15 @@ class PageCrawlerAdmin():
 
     def crawl_page(self, domain, url):
 
-        crawler = PageCrawler(domain=domain, url=url)
+        if len(self.urls_crawled) > 4000:
+            print("Max urls attained")
+            return
 
         if self.levels_deep == self.MAX_LEVELS_DEEP:
             print("Too many levels deep")
             return
+
+        crawler = PageCrawler(domain=domain, url=url)
 
         self.levels_deep = self.levels_deep + 1
 
@@ -151,6 +155,7 @@ class PageCrawlerAdmin():
                     sys.stdout.flush()
 
                 print("level: {} - url: {}".format(self.levels_deep, url), file=sys.stderr)
+                sys.stderr.flush()
 
                 # If this on our server then crawl it.
                 if domain in url:
