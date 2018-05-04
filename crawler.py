@@ -15,13 +15,125 @@ class Urls():
         self.domain = domain
         self.content = content
 
-    def __iter__(self):
-        return self
+    def build_url(self, url):
+        """
+        Clean up url:
+        - make url all-lowercase
+        - make sure protocol is http, not https (again, to avoid dupes)
+        - make sure domain is present
+        - 'normalize' the domain (remove 'www') to avoid dupes
+        - attempt to remove multiple repeated ';amp' values.
+        """
 
-    def __next__(self):
+        url = url.lower()
+
+        if url.startswith('https://'):
+            url = url.replace('https://', 'http://')
+
+        if url.startswith('/'):
+            url = 'http://' + self.domain + url
+
+        if url.startswith('http://www.'):
+            url = url.replace('http://www.', 'http://')
+
+        # find 'end' of url
+        url_endings = ['#', '?']
+        for url_ending in url_endings:
+            pos = url.find(url_ending)
+            if pos > 0:
+                url = url[ : pos]
+
+        remove_strings = [
+            "amp;",
+        ]
+
+        for remove_string in remove_strings:
+
+            url = re.sub(remove_string, '', url)
+
+        return url
+
+    def ignore_url(self, url):
         """
-        Return next url in the page, if any.
+        Returns True if we should ignore the url.
         """
+
+        url = url.lower()
+
+        # Verify valid protocol (e.g., avoid "tel:", "mailto:")
+        valid_protocols = [
+            "http:",
+            "https:",
+        ]
+
+        protocol_ok = False
+        for protocol in valid_protocols:
+
+            if url.startswith(protocol):
+                protocol_ok = True
+
+        if not protocol_ok:
+            return True
+
+        # Make sure file type (if any) is one we are interested in
+        ignored_endings = [
+            ".css",
+            "/css",
+            ".ico",
+            ".png",
+            ".jpg",
+            ".pdf",
+            ".axd",
+        ]
+
+        for ignore in ignored_endings:
+
+            if url.endswith(ignore):
+                return True
+
+        # For now, ignore url unless it has our domain
+        if self.domain not in url:
+            return True
+
+        # Make sure path is one we are interested in
+        ignored_paths = [
+            "/search-results",
+            "/calendar-and-events/",
+            "/calendar-events/",
+            "/cablecastpublicsite/",
+            "/dnngo_xblog/",
+            "/portals/0/docs/",
+            "/bundles/styles/",
+            "codstaging.detroitmi.gov",
+            "data.detroitmi.gov",
+            "dev.socrata.com",
+            "detroit-archives",
+            "articleid",
+            "github.com",
+            "how-do-i/index-a-to-z",
+            "city-council-sessions/m",
+            "goo.gl/",
+            "govdelivery.com",
+            "/home-old/",
+            "/news/",
+            "/register/mitn",
+            "/login",
+            "board-of-zoning-appeal-calendar",
+            "health-department-news-and-alerts",
+            "health-calendar",
+            "ddot-news-and-alerts",
+            "serve-detroit/newsandalerts",
+            "linkclick.aspx",
+        ]
+
+        for ignore in ignored_paths:
+
+            if ignore in url:
+                return True
+
+        return False
+
+    def next_url(self):
 
         begin = re.search('href=[\'\"]', self.content)
         if not begin:
@@ -33,7 +145,22 @@ class Urls():
             raise StopIteration
 
         url = self.content[ : end.start()]
-        return 'http://' + self.domain + url if url.startswith('/') else url
+        url = self.build_url(url)
+
+        if self.ignore_url(url):
+            return self.next_url()
+
+        return url
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        """
+        Return next url in the page, if any.
+        """
+
+        return self.next_url()
 
 
 class PageCrawler():
@@ -46,79 +173,11 @@ class PageCrawler():
     def urls(self):
 
         response = requests.get(self.url)
-        if response.status_code != 200:
+        if response.status_code != 200 or self.domain not in response.url:
             # print("url {} - {}".format(url, response.status_code))
             return []
 
         return Urls(domain=self.domain, content=response.text)
-
-
-def ignore_url(url):
-    """
-    Returns True if we should ignore the url.
-    """
-
-    url = url.lower()
-
-    # Verify valid protocol (e.g., avoid "tel:", "mailto:")
-    valid_protocols = [
-        "http:",
-        "https:",
-    ]
-
-    protocol_ok = False
-    for protocol in valid_protocols:
-
-        if url.startswith(protocol):
-            protocol_ok = True
-
-    if not protocol_ok:
-        return True
-
-    # Make sure file type (if any) is one we are interested in
-    pos = url.find('?')
-    if pos > 0:
-        url = url[ : pos]
-
-    ignored_endings = [
-        ".css",
-        "/css",
-        ".ico",
-        ".png",
-        ".jpg",
-        "pdf",
-    ]
-
-    for ignore in ignored_endings:
-
-        if url.endswith(ignore):
-            return True
-
-    # Make sure path is one we are interested in
-    ignored_paths = [
-        "/search-results?",
-        "/calendar-and-events/",
-        "/calendar-events/",
-        "/cablecastpublicsite/",
-        "/dnngo_xblog/",
-        "/portals/0/docs/",
-        "/bundles/styles/",
-        "/news/",
-        "codstaging.detroitmi.gov",
-        "data.detroitmi.gov",
-        "dev.socrata.com",
-        "github.com",
-        "goo.gl/",
-        "govdelivery.com",
-        "/home-old/",
-    ]
-
-    for ignore in ignored_paths:
-
-        if ignore in url:
-            return True
-
-    return False
 
 
 class PageCrawlerAdmin():
@@ -146,7 +205,7 @@ class PageCrawlerAdmin():
 
         for url in crawler.urls():
 
-            if not ignore_url(url) and url not in self.urls_crawled:
+            if url not in self.urls_crawled:
 
                 self.urls_crawled.add(url)
 
