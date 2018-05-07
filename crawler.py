@@ -6,9 +6,6 @@ import requests
 import sys
 
 
-import pdb
-
-
 class Urls():
 
     def __init__(self, domain, content):
@@ -48,8 +45,10 @@ class Urls():
         ]
 
         for remove_string in remove_strings:
-
             url = re.sub(remove_string, '', url)
+
+        if url.endswith('/'):
+            url = url[ : -1]
 
         return url
 
@@ -111,6 +110,8 @@ class Urls():
             "articleid",
             "github.com",
             "how-do-i/index-a-to-z",
+            "/home/ctl",
+            "/homeold",
             "city-council-sessions/m",
             "goo.gl/",
             "govdelivery.com",
@@ -125,6 +126,28 @@ class Urls():
             "serve-detroit/newsandalerts",
             "linkclick.aspx",
         ]
+
+        ignored_paths.extend(
+                [
+                    "/devel/",
+                    "/document/",
+                    "/forms/",
+                    "/taxonomy/",
+                    "/taxonomy_term/",
+                    "/media/",
+                    "/node",
+                ]
+            )
+
+        # for now, avoid crawling translations so we don't "double-count" pages
+        ignored_paths.extend(
+                [
+                    "/en/",
+                    "/es/",
+                    "/ar/",
+                    "/bn/",
+                ]
+            )
 
         for ignore in ignored_paths:
 
@@ -216,9 +239,8 @@ class PageCrawlerAdmin():
                 print("level: {} - url: {}".format(self.levels_deep, url), file=sys.stderr)
                 sys.stderr.flush()
 
-                # If this on our server then crawl it.
+                # If this url is on our domain then crawl it.
                 if domain in url:
-
                     self.crawl_page(domain=domain, url=url)
 
         self.levels_deep = self.levels_deep - 1
@@ -230,7 +252,8 @@ class PageCrawlerAdmin():
 
 if __name__ == '__main__':
 
-    domain = "detroitmi.gov"
+    # domain = "detroitmi.gov"
+    domain = "detroitmi.theneighborhoods.org"
     site = "http://" + domain
 
     admin = PageCrawlerAdmin()
@@ -246,5 +269,4 @@ if __name__ == '__main__':
     urls_crawled = admin.get_urls_crawled()
 
     for url in sorted(list(urls_crawled)):
-
         print(url)
