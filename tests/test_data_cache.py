@@ -246,7 +246,7 @@ class DataCacheTests(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
-        self.assertEqual(response.data['key'], 'data_cache_test_data')
+        self.assertEqual(response.data['key'], 'user_cache_test_data')
 
     def test_data_cache_data_only_update(self):
 
@@ -261,7 +261,7 @@ class DataCacheTests(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
-        self.assertEqual(response.data['key'], 'data_cache_test_data')
+        self.assertEqual(response.data['key'], 'user_cache_test_data')
 
     def test_data_cache_url_cache_persists(self):
 

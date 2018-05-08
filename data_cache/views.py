@@ -85,7 +85,7 @@ def add_user_cache(request):
     data_set, created = DataSet.objects.get_or_create(name='user_cache')
 
     # Create a data source for this url.
-    data_source_name = "data_cache_{}".format(key)
+    data_source_name = "user_cache_{}".format(key)
     data_source, created = DataSource.objects.get_or_create(name=data_source_name, data_set=data_set)
 
     # Create the data value for this data source.
