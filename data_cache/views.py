@@ -59,7 +59,7 @@ def add_url(request):
 
 
 @api_view(['POST'])
-def add_data(request):
+def add_user_cache(request):
     """
     Creates a data_source object for the given piece of data, in the data set 'data_cache', if one doesn't already exist,
     refreshes the data for it, if necessary, and returns the result.  The key name should be passed as well.
@@ -82,7 +82,7 @@ def add_data(request):
     if not key:
         return Response({ "error": "key is required" }, status.HTTP_400_BAD_REQUEST)
 
-    data_set, created = DataSet.objects.get_or_create(name='data_cache')
+    data_set, created = DataSet.objects.get_or_create(name='user_cache')
 
     # Create a data source for this url.
     data_source_name = "data_cache_{}".format(key)
@@ -132,7 +132,7 @@ def get_data_impl(name, param=None, path=None, force_refresh=False):
 
     # Parse parcel ids when necessary
     if param:
-        if name == 'url_cache':
+        if name in [ 'url_cache', 'user_cache' ]:
             data_source_name = param
             param = None
         else:

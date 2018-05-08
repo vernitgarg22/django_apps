@@ -242,7 +242,7 @@ class DataCacheTests(TestCase):
         data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
 
         c = Client()
-        response = c.post("/data_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+        response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
@@ -253,15 +253,28 @@ class DataCacheTests(TestCase):
         data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
 
         c = Client()
-        response = c.post("/data_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+        response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
 
         data = { "data": { "sample": "this is new sample data" }, "key": "test_data" }
 
-        response = c.post("/data_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+        response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
         self.assertEqual(response.data['key'], 'data_cache_test_data')
+
+    def test_data_cache_url_cache_persists(self):
+
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+
+        c = Client()
+        response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        key = response.data['key']
+
+        response = c.get("/data_cache/user_cache/{}/".format(key), secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['data'], data['data'], "Response should contain data")
 
     def test_data_cache_invalid_auth(self):
 
