@@ -1,3 +1,5 @@
+import json
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from rest_framework.decorators import api_view
@@ -39,6 +41,57 @@ def add_url(request):
     # Create a data source for this url.
     data_source_name = "url_cache_{}".format(data_set.datasource_set.count())
     data_source, created = DataSource.objects.get_or_create(name=data_source_name, url=url, data_set=data_set)
+
+    # Retrieve the data values for this data set
+    try:
+        data = data_set.get(data_source_name=data_source_name)
+    except:
+        data = None
+
+    # Do correct error handling if not found
+    if not data:
+        return Response({ "error": "No data received" }, status.HTTP_404_NOT_FOUND)
+
+    # add a key to the response, which caller can use to retrieve this cached data source.
+    data['key'] = data_source_name
+
+    return Response(data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+def add_data(request):
+    """
+    Creates a data_source object for the given piece of data, in the data set 'data_cache', if one doesn't already exist,
+    refreshes the data for it, if necessary, and returns the result.  The key name should be passed as well.
+    """
+
+    # Only allow certain servers to call this endpoint
+    if security.block_client(request):
+        remote_addr = request.META.get('REMOTE_ADDR')
+        return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
+
+    # Only call via https...
+    if not request.is_secure():
+        return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
+
+    data = request.data.get('data')
+    if not data:
+        return Response({ "error": "data is required" }, status.HTTP_400_BAD_REQUEST)
+
+    key = request.data.get('key')
+    if not key:
+        return Response({ "error": "key is required" }, status.HTTP_400_BAD_REQUEST)
+
+    data_set, created = DataSet.objects.get_or_create(name='data_cache')
+
+    # Create a data source for this url.
+    data_source_name = "data_cache_{}".format(key)
+    data_source, created = DataSource.objects.get_or_create(name=data_source_name, data_set=data_set)
+
+    # Create the data value for this data source.
+    data_value, created = DataValue.objects.get_or_create(data_source=data_source)
+    data_value.data = json.dumps(data)
+    data_value.save()
 
     # Retrieve the data values for this data set
     try:

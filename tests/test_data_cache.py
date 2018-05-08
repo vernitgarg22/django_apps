@@ -237,6 +237,32 @@ class DataCacheTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_data_cache_data_only(self):
+
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+
+        c = Client()
+        response = c.post("/data_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['data'], data['data'], "Response should contain data")
+        self.assertEqual(response.data['key'], 'data_cache_test_data')
+
+    def test_data_cache_data_only_update(self):
+
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+
+        c = Client()
+        response = c.post("/data_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+
+        data = { "data": { "sample": "this is new sample data" }, "key": "test_data" }
+
+        response = c.post("/data_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['data'], data['data'], "Response should contain data")
+        self.assertEqual(response.data['key'], 'data_cache_test_data')
+
     def test_data_cache_invalid_auth(self):
 
         init_test_data_invalid_auth()
