@@ -80,7 +80,7 @@ class Command(BaseCommand):
         parser.add_argument('--export_username', type=str, help="Output username [y|n]", default='n')
         parser.add_argument('--export_survey_id', type=str, help="Output survey id [y|n]", default='n')
 
-    field_names = [ 'Email', 'Full Name', 'Address', 'Date Selected', 'Ranking' ]
+    field_names = [ 'Email', 'Full Name', 'Address', 'Date Selected', 'Ranking', 'Confirmed' ]
 
     def handle(self, *args, **options):
 
@@ -101,7 +101,7 @@ class Command(BaseCommand):
 
         survey_type = SurveyType.objects.get(survey_template_id = 'bridging_neighborhoods')
 
-        surveys = survey_type.survey_set.all().order_by('-created_at', 'user_id')
+        surveys = survey_type.survey_set.exclude(status='deleted').order_by('-created_at', 'user_id')
 
         parcel_map = ParcelFavoriteMap()
         missing_emails = {}
@@ -125,13 +125,18 @@ class Command(BaseCommand):
                         continue
 
                     ranking = survey.survey_answers[2]
+
+                    confirmed = None
+                    if len(survey.survey_answers) == 4 and survey.survey_answers[3].answer != 'Please Confirm Your Selections.':
+                        confirmed = survey.survey_answers[3]
+
                     parcel = survey.parcel
                     parcel_master = ParcelMaster.objects.get(pnum = parcel.parcel_id)
 
                     # Now try to output our information.
                     if not get_user_name(user) and not user.email:
                         missing_emails[int(user.username)] = True
-                    elif parcel_map.exists(user, parcel) or survey.status == 'deleted':
+                    elif (parcel_map.exists(user, parcel) or survey.status == 'deleted') and not confirmed:
                         continue
                     elif not missing_emails:
 
@@ -142,6 +147,7 @@ class Command(BaseCommand):
                             'Address': parcel_master.propstreetcombined,
                             'Date Selected': survey.created_at.strftime("%b %d, %Y"),
                             'Ranking': int(ranking.answer) + 1,
+                            'Confirmed': confirmed.answer if confirmed else 'No',
                         }
 
                         if export_username:
