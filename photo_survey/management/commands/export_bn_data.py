@@ -94,6 +94,14 @@ class Command(BaseCommand):
 
         ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 216, 9999 ]
 
+        ignored_addresses = {
+            "2007 OAKDALE": None,
+            "2408 RIEDEN": None,
+            "4111 BUCKINGHAM": None,
+            "6711 ASHTON": None,
+            "13517 OHIO": None,
+        }
+
         if export_username:
             self.field_names.append('Username')
         if export_survey_id:
@@ -138,6 +146,9 @@ class Command(BaseCommand):
                         missing_emails[int(user.username)] = True
                     elif (parcel_map.exists(user, parcel) or survey.status == 'deleted') and not confirmed:
                         continue
+                    elif parcel_master.propstreetcombined in ignored_addresses:
+                        print("ignoring address " + parcel_master.propstreetcombined)
+                        ignored_addresses[parcel_master.propstreetcombined] = parcel.parcel_id
                     elif not missing_emails:
 
                         parcel_map.add(user, parcel)
@@ -157,6 +168,12 @@ class Command(BaseCommand):
                             data['Survey id'] = survey.id
 
                         writer.writerow(data)
+
+            for address, parcel_id in ignored_addresses.items():
+                if not parcel_id:
+                    print("Address " + address + " did not get ignored properly")
+                else:
+                    print("parcel_id: " + parcel_id)
 
             if missing_emails:
                 msg = "User ids {} need email added".format(list(missing_emails.keys()))
