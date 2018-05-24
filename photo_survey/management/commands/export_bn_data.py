@@ -92,7 +92,7 @@ class Command(BaseCommand):
             export_username = True
             export_survey_id = True
 
-        ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 216, 9999 ]
+        ignored_users = [ 0, 81, 86, 91, 92, 96, 101, 126, 131, 206, 216, 231, 536, 556, 581, 9999 ]
 
         ignored_addresses = {
             "2007 OAKDALE": None,
