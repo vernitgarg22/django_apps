@@ -1,5 +1,6 @@
 import datetime
 import requests
+import re
 
 from waste_schedule.models import ScheduleDetail
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
@@ -163,6 +164,13 @@ def geocode_address(street_address):
     Returns geocoded location and address object if address can be geocoded
     with enough accuracy. Otherwise, returns None.
     """
+
+    street_address = street_address.strip().lower()
+
+    # Verify address is not just 'detroit' or a zip code, because those are not
+    # specific enough.
+    if street_address == 'detroit' or re.fullmatch('[0-9]*', street_address):
+        return None, None
 
     # Parse address string and get result from AddressPoint geocoder
     address = direccion.Address(input=street_address, notify_fail=True)
