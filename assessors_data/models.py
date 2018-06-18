@@ -159,8 +159,74 @@ class Whd01Parcl2017(AssessorsBase):
         db_table = 'WHD01_PARCL_2017'
 
 
-class MttTrackerExport2017(AssessorsBase):
+class MttTrackerExportTest(models.Model):
+    parcels_pnum = models.CharField(db_column='Parcels.pnum', max_length=25, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_ecftbl = models.CharField(db_column='Parcels.ecftbl', max_length=16, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_propstreetcombined = models.CharField(db_column='ParcelMaster.propstreetcombined', max_length=62, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_propaddrnum = models.FloatField(db_column='ParcelMaster.propaddrnum', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_propaddrdirect = models.CharField(db_column='ParcelMaster.propaddrdirect', max_length=1, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_propstreetname = models.CharField(db_column='ParcelMaster.propstreetname', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_propzip = models.CharField(db_column='ParcelMaster.propzip', max_length=10, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_taxpayname = models.CharField(db_column='ParcelMaster.taxpayname', max_length=64, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_taxpayname2 = models.CharField(db_column='ParcelMaster.taxpayname2', max_length=64, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_taxpaystreetaddr = models.CharField(db_column='ParcelMaster.taxpaystreetaddr', max_length=64, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_taxpaycity = models.CharField(db_column='ParcelMaster.taxpaycity', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_taxpaystate = models.CharField(db_column='ParcelMaster.taxpaystate', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_taxpayzip = models.CharField(db_column='ParcelMaster.taxpayzip', max_length=16, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_propclass = models.CharField(db_column='Parcels.propclass', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_oldprop = models.CharField(db_column='Parcels.oldprop', max_length=8, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_propstatus = models.CharField(db_column='Parcels.propstatus', max_length=16, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_exempt = models.IntegerField(db_column='ParcelMaster.exempt')  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_prevexemptcode = models.CharField(db_column='Parcels.prevexemptcode', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_specialactscode = models.CharField(db_column='Parcels.SpecialActsCode', max_length=16, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    memoryfieldstable_assessmentyear = models.IntegerField(db_column='MemoryFieldsTable.assessmentYear', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    memoryfieldstable_previousassessmentyear = models.IntegerField(db_column='MemoryFieldsTable.previousAssessmentYear', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_mborass_1 = models.FloatField(db_column='ParcelReadonly.mborass_1', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_mborass_2 = models.FloatField(db_column='ParcelReadonly.mborass_2', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_mborsev_1 = models.FloatField(db_column='ParcelReadonly.mborsev_1', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_mborsev_2 = models.FloatField(db_column='ParcelReadonly.mborsev_2', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_mbortax_1 = models.FloatField(db_column='ParcelReadonly.mbortax_1', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_mbortax_2 = models.FloatField(db_column='ParcelReadonly.mbortax_2', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_specialnote = models.CharField(db_column='ParcelMaster.specialNote', max_length=128, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_usecode = models.CharField(db_column='Parcels.useCode', max_length=16, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_vacant = models.IntegerField(db_column='ParcelMaster.vacant', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_lastsaleprice = models.IntegerField(db_column='ParcelMaster.lastSalePrice', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_lastsaledate = models.CharField(db_column='ParcelMaster.lastSaleDate', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_cib_numcib = models.IntegerField(db_column='ParcelMaster.cib_numcib', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_cib_yearbuilt = models.IntegerField(db_column='ParcelMaster.cib_yearbuilt', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_cib_floorarea = models.IntegerField(db_column='ParcelMaster.cib_floorarea', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_resb_numresb = models.IntegerField(db_column='ParcelMaster.resb_numresb', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_resb_yearbuilt = models.IntegerField(db_column='ParcelMaster.resb_yearbuilt', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_resb_groundarea = models.IntegerField(db_column='ParcelMaster.resb_groundarea', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_totalacres = models.FloatField(db_column='ParcelMaster.totalacres', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_squarefootage = models.IntegerField(db_column='Parcels.squareFootage', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_frontage = models.IntegerField(db_column='ParcelMaster.frontage', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_avdepth = models.IntegerField(db_column='ParcelMaster.avdepth', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_landvalue = models.IntegerField(db_column='ParcelMaster.landvalue', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_landmap = models.CharField(db_column='ParcelMaster.landMap', max_length=8, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_namechgdate = models.CharField(db_column='ParcelMaster.namechgdate', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_relatedpnum = models.CharField(db_column='ParcelMaster.relatedpnum', max_length=48, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_xcord = models.FloatField(db_column='ParcelMaster.XCord', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_ycord = models.FloatField(db_column='ParcelMaster.YCord', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_mapnum = models.CharField(db_column='Parcels.mapnum', max_length=8, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    neighborhoods_neighcode = models.CharField(db_column='Neighborhoods.neighcode', max_length=8, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_block = models.CharField(db_column='ParcelMaster.block', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_sub = models.CharField(db_column='ParcelMaster.sub', max_length=32, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_liberpage = models.CharField(db_column='ParcelMaster.liberpage', max_length=16, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelreadonly_legaldescription = models.CharField(db_column='ParcelReadonly.legalDescription', max_length=32000, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcels_usernum = models.IntegerField(db_column='Parcels.usernum', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    parcelmaster_ownername1 = models.CharField(db_column='ParcelMaster.ownername1', max_length=48, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+
+    def validate(self):    # pragma: no cover (this is really just for debugging)
+
+        for field in type(self)._meta.local_fields:
+            value = self.__getattribute__(field.name)
+            if type(field) == models.CharField and type(value) == str:
+                if len(value) > field.max_length:
+
+                    raise Exception("value of field {} too long".format(field.name))
 
     class Meta:
         managed = False
-        db_table = 'MTT_TRACKEREXPORT2017'
+        db_table = 'MTT_TRACKEREXPORT_TEST'
+

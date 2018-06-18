@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from assessors_data.models import MttTrackerExport2017, Whd01Parcl2017
+from assessors_data.models import MttTrackerExport2017, Whd01Parcl2017, MttTrackerExportTest
 
 
 def clean_string(buffer):
@@ -57,7 +57,7 @@ class Command(BaseCommand):
             return None
 
     def get_data_model(self):
-        return Whd01Parcl2017 if self.use_warehousedb else MttTrackerExport2017
+        return Whd01Parcl2017 if self.use_warehousedb else MttTrackerExportTest
 
     def parse_row(self, row):
 
@@ -72,7 +72,7 @@ class Command(BaseCommand):
         parcelmaster_propzip = self.get_value(row, Decimal)
         parcelmaster_taxpayname = self.get_value(row)
         parcelmaster_taxpayname2 = self.get_value(row)
-        parcelMaster_taxpaystreetaddr = self.get_value(row)
+        parcelmaster_taxpaystreetaddr = self.get_value(row)
 
         parcelmaster_taxpaycity = self.get_value(row)
         parcelmaster_taxpaystate = self.get_value(row)
@@ -86,12 +86,12 @@ class Command(BaseCommand):
         memoryfieldstable_assessmentyear = self.get_value(row, Decimal)
 
         memoryfieldstable_previousassessmentyear = self.get_value(row, Decimal)
-        parcelreadonly_mborass1 = self.get_value(row, Decimal)
-        parcelreadonly_mborass2 = self.get_value(row, Decimal)
-        parcelreadonly_mborsev1 = self.get_value(row, Decimal)
-        parcelreadonly_mborsev2 = self.get_value(row, Decimal)
-        parcelreadonly_mbortax1 = self.get_value(row, Decimal)
-        parcelreadonly_mbortax2 = self.get_value(row, Decimal)
+        parcelreadonly_mborass_1 = self.get_value(row, Decimal)
+        parcelreadonly_mborass_2 = self.get_value(row, Decimal)
+        parcelreadonly_mborsev_1 = self.get_value(row, Decimal)
+        parcelreadonly_mborsev_2 = self.get_value(row, Decimal)
+        parcelreadonly_mbortax_1 = self.get_value(row, Decimal)
+        parcelreadonly_mbortax_2 = self.get_value(row, Decimal)
         parcelmaster_specialnote = self.get_value(row)
         parcels_usecode = self.get_value(row)
         parcelmaster_vacant = self.get_value(row, Decimal)
@@ -136,11 +136,12 @@ class Command(BaseCommand):
             parcelmaster_propzip=parcelmaster_propzip,
             parcelmaster_taxpayname=parcelmaster_taxpayname,
             parcelmaster_taxpayname2=parcelmaster_taxpayname2,
-            parcelMaster_taxpaystreetaddr=parcelMaster_taxpaystreetaddr,
+            parcelmaster_taxpaystreetaddr=parcelmaster_taxpaystreetaddr,
             parcelmaster_taxpaycity=parcelmaster_taxpaycity,
             parcelmaster_taxpaystate=parcelmaster_taxpaystate,
             parcelmaster_taxpayzip=parcelmaster_taxpayzip,
             parcels_propclass=parcels_propclass,
+
             parcels_oldprop=parcels_oldprop,
             parcels_propstatus=parcels_propstatus,
             parcelmaster_exempt=parcelmaster_exempt,
@@ -148,13 +149,14 @@ class Command(BaseCommand):
             parcels_specialactscode=parcels_specialactscode,
             memoryfieldstable_assessmentyear=memoryfieldstable_assessmentyear,
             memoryfieldstable_previousassessmentyear=memoryfieldstable_previousassessmentyear,
-            parcelreadonly_mborass1=parcelreadonly_mborass1,
-            parcelreadonly_mborass2=parcelreadonly_mborass2,
-            parcelreadonly_mborsev1=parcelreadonly_mborsev1,
-            parcelreadonly_mborsev2=parcelreadonly_mborsev2,
-            parcelreadonly_mbortax1=parcelreadonly_mbortax1,
-            parcelreadonly_mbortax2=parcelreadonly_mbortax2,
+            parcelreadonly_mborass_1=parcelreadonly_mborass_1,
+            parcelreadonly_mborass_2=parcelreadonly_mborass_2,
+            parcelreadonly_mborsev_1=parcelreadonly_mborsev_1,
+            parcelreadonly_mborsev_2=parcelreadonly_mborsev_2,
+            parcelreadonly_mbortax_1=parcelreadonly_mbortax_1,
+            parcelreadonly_mbortax_2=parcelreadonly_mbortax_2,
             parcelmaster_specialnote=parcelmaster_specialnote,
+
             parcels_usecode=parcels_usecode,
             parcelmaster_vacant=parcelmaster_vacant,
             parcelmaster_lastsaleprice=parcelmaster_lastsaleprice,
@@ -162,6 +164,7 @@ class Command(BaseCommand):
             parcelmaster_cib_numcib=parcelmaster_cib_numcib,
             parcelmaster_cib_yearbuilt=parcelmaster_cib_yearbuilt,
             parcelmaster_cib_floorarea=parcelmaster_cib_floorarea,
+
             parcelmaster_resb_numresb=parcelmaster_resb_numresb,
             parcelmaster_resb_yearbuilt=parcelmaster_resb_yearbuilt,
             parcelmaster_resb_groundarea=parcelmaster_resb_groundarea,
@@ -169,13 +172,16 @@ class Command(BaseCommand):
             parcels_squarefootage=parcels_squarefootage,
             parcelmaster_frontage=parcelmaster_frontage,
             parcelmaster_avdepth=parcelmaster_avdepth,
+
             parcelmaster_landvalue=parcelmaster_landvalue,
             parcelmaster_landmap=parcelmaster_landmap,
             parcelmaster_namechgdate=parcelmaster_namechgdate,
+
             parcelmaster_relatedpnum=parcelmaster_relatedpnum,
             parcelmaster_xcord=parcelmaster_xcord,
             parcelmaster_ycord=parcelmaster_ycord,
             parcels_mapnum=parcels_mapnum,
+
             neighborhoods_neighcode=neighborhoods_neighcode,
             parcelmaster_block=parcelmaster_block,
             parcelmaster_sub=parcelmaster_sub,
@@ -214,6 +220,7 @@ class Command(BaseCommand):
                     first_line = False
                 else:
 
+                    # Note: save / validate one row at a time for better debug info
                     # row = self.parse_row(row)
                     # row.validate()
                     # row.save()
