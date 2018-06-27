@@ -23,7 +23,7 @@ urlpatterns = [
 	url(r'^$', RedirectView.as_view(url='waste_wizard/', permanent=False), name='index'),
 
     # admin site
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^admin/waste_schedule/', include('waste_schedule.urls', namespace='waste_schedule')),
 
     # apis

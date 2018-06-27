@@ -119,8 +119,8 @@ class DataSource(models.Model):
 
     name = models.CharField('Name', max_length=64, unique=True, db_index=True)
     url = models.CharField('Data Source URL', max_length=3000, null=True, blank=True)
-    data_set = models.ForeignKey(DataSet, null=True, blank=True)
-    credentials = models.ForeignKey(DataCredential, null=True, blank=True)
+    data_set = models.ForeignKey(DataSet, null=True, blank=True, on_delete=models.deletion.PROTECT)
+    credentials = models.ForeignKey(DataCredential, null=True, blank=True, on_delete=models.deletion.PROTECT)
     data_parse_path = models.CharField('Data to extract', max_length=128, null=True, blank=True)
     data_id_parse_path = models.CharField('Data ID to extract', max_length=128, null=True, blank=True)
     socrata_where = models.CharField('Where clause', max_length=128, null=True, blank=True)
@@ -277,7 +277,7 @@ class DataValue(models.Model):
 
     app_label = 'data_cache'
 
-    data_source = models.ForeignKey(DataSource)
+    data_source = models.ForeignKey(DataSource, on_delete=models.deletion.PROTECT)
     data = models.TextField()
     updated = models.DateTimeField('Last time data was cached')
     param = models.CharField(max_length=128, blank=True, null=True, db_index=True)
@@ -343,11 +343,11 @@ class DataCitySummary(models.Model):
     name = models.CharField('name', max_length=64)
     description = models.CharField('description', max_length=1024)
 
-    data_set = models.ForeignKey(DataSet, null=True, blank=True)
+    data_set = models.ForeignKey(DataSet, null=True, blank=True, on_delete=models.deletion.PROTECT)
     url = models.CharField('url', max_length=2056, null=True, blank=True)
-    credentials = models.ForeignKey(DataCredential, null=True, blank=True)
+    credentials = models.ForeignKey(DataCredential, null=True, blank=True, on_delete=models.deletion.PROTECT)
 
-    descriptor = models.ForeignKey(DataDescriptor, null=True, blank=True)
+    descriptor = models.ForeignKey(DataDescriptor, null=True, blank=True, on_delete=models.deletion.PROTECT)
 
     def json(self):
         """

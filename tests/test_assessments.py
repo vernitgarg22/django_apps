@@ -22,8 +22,8 @@ def cleanup_db():
     test_util.cleanup_model(ParcelMaster)
     test_util.cleanup_model(Sales)
     test_util.cleanup_model(CaseMain)
-    test_util.cleanup_model(RoleType)
     test_util.cleanup_model(CaseType)
+    test_util.cleanup_model(RoleType)
     test_util.cleanup_model(Parcel)
 
 

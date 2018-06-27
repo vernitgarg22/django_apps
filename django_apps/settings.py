@@ -112,7 +112,7 @@ INSTALLED_APPS = (
 if RUNNING_UNITTESTS:
     INSTALLED_APPS = INSTALLED_APPS + ('tests',)
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     # KARL: removing some of the sessions middleware package because assessments database has no sessions table
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -217,6 +217,7 @@ class DjangoAppsRouter(object):
         "Tblztickets": "blight_tickets",
         "Whd01Parcl2017": "warehousedb",
         "MttTrackerExport2017": "finassessorprod",
+        "MttTrackerExportTest": "finassessorprod",
     }
 
     ModelDBMapDev = {

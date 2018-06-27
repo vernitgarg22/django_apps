@@ -32,6 +32,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='schedulechange',
             name='waste_area',
-            field=models.ForeignKey(to='waste_schedule.WasteArea'),
+            field=models.ForeignKey(to='waste_schedule.WasteArea', on_delete=models.PROTECT),
         ),
     ]

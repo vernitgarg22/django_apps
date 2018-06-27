@@ -194,7 +194,7 @@ class SurveyorView(APIView):
         """
 
         user = None
-        if request.user and request.user.is_authenticated():
+        if request.user and request.user.is_authenticated:
             user = request.user
         else:
             # TODO remove this once we get mod_wsgi passing the authorization header through properly

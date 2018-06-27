@@ -218,7 +218,7 @@ class Parcel(models.Model):
 
 class CaseType(models.Model):
     case_type = models.CharField(primary_key=True, max_length=3)
-    role_type = models.ForeignKey('RoleType', db_column='role_type')
+    role_type = models.ForeignKey('RoleType', db_column='role_type', on_delete=models.deletion.PROTECT)
     cst_description = models.CharField(max_length=50, blank=True, null=True)
     cst_prcl_flag = models.CharField(max_length=1, blank=True, null=True)
     cst_type = models.CharField(max_length=1, blank=True, null=True)
@@ -242,11 +242,11 @@ class CaseType(models.Model):
 
 class CaseMain(models.Model):
     csm_caseno = models.CharField(primary_key=True, max_length=14)
-    case_type = models.ForeignKey(CaseType, db_column='case_type', related_name='type')
-    prc_parcel_no = models.ForeignKey('Parcel', db_column='prc_parcel_no', related_name='parcel_no')
+    case_type = models.ForeignKey(CaseType, db_column='case_type', related_name='type', on_delete=models.deletion.PROTECT)
+    prc_parcel_no = models.ForeignKey('Parcel', db_column='prc_parcel_no', related_name='parcel_no', on_delete=models.deletion.PROTECT)
     csm_description = models.TextField(blank=True, null=True)  # This field type is a guess.
     csm_target_date = models.DateField(blank=True, null=True)
-    prc_avp_no = models.ForeignKey('Parcel', db_column='prc_avp_no', related_name='avp_no')
+    prc_avp_no = models.ForeignKey('Parcel', db_column='prc_avp_no', related_name='avp_no', on_delete=models.deletion.PROTECT)
     csm_expr_date = models.DateField(blank=True, null=True)
     csm_finaled_date = models.DateField(blank=True, null=True)
     csm_issued_date = models.DateField(blank=True, null=True)

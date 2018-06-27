@@ -123,21 +123,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='casetype',
             name='role_type',
-            field=models.ForeignKey(db_column='role_type', to='assessments.RoleType'),
+            field=models.ForeignKey(db_column='role_type', to='assessments.RoleType', on_delete=models.PROTECT),
         ),
         migrations.AddField(
             model_name='CaseMain',
             name='case_type',
-            field=models.ForeignKey(db_column='case_type', related_name='type', to='assessments.CaseType'),
+            field=models.ForeignKey(db_column='case_type', related_name='type', to='assessments.CaseType', on_delete=models.PROTECT),
         ),
         migrations.AddField(
             model_name='CaseMain',
             name='prc_avp_no',
-            field=models.ForeignKey(db_column='prc_avp_no', related_name='avp_no', to='assessments.Parcel'),
+            field=models.ForeignKey(db_column='prc_avp_no', related_name='avp_no', to='assessments.Parcel', on_delete=models.PROTECT),
         ),
         migrations.AddField(
             model_name='CaseMain',
             name='prc_parcel_no',
-            field=models.ForeignKey(db_column='prc_parcel_no', related_name='parcel_no', to='assessments.Parcel'),
+            field=models.ForeignKey(db_column='prc_parcel_no', related_name='parcel_no', to='assessments.Parcel', on_delete=models.PROTECT),
         ),
     ]
