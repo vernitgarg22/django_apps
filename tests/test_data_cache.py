@@ -5,6 +5,7 @@ import requests
 from django.test import Client
 from django.test import TestCase
 from django.conf import settings
+from unittest import skip
 
 from tests import test_util
 
@@ -15,9 +16,10 @@ from cod_utils import util
 
 
 def cleanup_db():
+    test_util.cleanup_model(DataValue)
     test_util.cleanup_model(DataSource)
-    test_util.cleanup_model(DataSet)
     test_util.cleanup_model(DataCitySummary)
+    test_util.cleanup_model(DataSet)
 
     SimpleJSONCache.clear_all()
 
@@ -54,6 +56,7 @@ def init_hydrants_data():
     credentials = init_creds(key="HYDRANTS")
     DataSource(data_set=data_set, name='hydrants', url="https://gisweb.glwater.org/arcgis/rest/services/Hydrants/dwsd_HydrantInspection_v2/MapServer/0?f=json", credentials=credentials).save()
 
+@skip('gis token has been disabled')
 def init_gis_data():
 
     data_set = DataSet(name='bridging_neighborhoods')
