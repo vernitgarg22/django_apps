@@ -206,11 +206,24 @@ class PageCrawler():
 class PageCrawlerAdmin():
 
     MAX_LEVELS_DEEP = 250
+    ILLEGAL_DOMAIN = "detroitmi.gov"
 
     def __init__(self):
 
         self.urls_crawled = set()
         self.levels_deep = 0
+
+    def is_domain_illegal(url):
+
+        for begin in [ "://www.", "://" ]:
+
+            pos = url.find(begin)
+            if pos > 0:
+
+                url = url[ pos + len(begin) : ]
+                break
+
+        return url.startswith(PageCrawlerAdmin.ILLEGAL_DOMAIN)
 
     def crawl_page(self, domain, url):
 
@@ -229,6 +242,9 @@ class PageCrawlerAdmin():
         for url in crawler.urls():
 
             if url not in self.urls_crawled:
+
+                if PageCrawlerAdmin.is_domain_illegal(url):
+                    print("ILLEGAL DOMAIN: " + url)
 
                 self.urls_crawled.add(url)
 
