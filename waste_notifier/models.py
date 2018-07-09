@@ -180,7 +180,6 @@ class Subscriber(models.Model):
             subscriber = previous[0]
             subscriber.phone_number=phone_number
             subscriber.waste_area_ids=waste_area_ids
-            subscriber.status=Subscriber.DEFAULT_STATUS
         else:
             # try to create a subscriber with the posted data
             subscriber = Subscriber(phone_number=phone_number, waste_area_ids=waste_area_ids)
