@@ -5,6 +5,7 @@ from rest_framework import routers
 import assessments.views
 import blight_tickets.views
 import data_cache.views
+import elections.views
 import photo_survey.views
 import property_data.views
 import waste_notifier.views
@@ -30,6 +31,7 @@ urlpatterns = [
     url(r'^assessments/', include('assessments.urls', namespace="assessments")),
     url(r'^blight_tickets/', include('blight_tickets.urls', namespace="blight_tickets")),
     url(r'^data_cache/', include('data_cache.urls', namespace="data_cache")),
+    url(r'^elections/', include('elections.urls', namespace="elections")),
     url(r'^photo_survey/', include('photo_survey.urls', namespace="photo_survey")),
     url(r'^property_data/', include('property_data.urls', namespace="property_data")),
     url(r'^waste_notifier/', include('waste_notifier.urls', namespace="waste_notifier")),
