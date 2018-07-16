@@ -129,6 +129,7 @@ class SimpleJSONCache():
 def get_data_impl(name, param=None, path=None, force_refresh=False):
 
     data_source_name = None
+    data = {}
 
     # Parse parcel ids when necessary
     if param:
@@ -138,8 +139,7 @@ def get_data_impl(name, param=None, path=None, force_refresh=False):
         else:
             param = get_parcel_id(path, 3)
 
-    data = {}
-    if not force_refresh and not param:
+    elif not force_refresh:
         data = SimpleJSONCache.get(name)
 
     if not data:
