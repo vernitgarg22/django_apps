@@ -19,15 +19,19 @@ import pdb
 
 server = "http://detroitmi.theneighborhoods.org"
 
+
 # "/Government/Boards",
 # "/Government/Commissions",
 # "/How-Do-I/Neighborhood-Police-Officer-NPO-program/7TH-PRECINCT-NPO",
 # "/How-Do-I/Neighborhood-Police-Officer-NPO-program/8TH-PRECINCT-NPO",
 # "/How-Do-I/Neighborhood-Police-Officer-NPO-program/9TH-PRECINCT-NPO",
 # "/How-Do-I/Neighborhood-Police-Officer-NPO-program/GAMING-NPO",
+# "/How-Do-I/Do-Business-with-the-City/Planning-Development-RFQs",
 # "/Calendar-and-Events",
 # "/Calendar-Events",
 # "/Government/City-Council/George-Cushingberry",
+
+# "/Detroit-Dashboard",
 
 
 urls = [
@@ -40,7 +44,6 @@ urls = [
     "/DACC",
     "/DDOT",
     "/Demolition",
-    "/Detroit-Dashboard",
     "/Detroit-Demolition-Program/View-All-Demolitions",
     "/Detroit-Opportunities",
     "/Detroit-Opportunities/Find-A-Job",
@@ -109,7 +112,6 @@ urls = [
     "/How-Do-I/Do-Business-with-the-City",
     "/How-Do-I/Do-Business-with-the-City/Building-Authority-Advertisements",
     "/How-Do-I/Do-Business-with-the-City/Open-Bids-for-the-City-of-Detroit",
-    "/How-Do-I/Do-Business-with-the-City/Planning-Development-RFQs",
     "/How-Do-I/File",
     "/How-Do-I/File/Blight-Complaint",
     "/How-Do-I/File/Income-Tax-Forms",
@@ -142,13 +144,10 @@ urls = [
     "/How-Do-I/Find/Schedule-An-Appointment",
     "/How-Do-I/Find/Water-Sewer-and-Drainage-Rates-101",
     "/How-Do-I/Grants",
-    "/How-Do-I/Index-A-to-Z/A",
-    "/How-Do-I/Index-A-to-Z/P",
     "/How-Do-I/Locate-Transportation",
     "/How-Do-I/Locate-Transportation/Bus-Schedules",
     "/How-Do-I/Locate-Transportation/Bus-Schedules-Information",
     "/How-Do-I/Locate-Transportation/Metro-Lift-Requirements",
-    "/How-Do-I/Locate-Transportation/Public-Notices",
     "/How-Do-I/Locate-Transportation/Transportation-Fares",
     "/How-Do-I/Medical-Marihuana-Information",
     "/ImproveDetroit",
@@ -200,6 +199,123 @@ urls = [
     "/Serve-Detroit",
     "/Supplier",
     "/youthprograms",
+    "/government/city-clerk",
+    "/government/city-clerk/appear-council",
+    "/government/city-clerk/banner-permits-information",
+    "/government/city-clerk/city-clerk-archive-records-fees",
+    "/government/city-clerk/city-clerks-archives-and-records-information",
+    "/government/city-clerk/city-council-proceedings-2000-2014-information",
+    "/government/city-clerk/city-of-detroit-charter-information",
+    "/government/city-clerk/lobbyist-registration-and-reporting-information",
+    "/government/city-clerk/elections/become-election-day-pollworker",
+    "/government/city-clerk/elections/election-information",
+    "/government/city-clerk/elections/election-results",
+    "/government/city-clerk/elections/m-100-automark-voting-system",
+    "/government/city-clerk/elections/request-absentee-ballot",
+]
+
+
+already_exported = [
+    "http://detroitmi.theneighborhoods.org/government/boards/board-of-police-commissioners",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department",
+    "http://detroitmi.theneighborhoods.org/departments/planning-and-development-department/east-design-region/campau-banglatown",
+    "http://detroitmi.theneighborhoods.org/government/mayors-office/correspondence",
+    "http://detroitmi.theneighborhoods.org/departments/health-department/detroit-animal-care-and-control",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-department-of-transportation",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-building-authority/detroit-demolition-program/view-all-demolitions",
+    "http://detroitmi.theneighborhoods.org/government/mayors-office/detroit-opportunities/find-job",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/stormwater-drainage/what-drainage",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/dwsd-customer-care",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/dwsd-customer-care/payment-kiosks",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/dwsd-customer-care/skip-the-line",
+    "http://detroitmi.theneighborhoods.org/government/city-clerk/elections",
+    "http://detroitmi.theneighborhoods.org/departments/human-resources-department/apply-for-job",
+    "http://detroitmi.theneighborhoods.org/departments/office-of-the-chief-financial-officer/office-of-treasury/pay-property-tax",
+    "http://detroitmi.theneighborhoods.org/government/boards/board-of-electrical-examiners",
+    "http://detroitmi.theneighborhoods.org/government/city-clerk",
+    "http://detroitmi.theneighborhoods.org/government/city-council",
+    "http://detroitmi.theneighborhoods.org/departments/health-department/detroit-id",
+    "http://detroitmi.theneighborhoods.org/departments/health-department/food-safety",
+    "http://detroitmi.theneighborhoods.org/departments/health-department/immunizations",
+    "http://detroitmi.theneighborhoods.org/departments/law-department",
+    "http://detroitmi.theneighborhoods.org/departments/planning-and-development-department",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/contact-us",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/refuse-collection/bulk-yard-waste/curbside-bulk-waste-pickup",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/refuse-collection/recycle",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/about-dwsd",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/dwsd-customer-care/learn-about-your-bill",
+    "http://detroitmi.theneighborhoods.org/government/mayors-office",
+    "http://detroitmi.theneighborhoods.org/departments/health-department",
+    "http://detroitmi.theneighborhoods.org/how-do-i/appeal",
+    "http://detroitmi.theneighborhoods.org/government/property-assessment-forms",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/construction/boiler-inspection-team",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/business-license-center",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/business-licenses-checklist",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/construction/building-inspection-information",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/building-permit-information/building-permit-requirements",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department/gun-permits-information",
+    "http://detroitmi.theneighborhoods.org/departments/media-services-department/special-events",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/zoning",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/construction",
+    "http://detroitmi.theneighborhoods.org/how-do-i/do-business-with-the-city",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-building-authority",
+    "http://detroitmi.theneighborhoods.org/departments/office-of-the-chief-financial-officer/office-of-contracting-and-procurement/open-bids-for-the-city-of-detroit",
+    "http://detroitmi.theneighborhoods.org/departments/office-of-the-chief-financial-officer/office-of-treasury/income-tax",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-fire-department/arson-awareness",
+    "http://detroitmi.theneighborhoods.org/government/city-clerk/city-clerks-archives-and-records-information",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-department-of-transportation/buy-pass",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-parks-recreation/community-recreation-centers/butzel-family-center",
+    "http://detroitmi.theneighborhoods.org/departments/health-department/birth-and-death-certificates",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-parks-recreation",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department/detroit-police-department-jobs",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/dwsd-customer-care/payment-plan",
+    "http://detroitmi.theneighborhoods.org/how-do-i/find-information/properties-faq",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/refuse-collection",
+    "http://detroitmi.theneighborhoods.org/departments/health-department/detroit-id/schedule-appointment",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-water-and-sewerage-department/water-sewer-and-drainage-rates-101",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-department-of-transportation/bus-schedules",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-department-of-transportation/metro-lift-requirements",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-department-of-transportation/transportation-fares",
+    "http://detroitmi.theneighborhoods.org/ImproveDetroit",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department/precincts-and-neighborhood-police-officers",
+    "http://detroitmi.theneighborhoods.org/departments/planning-and-development-department/citywide-initiatives/home-repair-program-information",
+    "http://detroitmi.theneighborhoods.org/departments/office-of-the-chief-financial-officer/office-of-treasury/delinquent-property-tax-information",
+    "http://detroitmi.theneighborhoods.org/departments/municipal-parking-department/pay-parking-ticket",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department/detroit-police-department-records-and-reports",
+    "http://detroitmi.theneighborhoods.org/node/1581",
+    "http://detroitmi.theneighborhoods.org/how-do-i/register",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department/abandoned-vehicle",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department/report-crime",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/dead-animal-removal",
+    "http://detroitmi.theneighborhoods.org/government/city-council/council-awards-and-resolutions",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/refuse-collection/dpw-container-services",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works/street-maintenance",
+    "http://detroitmi.theneighborhoods.org/departments/general-services-department/tree-services",
+    "http://detroitmi.theneighborhoods.org/government/city-council/legislative-policy-division/legislative-policy-division-reports",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-neighborhoods/motorcity-makeover-information",
+    "http://detroitmi.theneighborhoods.org/government/mayors-office/mayors-help-desk",
+    "http://detroitmi.theneighborhoods.org/departments/media-services-department",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-neighborhoods",
+    "http://detroitmi.theneighborhoods.org/departments/detroit-police-department",
+    "http://detroitmi.theneighborhoods.org/departments/law-department/project-clean-slate",
+    "http://detroitmi.theneighborhoods.org/government/mayors-office/properties",
+    "http://detroitmi.theneighborhoods.org/departments/department-of-public-works",
+    "http://detroitmi.theneighborhoods.org/departments/office-of-the-chief-financial-officer/office-of-contracting-and-procurement",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/property-maintenance-division",
+    "http://detroitmi.theneighborhoods.org/departments/buildings-safety-engineering-and-environmental-department/property-maintenance-division/certificate-of-compliance/quick-steps-obtain-certificate-of-compliance",
+    "http://detroitmi.theneighborhoods.org/departments/office-of-the-chief-financial-officer/office-of-contracting-and-procurement/supplier-portal-information-and-instructions",
+    "http://detroitmi.theneighborhoods.org/node/4576",
+    "http://detroitmi.theneighborhoods.org/node/1231",
+    "http://detroitmi.theneighborhoods.org/node/2586",
+    "http://detroitmi.theneighborhoods.org/node/6476",
+    "http://detroitmi.theneighborhoods.org/node/3361",
+    "http://detroitmi.theneighborhoods.org/node/3886",
+    "http://detroitmi.theneighborhoods.org/node/2471",
+    "http://detroitmi.theneighborhoods.org/node/1521",
+    "http://detroitmi.theneighborhoods.org/node/3866",
+    "http://detroitmi.theneighborhoods.org/node/2481",
+    "http://detroitmi.theneighborhoods.org/node/2501",
 ]
 
 
@@ -228,11 +344,13 @@ class ContentExporter():
 
         for key in [ 'field_need_review', 'field_need_reviewed' ]:
             if content.get(key) and content[key][0]['value']:
+                # pdb.set_trace()
                 return True
 
         tmp_content = str(content)
         for word in [ 'TODO', 'REVIEW' ]:
             if word in tmp_content:
+                # pdb.set_trace()
                 return True
 
         return False
@@ -352,6 +470,14 @@ class ContentExporter():
                 urls.append(url)
 
     @staticmethod
+    def cleanup_url(url):
+
+        pos = url.find('?')
+        if pos > 0:
+            url = url[0 : pos]
+        return url
+
+    @staticmethod
     def get_data(url):
 
         auth_values = tuple(settings.CREDENTIALS['DETROITMI'].values())
@@ -366,8 +492,9 @@ class ContentExporter():
         url = response.url
 
         # Have we already exported this content?
-        if ContentExporter.urls_exported.get(response.url):
-            ContentExporter.report_err("url {} has already been exported".format(url), "Duplicate URL")
+        tmp_url = ContentExporter.cleanup_url(response.url)
+        if ContentExporter.urls_exported.get(tmp_url):
+            ContentExporter.report_err("url {} has already been exported".format(tmp_url), "Duplicate URL")
             return [None, None];
 
         data = response.json()
@@ -377,14 +504,6 @@ class ContentExporter():
             return ContentExporter.get_data(url=tmp_url)
         else:
             return url, data
-
-    @staticmethod
-    def cleanup_url(url):
-
-        pos = url.find('?')
-        if pos > 0:
-            url = url[0 : pos]
-        return url
 
     @staticmethod
     def do_export(url):
@@ -437,6 +556,10 @@ if __name__ == '__main__':
 
     os.environ['DJANGO_SETTINGS_MODULE'] = 'django_apps.settings'
     django.setup()
+
+    for url in already_exported:
+
+        ContentExporter.urls_exported[url] = True
 
     for url in urls:
 
