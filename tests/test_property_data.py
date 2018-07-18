@@ -8,15 +8,16 @@ from django.conf import settings
 from tests import test_util
 
 from data_cache.models import DTEActiveGasSite
+from property_data.models import EscrowBalance
 
 
-def cleanup_db():
-    test_util.cleanup_model(DTEActiveGasSite)
+class PropertyDataDTETests(TestCase):
 
-class PropertyDataTests(TestCase):
+    def cleanup_db(self):
+        test_util.cleanup_model(DTEActiveGasSite)
 
     def setUp(self):
-        cleanup_db()
+        self.cleanup_db()
         self.maxDiff = None
 
     def test_get_dte_active_connections(self):
@@ -58,3 +59,55 @@ class PropertyDataTests(TestCase):
         response = c.get("/property_data/dte/active_connections/123./", secure=True)
 
         self.assertEqual(response.status_code, 404)
+
+
+class PropertyDataRentEscrowTests(TestCase):
+
+    def cleanup_db(self):
+        test_util.cleanup_model(EscrowBalance)
+
+    def setUp(self):
+        self.cleanup_db()
+        self.maxDiff = None
+
+    def create_rent_escrow_balance(self):
+
+        balance = EscrowBalance(master_account_num=1, master_account_name='master', sub_account_num=1, sub_account_name='sub',
+                    short_name='sub', account_status='a', group_num=1, item_num=1,
+                    original_balance=1000.00, fed_withholding_tax_this_period=None, ytd_fed_withholding_tax=None,
+                    int_paid_this_period=None, ytd_int_paid=None, int_split_this_period=None, escrow_balance=1000.00)
+        balance.save()
+
+    def test_get_escrow_balance(self):
+
+        self.create_rent_escrow_balance()
+
+        c = Client()
+        response = c.get("/property_data/rental_escrow/1/", secure=True)
+
+        expected = {'master_account_num': 1, 'master_account_name': 'master', 'sub_account_num': 1, 'sub_account_name': 'sub', 'short_name': 'sub', 'account_status': 'a', 'group_num': 1, 'item_num': 1, 'original_balance': '1000.00', 'fed_withholding_tax_this_period': None, 'ytd_fed_withholding_tax': None, 'int_paid_this_period': None, 'ytd_int_paid': None, 'int_split_this_period': None, 'escrow_balance': '1000.00'}
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, expected, "Rental escrow balance data gets returned")
+
+    def test_get_escrow_balance_404(self):
+
+        c = Client()
+        response = c.get("/property_data/rental_escrow/1/", secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_escrow_balance_not_secure(self):
+
+        c = Client()
+        response = c.get("/property_data/rental_escrow/1/", secure=False)
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_escrow_balance_badclient(self):
+
+        # Force block_client to block us
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
+
+        c = Client()
+        response = c.get("/property_data/rental_escrow/1/", secure=False)
+        self.assertEqual(response.status_code, 403)
+
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
