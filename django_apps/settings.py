@@ -205,6 +205,7 @@ class DjangoAppsRouter(object):
         "ImageMetadata": "photo_survey",
         "ParcelMetadata": "photo_survey",
         "PublicPropertyData": "photo_survey",
+        "EscrowBalance": "property_data",
         "Sales": "eql",
         "Sketch": "eql",
         "Survey": "photo_survey",
