@@ -1,5 +1,7 @@
 from django.db import models
 
+from cod_utils.util import date_json
+
 
 class EscrowBalance(models.Model):
 
@@ -15,7 +17,7 @@ class EscrowBalance(models.Model):
     short_name = models.CharField('Short name', max_length = 128)
     account_status = models.CharField('Account status', max_length = 8)
     group_num = models.BigIntegerField('Group num')
-    item_num = models.BigIntegerField('Item num (reference num)', db_index=True)
+    item_num = models.BigIntegerField('Item num (reference num)', unique=True)
     original_balance = models.DecimalField('Original balance', max_digits=8, decimal_places=2)
     fed_withholding_tax_this_period = models.DecimalField('Fed Withholding tax this period', max_digits=8, decimal_places=2, null=True)
     ytd_fed_withholding_tax = models.DecimalField('YTD Fed Withholding tax', max_digits=8, decimal_places=2, null=True)
@@ -23,6 +25,8 @@ class EscrowBalance(models.Model):
     ytd_int_paid = models.DecimalField('YTD interest paid', max_digits=8, decimal_places=2, null=True)
     int_split_this_period = models.DecimalField('Interest split this period', max_digits=8, decimal_places=2, null=True)
     escrow_balance = models.DecimalField('Escrow balance', max_digits=8, decimal_places=2)
+    escrow_begin_date = models.DateField('Escrow start date', null=True, blank=True)
+    escrow_end_date = models.DateField('Escrow start date', null=True, blank=True)
 
     def convert_decimal(self, decimal):
 
@@ -49,6 +53,8 @@ class EscrowBalance(models.Model):
             "ytd_int_paid": self.convert_decimal(self.ytd_int_paid),
             "int_split_this_period": self.convert_decimal(self.int_split_this_period),
             "escrow_balance": self.convert_decimal(self.escrow_balance),
+            "escrow_begin_date": date_json(self.escrow_begin_date),
+            "escrow_end_date": date_json(self.escrow_end_date),
         }
 
     def __str__(self):  # pragma: no cover (mostly for debugging)

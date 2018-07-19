@@ -85,7 +85,7 @@ class PropertyDataRentEscrowTests(TestCase):
         c = Client()
         response = c.get("/property_data/rental_escrow/1/", secure=True)
 
-        expected = {'master_account_num': 1, 'master_account_name': 'master', 'sub_account_num': 1, 'sub_account_name': 'sub', 'short_name': 'sub', 'account_status': 'a', 'group_num': 1, 'item_num': 1, 'original_balance': '1000.00', 'fed_withholding_tax_this_period': None, 'ytd_fed_withholding_tax': None, 'int_paid_this_period': None, 'ytd_int_paid': None, 'int_split_this_period': None, 'escrow_balance': '1000.00'}
+        expected = {'master_account_num': 1, 'master_account_name': 'master', 'sub_account_num': 1, 'sub_account_name': 'sub', 'short_name': 'sub', 'account_status': 'a', 'group_num': 1, 'item_num': 1, 'original_balance': '1000.00', 'fed_withholding_tax_this_period': None, 'ytd_fed_withholding_tax': None, 'int_paid_this_period': None, 'ytd_int_paid': None, 'int_split_this_period': None, 'escrow_balance': '1000.00', 'escrow_begin_date': '', 'escrow_end_date': ''}
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected, "Rental escrow balance data gets returned")
 
