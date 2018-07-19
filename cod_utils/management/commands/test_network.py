@@ -44,3 +44,5 @@ class Command(BaseCommand):
 
         if error_msg:
             SlackMsgHandler().send(message=error_msg)
+        else:
+            print('No network problems detected')
