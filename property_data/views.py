@@ -58,7 +58,8 @@ def get_escrow_data(request, item_num, param=None):
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
-    if not EscrowBalance.objects.filter(item_num=item_num).exists():
+    balances = EscrowBalance.objects.filter(item_num=item_num)
+    if not balances.exists():
         raise Http404("No escrow data found for item number " + str(item_num))
 
-    return Response(EscrowBalance.objects.first().to_json())
+    return Response(balances.first().to_json())

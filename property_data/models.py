@@ -8,14 +8,14 @@ class EscrowBalance(models.Model):
     # REVIEW:  finish adding in indexes
     # REVIEW:  finish adding in blank=True, null=True
 
-    master_account_num = models.IntegerField('Master account number')
+    master_account_num = models.BigIntegerField('Master account number')
     master_account_name = models.CharField('Master account name', max_length = 128)
-    sub_account_num = models.IntegerField('Sub account number')
+    sub_account_num = models.BigIntegerField('Sub account number')
     sub_account_name = models.CharField('Sub account name', max_length = 128)
     short_name = models.CharField('Short name', max_length = 128)
     account_status = models.CharField('Account status', max_length = 8)
-    group_num = models.IntegerField('Group num')
-    item_num = models.IntegerField('Item num (reference num)', db_index=True)
+    group_num = models.BigIntegerField('Group num')
+    item_num = models.BigIntegerField('Item num (reference num)', db_index=True)
     original_balance = models.DecimalField('Original balance', max_digits=8, decimal_places=2)
     fed_withholding_tax_this_period = models.DecimalField('Fed Withholding tax this period', max_digits=8, decimal_places=2, null=True)
     ytd_fed_withholding_tax = models.DecimalField('YTD Fed Withholding tax', max_digits=8, decimal_places=2, null=True)
