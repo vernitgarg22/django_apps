@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Sketches',
-                'managed': False,
+                # 'managed': False,
             },
         ),
         migrations.AlterModelOptions(

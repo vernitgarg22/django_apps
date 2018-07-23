@@ -1,11 +1,15 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 from decimal import *
 import pytz
 
+from django.conf import settings
+
 from django.test import Client
 from django.test import TestCase
 
+from django.core.files.images import ImageFile
 from django.utils import timezone
 
 import tests.disabled
@@ -15,7 +19,7 @@ from assessments import util
 from assessments import views
 
 from assessments.models import Sales, ParcelMaster
-from assessments.models import Parcel, RoleType, CaseType, CaseMain
+from assessments.models import Parcel, RoleType, CaseType, CaseMain, Sketch
 
 
 def cleanup_db():
@@ -234,3 +238,14 @@ class AssessmentsTests(TestCase):
 
         response = c.get('/assessments/rentals/cases/1000/')
         self.assertEqual(response.status_code, 404)
+
+    def test_get_images(self):
+
+        c = Client()
+
+        sketch = Sketch(pnum='1', date=datetime(2018, 7, 30, 0, 0, tzinfo=pytz.utc))
+        sketch.imageData = ImageFile(open("data/assessments/images/image_1_20180730_0000.jpg", "rb"))      
+        sketch.save()
+
+        response = c.get('/assessments/1/images/')
+        self.assertEqual(response.status_code, 200)
