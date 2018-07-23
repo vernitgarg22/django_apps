@@ -73,8 +73,18 @@ class WasteNotifierTests(TestCase):
         s = Subscriber(phone_number="1234567890", waste_area_ids="1", address="7840 van dyke pl", service_type="all")
         s.save()
         views.add_subscriber_comment(subscriber=s, comment="testing")
-        s = Subscriber.objects.all()[0]
+        s = Subscriber.objects.first()
         self.assertTrue(str(s).find("testing"), "add_subscriber_comment() adds a comment to the subscriber")
+
+    def test_subscriber_comment_truncate(self):
+        """
+        Test subscriber with long comment getting truncated.
+        """
+        s = Subscriber(phone_number="1234567890", waste_area_ids="1", address="7840 van dyke pl", service_type="all")
+        s.save()
+        views.add_subscriber_comment(subscriber=s, comment = "testing" * 1000)
+        s = Subscriber.objects.first()
+        self.assertTrue(str(s).find("(previous comments truncated)"), "add_subscriber_comment() truncates a comment to the subscriber")
 
     def test_subscriber_delete(self):
         """
@@ -286,6 +296,13 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(response.status_code, 201)
         expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
         self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
+
+    def test_sign_up_by_fone_vague_address(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "Detroit" }, secure=True)
+        self.assertEqual(response.status_code, 400)
 
     def test_includes_yard_waste_all(self):
         self.assertTrue(views.includes_yard_waste(['all']))
