@@ -244,7 +244,6 @@ class AssessmentsTests(TestCase):
         c = Client()
 
         sketch = Sketch(pnum='1', date=datetime(2018, 7, 30, 0, 0, tzinfo=pytz.utc))
-        sketch.imageData = ImageFile(open("data/assessments/images/image_1_20180730_0000.jpg", "rb"))      
         sketch.save()
 
         response = c.get('/assessments/1/images/')
