@@ -94,14 +94,7 @@ def add_user_cache(request):
     data_value.save()
 
     # Retrieve the data values for this data set
-    try:
-        data = data_set.get(data_source_name=data_source_name)
-    except:
-        data = None
-
-    # Do correct error handling if not found
-    if not data:
-        return Response({ "error": "No data received" }, status.HTTP_404_NOT_FOUND)
+    data = data_set.get(data_source_name=data_source_name)
 
     # add a key to the response, which caller can use to retrieve this cached data source.
     data['key'] = data_source_name
