@@ -240,7 +240,7 @@ class DataCacheTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_data_cache_data_only(self):
+    def test_data_cache_user(self):
 
         data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
 
@@ -251,7 +251,7 @@ class DataCacheTests(TestCase):
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
         self.assertEqual(response.data['key'], 'user_cache_test_data')
 
-    def test_data_cache_data_only_update(self):
+    def test_data_cache_user_update(self):
 
         data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
 
@@ -266,7 +266,7 @@ class DataCacheTests(TestCase):
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
         self.assertEqual(response.data['key'], 'user_cache_test_data')
 
-    def test_data_cache_url_cache_persists(self):
+    def test_data_cache_user_persists(self):
 
         data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
 
@@ -278,6 +278,38 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/user_cache/{}/".format(key), secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['data'], data['data'], "Response should contain data")
+
+    def test_data_cache_user_persists_not_secure(self):
+
+        c = Client()
+        response = c.post("/data_cache/user_cache/data/", data={}, secure=False, content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_data_cache_user_persists_missing_data(self):
+
+        c = Client()
+        response = c.post("/data_cache/user_cache/data/", data={}, secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_data_cache_user_persists_missing_key(self):
+
+        data = { "data": { "sample": "this is sample data" } }
+
+        c = Client()
+        response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_data_cache_user_persists_blocked_client(self):
+
+        # Force block_client to block us
+        settings.ALLOWED_HOSTS.remove("127.0.0.1")
+
+        c = Client()
+        response = c.post("/data_cache/user_cache/data/", data={}, secure=True, content_type="application/json")
+
+        settings.ALLOWED_HOSTS.append("127.0.0.1")
+
+        self.assertEqual(response.status_code, 403)
 
     def test_data_cache_invalid_auth(self):
 
