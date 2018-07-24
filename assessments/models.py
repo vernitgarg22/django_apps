@@ -342,13 +342,6 @@ class Sketch(models.Model):
             "image_url": fileurl,
         }
 
-    @staticmethod
-    def load(pnum):
-
-        sketches = Sketch.objects.filter(pnum=pnum).order_by('-date')
-        if sketches:
-            return sketches.first().get_json()
-
 
     class Meta:    # pragma: no cover
         db_table = 'Sketches'
