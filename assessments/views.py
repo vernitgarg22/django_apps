@@ -10,6 +10,7 @@ from rest_framework.response import Response
 # from django.core.cache import cache
 
 from django.conf import settings
+from django.http import HttpResponse
 from django.http import Http404
 
 from assessments.models import Sales, ParcelMaster, Sketch
@@ -158,11 +159,30 @@ def get_images(request, pnum=None, format=None):
     sketch_data = Sketch.objects.filter(pnum=pnum).order_by('-date')
     content = []
 
+    # REVIEW (TODO) remove the call to move_files() ...
+
     for sketch in sketch_data:
 
         content.append(sketch.get_json())
 
     return Response(content)
+
+
+@api_view(['GET'])
+def get_image(request, id, format=None):
+    """
+    Retrieve an image from the assessors database.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    sketches = Sketch.objects.filter(id=int(id))
+    if not sketches:
+        raise Http404("Sketch id " + id + " not found")
+
+    sketch = sketches.first()
+
+    return HttpResponse(sketch.imageData, content_type="image/jpg")
 
 
 # @api_view(['GET'])

@@ -17,9 +17,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
                 ('pnum', models.CharField(max_length=25)),
+                ('caption', models.CharField(max_length=40)),
                 ('date', models.DateTimeField(blank=True, null=True)),
                 ('sketchData', models.ImageField(blank=True, null=True, upload_to='assessments/sketches', verbose_name='sketchData')),
                 ('imageData', models.ImageField(blank=True, null=True, upload_to='assessments/images', verbose_name='imageData')),
+                ('isPrimarySketch', models.SmallIntegerField()),
             ],
             options={
                 'db_table': 'Sketches',
