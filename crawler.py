@@ -158,6 +158,13 @@ class Urls():
 
     def next_url(self):
 
+
+        illegal = "2cfb2a637f0f49e197ef78e397e76eb9"
+
+        if illegal in self.content:
+            print("spotted illegal tag")
+
+
         begin = re.search('href=[\'\"]', self.content)
         if not begin:
             raise StopIteration
