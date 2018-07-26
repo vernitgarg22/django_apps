@@ -6,11 +6,14 @@ import pytz
 
 from django.conf import settings
 
+from django.core.files import File
+from django.core.files.images import ImageFile
+from django.utils import timezone
+
 from django.test import Client
 from django.test import TestCase
 
-from django.core.files.images import ImageFile
-from django.utils import timezone
+import mock
 
 import tests.disabled
 from tests import test_util
@@ -29,6 +32,7 @@ def cleanup_db():
     test_util.cleanup_model(CaseType)
     test_util.cleanup_model(RoleType)
     test_util.cleanup_model(Parcel)
+    test_util.cleanup_model(Sketch)
 
 
 def make_sale():
@@ -243,8 +247,29 @@ class AssessmentsTests(TestCase):
 
         c = Client()
 
-        sketch = Sketch(pnum='1', date=datetime(2018, 7, 30, 0, 0, tzinfo=pytz.utc))
+        sketch = Sketch(pnum='1', date=datetime(2018, 7, 30, 0, 0, tzinfo=pytz.utc), isPrimarySketch=1)
         sketch.save()
 
         response = c.get('/assessments/1/images/')
         self.assertEqual(response.status_code, 200)
+
+    def test_get_image(self):
+
+        c = Client()
+
+        sketch = Sketch(pnum='1', date=datetime(2018, 7, 30, 0, 0, tzinfo=pytz.utc), isPrimarySketch=1)
+
+        mock_image = mock.MagicMock(spec=File, name='mock_image')
+        mock_image.name='mock_image.jpg'
+        sketch.imageData = mock_image
+        sketch.save()
+
+        response = c.get('/assessments/image/1/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_image_404(self):
+
+        c = Client()
+
+        response = c.get('/assessments/image/1/')
+        self.assertEqual(response.status_code, 404)
