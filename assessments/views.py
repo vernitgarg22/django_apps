@@ -149,6 +149,8 @@ def get_images(request, pnum=None, format=None):
     Retrieve all images for the given parcel.
     """
 
+    # REVIEW TODO add frank's suggestions
+
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # clean up the pnum
@@ -170,6 +172,9 @@ def get_image(request, id, format=None):
     """
     Retrieve an image from the assessors database.
     """
+
+    # REVIEW TODO add frank's suggestions
+
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
