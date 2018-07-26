@@ -7,15 +7,12 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-# from django.core.cache import cache
-
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import Http404
 
 from assessments.models import Sales, ParcelMaster, Sketch
 
-# TODO clean this up
 from assessments.models import Parcel, CaseMain
 from assessments import util
 
