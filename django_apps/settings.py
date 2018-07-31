@@ -101,6 +101,7 @@ INSTALLED_APPS = (
     'cod_utils',
     'data_cache',
     'dnninternet',
+    'elections',
     'photo_survey',
     'property_data',
     'waste_schedule',
