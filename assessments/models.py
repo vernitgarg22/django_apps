@@ -285,12 +285,12 @@ class Sketch(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     pnum = models.CharField(max_length=25)
+    caption = models.CharField(max_length=40)
 
     # REVIEW:  finish adding fields when the data itself is ready.
 
     #    NO foreignKey
     #    NO foreignType
-    # caption
     # prgid
     # numrecs
     # size
@@ -300,13 +300,13 @@ class Sketch(models.Model):
     # author
     # bprint
 
-    # REVIEW TODO : use upload_to=upload_to ?
-
     sketchData = models.ImageField('sketchData', blank=True, null=True, upload_to='assessments/sketches')
     imageData = models.ImageField('imageData', blank=True, null=True, upload_to='assessments/images')
+
     # zoomFactor
     # guid
-    # isPrimarySketch
+
+    isPrimarySketch = models.SmallIntegerField()
 
     def move_files(self):
         """
@@ -338,8 +338,11 @@ class Sketch(models.Model):
         filename, fileurl = self.move_files()
 
         return {
+            "sketch_id": self.id,
             "date": date_json(self.date),
             "image_url": fileurl,
+            "caption": self.caption,
+            "is_primary_sketch": self.isPrimarySketch,
         }
 
 
