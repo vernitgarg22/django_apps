@@ -7,8 +7,11 @@ class District(models.Model):
 
     number = models.IntegerField(unique=True, db_index=True)
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover - these are used mostly for debugging
         return str(self.number)
+
+
+# REVIEW TODO oops districts should be congressional versus state
 
 
 class Poll(models.Model):
@@ -39,7 +42,7 @@ class Poll(models.Model):
             "precincts": precincts,
         }
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover - these are used mostly for debugging
         return self.name + ' - ' + self.address
 
 
@@ -51,5 +54,5 @@ class Precinct(models.Model):
     district = models.ForeignKey(District, on_delete=models.PROTECT)
     number = models.IntegerField(unique=True, db_index=True)
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover - these are used mostly for debugging
         return str(self.number)
