@@ -83,7 +83,8 @@ class ElectionPollingInfoTests(TestCase):
 
     def test_get_polling_location(self):
 
-        poll = Poll(name='test', address='800 woodward detroit, mi', 
+        poll = Poll(name='test', address='800 woodward detroit, mi',
+            latitude=42.0, longitude=82.1,
             congress_rep_district=1, state_senate_district=1, state_rep_district=1,
             map_url="https://goo.gl/maps/xfFuRHgY2dC2", image_url="https://goo.gl/maps/4ijaK7hjUKr")
         poll.save()
@@ -97,6 +98,8 @@ class ElectionPollingInfoTests(TestCase):
         expected = {
             'name': 'test',
             'address': '800 woodward detroit, mi',
+            'latitude': 42.0,
+            'longitude': 82.1,
             'congress_rep_district': 1,
             'state_senate_district': 1,
             'state_rep_district': 1,

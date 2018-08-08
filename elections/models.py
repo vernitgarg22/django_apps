@@ -7,6 +7,8 @@ class Poll(models.Model):
 
     name = models.CharField(max_length=128, unique=True, db_index=True)
     address = models.CharField(max_length=128)
+    latitude = models.FloatField(blank=True)
+    longitude = models.FloatField(blank=True)
     congress_rep_district = models.IntegerField()
     state_senate_district = models.IntegerField()
     state_rep_district = models.IntegerField()
@@ -25,6 +27,8 @@ class Poll(models.Model):
         return {
             "name": self.name,
             "address": self.address,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
             "congress_rep_district": self.congress_rep_district,
             "state_senate_district": self.state_senate_district,
             "state_rep_district": self.state_rep_district,
