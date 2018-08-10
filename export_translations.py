@@ -64,13 +64,21 @@ urls = [
     "/Government/City-Clerk",
     "/Government/City-Council",
     "/Government/City-Council/Andre-Spivey",
+    "/Government/city-council/city-council-district-4/task-forces",
     "/Government/City-Council/Brenda-Jones",
+    "/Government/city-council/city-council-president/skilled-trades-task-force",
     "/Government/City-Council/City-Council-Sessions",
     "/Government/City-Council/Gabe-Leland",
     "/Government/City-Council/James-Tate",
+    "/Government/city-council/city-council-district-1/task-force",
     "/Government/City-Council/Janee-L-Ayers",
+    "/Government/city-council/city-council-large/returning-citizens-task-force",
+    "/Government/city-council/city-council-large/letter-residents-detroit",
     "/Government/City-Council/Mary-Sheffield",
+    "/government/city-council/city-council-district-5/district-5-neighborhood-police",
+    "/government/city-council/city-council-district-5/statements",
     "/Government/City-Council/Raquel-Castaneda-Lopez",
+    "/Government/city-council/city-council-district-6/immigation-task-force",
     "/Government/City-Council/Scott-Benson",
     "/Government/Departments",
     "/Government/Departments-and-Agencies/Detroit-Department-of-Transportation/DDOT-News-and-Alerts",
@@ -213,6 +221,87 @@ urls = [
     "/government/city-clerk/elections/m-100-automark-voting-system",
     "/government/city-clerk/elections/request-absentee-ballot",
 ]
+
+# # city council urls
+# city_council_urls = [
+#     "/Government/City-Council",
+#     "/government/city-council/city-council-president",
+#     "/Government/city-council/city-council-president/skilled-trades-task-force",
+#     "/government/city-council/city-council-large",
+#     "/government/city-council/city-council-large/returning-citizens-task-force",
+#     "/Government/city-council/city-council-large/letter-residents-detroit",
+#     "/government/city-council/city-council-district-1",
+#     "/government/city-council/city-council-district-1/task-force",
+#     "/government/city-council/city-council-district-2",
+#     "/government/city-council/city-council-district-2/mental-health-task-force",
+#     "/government/city-council/city-council-district-3",
+#     "/government/city-council/city-council-district-3/green-task-force",
+#     "/government/city-council/city-council-district-4",
+#     "/government/city-council/city-council-district-4/task-forces",
+#     "/government/city-council/city-council-district-5",
+#     "/government/city-council/city-council-district-5/district-5-neighborhood-police",
+#     "/government/city-council/city-council-district-5/statements",
+#     "/government/city-council/city-council-district-6",
+#     "/government/city-council/city-council-district-6/immigation-task-force",
+#     "/government/city-council/city-council-district-7",
+#     "/government/city-council/city-council-standing-committees-information",
+#     "/government/city-council/council-awards-and-resolutions",
+#     "/government/city-council/legislative-policy-division",
+#     "/government/city-council/legislative-policy-division/fiscal-analysis-reports",
+# ]
+
+ddot_urls = [
+    "/departments/detroit-department-transportation",
+    "/departments/detroit-department-transportation/bus-schedules",
+    "/departments/detroit-department-transportation/buy-pass",
+    "/departments/detroit-department-transportation/metrolift-ada-paratransit-services",
+    "/departments/detroit-department-transportation/transportation-fares",
+]
+
+# urls = ddot_urls
+
+bseed_urls = [
+    "/departments/buildings-safety-engineering-and-environmental-department",
+    "/departments/buildings-safety-engineering-and-environmental-department/building-permit-information",
+    "/departments/buildings-safety-engineering-and-environmental-department/business-license-center",
+    "/departments/buildings-safety-engineering-and-environmental-department/business-licenses-checklist",
+    "/departments/buildings-safety-engineering-and-environmental-department/construction",
+    "/departments/buildings-safety-engineering-and-environmental-department/construction/boiler",
+    "/departments/buildings-safety-engineering-and-environmental-department/construction/building",
+    "/departments/buildings-safety-engineering-and-environmental-department/construction/building-codes",
+    "/departments/buildings-safety-engineering-and-environmental-department/medical-marijuana",
+    "/departments/buildings-safety-engineering-and-environmental-department/property-maintenance-division",
+    "/departments/buildings-safety-engineering-and-environmental-department/property-maintenance-division/certificate-compliance",
+    "/departments/buildings-safety-engineering-and-environmental-department/property-maintenance-division/certificate-compliance/quick-steps-obtain-certificate",
+    "/departments/buildings-safety-engineering-and-environmental-department/zoning",
+]
+
+# urls = bseed_urls
+
+
+dah_urls = [
+    "/departments/department-appeals-and-hearings/blight-ticket-information",
+]
+
+# urls = dah_urls
+
+city_clerk_urls = [
+    "/government/city-clerk",
+    "/government/city-clerk/appear-council",
+    "/government/city-clerk/banner-permits-information",
+    "/government/city-clerk/city-clerk-archive-records-fees",
+    "/government/city-clerk/city-council-proceedings-2000-2014-information",
+    "/government/city-clerk/city-detroit-charter-information",
+    "/government/city-clerk/elections",
+    "/government/city-clerk/elections/become-election-day-pollworker",
+    "/government/city-clerk/elections/election-information",
+    "/government/city-clerk/elections/election-results",
+    "/government/city-clerk/elections/m-100-automark-voting-system",
+    "/government/city-clerk/elections/request-absentee-ballot",
+    "/government/city-clerk/lobbyist-registration-and-reporting-information",
+]
+
+urls = city_clerk_urls
 
 
 already_exported = [
@@ -478,6 +567,14 @@ class ContentExporter():
         return url
 
     @staticmethod
+    def get_response_url(url, response):
+
+        tmp = response.url
+        if "/node/" not in tmp:
+            url = tmp
+        return url
+
+    @staticmethod
     def get_data(url):
 
         auth_values = tuple(settings.CREDENTIALS['DETROITMI'].values())
@@ -531,7 +628,8 @@ class ContentExporter():
             else:
                 pdb.set_trace()
 
-        print("url: " + ContentExporter.cleanup_url(url))
+        url = ContentExporter.cleanup_url(url)
+        print("url: " + url)
 
         has_some_required = False
         required_keys = set(data.keys()).intersection(["description", "summary", "field_faq_pair"])
@@ -548,6 +646,19 @@ class ContentExporter():
         ContentExporter.urls_exported[url] = True
         print("")
 
+        if ContentExporter.output_errs:
+            return
+
+
+        # also print the json to an individual file for each url
+        url_encoded = url[37 : ].replace("/", "%2F")
+        url_encoded = ContentExporter.cleanup_url(url_encoded)
+
+        with open(url_encoded + ".txt", 'w') as output:
+
+            output.write(ContentExporter.cleanup_url(url) + "\n\n")
+            output.write(json.dumps(data))
+
 
 if __name__ == '__main__':
 
@@ -557,9 +668,9 @@ if __name__ == '__main__':
     os.environ['DJANGO_SETTINGS_MODULE'] = 'django_apps.settings'
     django.setup()
 
-    for url in already_exported:
+    # for url in already_exported:
 
-        ContentExporter.urls_exported[url] = True
+    #     ContentExporter.urls_exported[url] = True
 
     for url in urls:
 
