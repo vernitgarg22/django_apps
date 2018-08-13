@@ -206,6 +206,11 @@ class DjangoAppsRouter(object):
         "ImageMetadata": "photo_survey",
         "ParcelMetadata": "photo_survey",
         "PublicPropertyData": "photo_survey",
+
+        # REVIEW put these somewhere else
+        "Poll": "default",
+        "Precinct": "default",
+
         "EscrowBalance": "property_data",
         "Sales": "eql",
         "Sketch": "eql",
