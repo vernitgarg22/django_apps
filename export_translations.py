@@ -301,7 +301,59 @@ city_clerk_urls = [
     "/government/city-clerk/lobbyist-registration-and-reporting-information",
 ]
 
-urls = city_clerk_urls
+# urls = city_clerk_urls
+
+
+ocfo_urls = [
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-assessor",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-assessor/property-tax-assistance",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-assessor/renaissance-zones",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-contracting-and-procurement",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-contracting-and-procurement/open-bids-city-detroit",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-contracting-and-procurement/supplier-portal-information-and-instructions",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-treasury/delinquent-property-tax-information",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-treasury/income-tax",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-treasury/income-tax/business-income-tax",
+    "/departments/office-chief-financial-officer/ocfo-divisions/office-treasury/pay-property-tax",
+]
+
+# urls = ocfo_urls
+
+
+dpw_urls = [
+    "/departments/department-public-works",
+    "/departments/department-public-works/contact-us",
+    "/departments/department-public-works/dead-animal-removal",
+    "/departments/department-public-works/refuse-collection",
+    "/departments/department-public-works/refuse-collection/bulk-yard-waste/curbside-bulk-waste-pickup",
+    "/departments/department-public-works/refuse-collection/recycle",
+    "/departments/department-public-works/street-maintenance",
+]
+
+# urls = dpw_urls
+
+
+health_urls = [
+    "/departments/health-department",
+    "/departments/health-department/birth-and-death-certificates",
+    "/departments/health-department/detroit-animal-care-and-control",
+    "/departments/health-department/detroit-id",
+    "/departments/health-department/detroit-id/schedule-appointment",
+    "/departments/health-department/food-safety",
+    "/departments/health-department/immunizations",
+    "/departments/health-department/sexually-transmitted-diseases-clinic",
+]
+
+# urls = health_urls
+
+
+hrd_urls = [
+    "/departments/human-resources-department/apply-job",
+    "/departments/human-resources-department/city-employee-information",
+    "/departments/human-resources-department/employee-forms",
+]
+
+# urls = hrd_urls
 
 
 already_exported = [
