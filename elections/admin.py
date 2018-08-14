@@ -10,7 +10,7 @@ class PollAdmin(admin.ModelAdmin):
         (None, {'fields': ['name', 'address', 'latitude', 'longitude', 'congress_rep_district', 'state_senate_district', 'state_rep_district', 'map_url', 'image_url']}),
     ]
     list_display = ('name', 'address', 'latitude', 'longitude', 'congress_rep_district', 'state_senate_district', 'state_rep_district', 'map_url', 'image_url')
-    list_filter = ['name']
+    list_filter = []
     list_editable = ['address', 'latitude', 'longitude', 'congress_rep_district', 'state_senate_district', 'state_rep_district', 'map_url', 'image_url']
     search_fields = ['name', 'address']
     ordering = ['name']
