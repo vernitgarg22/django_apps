@@ -2,6 +2,7 @@
 .Python
 secrets.json
 *.sqlite3
+.DS_Store
 test_secrets.json
 .coverage
 htmlcov
