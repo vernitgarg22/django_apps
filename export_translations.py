@@ -260,6 +260,28 @@ ddot_urls = [
 
 # urls = ddot_urls
 
+
+dfd_urls = [
+    "/departments/detroit-fire-department/arson-awareness",
+]
+
+# urls = dfd_urls
+
+
+dpd_urls = [
+    "/departments/police-department",
+    "/departments/police-department/2016-crime-statistics",
+    "/departments/police-department/abandoned-vehicle",
+    "/departments/police-department/detroit-police-department-jobs",
+    "/departments/police-department/detroit-police-department-records-and-reports",
+    "/departments/police-department/gun-permits-information",
+    "/departments/police-department/precincts-and-neighborhood-police-officers",
+    "/departments/police-department/report-crime",
+]
+
+# urls = dpd_urls
+
+
 bseed_urls = [
     "/departments/buildings-safety-engineering-and-environmental-department",
     "/departments/buildings-safety-engineering-and-environmental-department/building-permit-information",
@@ -304,6 +326,30 @@ city_clerk_urls = [
 # urls = city_clerk_urls
 
 
+dwsd_urls = [
+    "/departments/water-and-sewerage-department",
+    "/departments/water-and-sewerage-department/customer-care",
+    "/departments/water-and-sewerage-department/customer-care/how-am-i-charged",
+    "/departments/water-and-sewerage-department/customer-care/learn-about-your-water-and-sewer-bill",
+    "/departments/water-and-sewerage-department/customer-care/where-do-i-pay",
+    "/departments/water-and-sewerage-department/drainage-charge",
+    "/departments/water-and-sewerage-department/resources/about-dwsd",
+    "/departments/water-and-sewerage-department/resources/dwsd-associations",
+    "/departments/water-and-sewerage-department/resources/payment-kiosks",
+    "/departments/water-and-sewerage-department/resources/payment-plan",
+]
+
+# urls = dwsd_urls
+
+
+media_services_urls = [
+    "/departments/media-services-department",
+    "/departments/media-services-department/special-events",
+]
+
+# urls = media_services_urls
+
+
 ocfo_urls = [
     "/departments/office-chief-financial-officer/ocfo-divisions/office-assessor",
     "/departments/office-chief-financial-officer/ocfo-divisions/office-assessor/property-tax-assistance",
@@ -344,7 +390,7 @@ health_urls = [
     "/departments/health-department/sexually-transmitted-diseases-clinic",
 ]
 
-# urls = health_urls
+urls = health_urls
 
 
 hrd_urls = [
