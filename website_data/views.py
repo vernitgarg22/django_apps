@@ -1,6 +1,11 @@
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 
 from django.shortcuts import render
+from django.utils import timezone
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
 from dnninternet.models import Faqs, Htmltext
 
@@ -9,11 +14,13 @@ from cod_utils.util import date_json
 
 def parse_date(val):
 
-    return datetime.strptime(val, "%Y%m%d").date()
+    dt = datetime.strptime(val, "%Y%m%d")
+    dt = timezone.make_aware(dt)
+    return dt.date()
 
 
 @api_view(['GET'])
-def get_amount_added(request, start=None, end=None, format=None):
+def get_new_content(request, start=None, end=None, format=None):
 
     if start:
 
@@ -22,8 +29,9 @@ def get_amount_added(request, start=None, end=None, format=None):
     else:
 
         # default: most-recent monday
-        today = date.today()
+        today = timezone.now().date()
         diff = today.weekday()
+
         if diff == 0:
             start = today
         else:
@@ -38,12 +46,12 @@ def get_amount_added(request, start=None, end=None, format=None):
         # default: most-recent sunday
         end = start + timedelta(days=6)
 
-    faqs = Faqs.objects.filter(DateModified__range = (start, end))
-    pages = Htmltext.objects.filter(LastModifiedOnDate__range = (start, end))
+    num_faqs = Faqs.objects.filter(datemodified__range = (start, end)).count()
+    num_pages = Htmltext.objects.filter(lastmodifiedondate__range = (start, end)).count()
 
     content = {
-        "num_faqs": len(faqs),
-        "num_html_pages": len(pages),
+        "num_faqs": num_faqs,
+        "num_html_pages": num_pages,
         "date_start": date_json(start),
         "date_end": date_json(end),
         "num_days": (end - start).days,

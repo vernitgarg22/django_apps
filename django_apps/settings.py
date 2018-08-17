@@ -193,6 +193,8 @@ class DjangoAppsRouter(object):
         "DataCitySummary": "data_cache",
         "DTEActiveGasSite": "data_cache",
         "DNNKeyword": "data_cache",
+        "Faqs": "dnninternet",
+        "Htmltext": "dnninternet",
         "Subscriber": "waste_collection",
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",
