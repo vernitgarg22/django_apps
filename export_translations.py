@@ -301,6 +301,13 @@ bseed_urls = [
 # urls = bseed_urls
 
 
+pdd_urls = [
+    "/departments/planning-and-development-department",
+    "/departments/planning-and-development-department/citywide-initiatives/home-repair-program-information",
+    "/departments/planning-and-development-department/east-design-region/campau-banglatown",
+]
+
+
 dah_urls = [
     "/departments/department-appeals-and-hearings/blight-ticket-information",
 ]
