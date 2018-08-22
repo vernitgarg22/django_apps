@@ -10,6 +10,7 @@ import photo_survey.views
 import property_data.views
 import waste_notifier.views
 import waste_schedule.views
+import website_data.views
 
 
 
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^waste_notifier/', include('waste_notifier.urls', namespace="waste_notifier")),
     url(r'^waste_schedule/', include('waste_schedule.urls', namespace="waste_schedule")),
     url(r'^weather_info/', include('weather_info.urls', namespace="weather_info")),
+    url(r'^website_data/', include('website_data.urls', namespace="website_data")),
     
     # waste sorter
     url(r'^waste_wizard/', include('waste_wizard.urls', namespace="waste_wizard")),

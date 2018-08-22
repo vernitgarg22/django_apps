@@ -260,6 +260,28 @@ ddot_urls = [
 
 # urls = ddot_urls
 
+
+dfd_urls = [
+    "/departments/detroit-fire-department/arson-awareness",
+]
+
+# urls = dfd_urls
+
+
+dpd_urls = [
+    "/departments/police-department",
+    "/departments/police-department/2016-crime-statistics",
+    "/departments/police-department/abandoned-vehicle",
+    "/departments/police-department/detroit-police-department-jobs",
+    "/departments/police-department/detroit-police-department-records-and-reports",
+    "/departments/police-department/gun-permits-information",
+    "/departments/police-department/precincts-and-neighborhood-police-officers",
+    "/departments/police-department/report-crime",
+]
+
+# urls = dpd_urls
+
+
 bseed_urls = [
     "/departments/buildings-safety-engineering-and-environmental-department",
     "/departments/buildings-safety-engineering-and-environmental-department/building-permit-information",
@@ -277,6 +299,13 @@ bseed_urls = [
 ]
 
 # urls = bseed_urls
+
+
+pdd_urls = [
+    "/departments/planning-and-development-department",
+    "/departments/planning-and-development-department/citywide-initiatives/home-repair-program-information",
+    "/departments/planning-and-development-department/east-design-region/campau-banglatown",
+]
 
 
 dah_urls = [
@@ -302,6 +331,83 @@ city_clerk_urls = [
 ]
 
 # urls = city_clerk_urls
+
+
+mayors_office_urls = [
+    "/government/mayors-office",
+    "/government/mayors-office/mayor",
+    "/government/mayors-office/police-chief",
+    "/government/mayors-office/chief-staff",
+    "/government/mayors-office/corporation-counsel",
+    "/government/mayors-office/chief-financial-officer",
+    "/government/mayors-office/chief-information-officer",
+    "/government/mayors-office/correspondence",
+    "/government/mayors-office/group-executive-operations",
+    "/government/mayors-office/detroit-neighborhood-initiative",
+    "/government/mayors-office/detroit-opportunities",
+    "/government/mayors-office/detroit-opportunities/detroit-experiences",
+    "/government/mayors-office/detroit-opportunities/find-job",
+    "/government/mayors-office/water-and-sewerage-director",
+    "/government/mayors-office/group-executive-jobs-and-economic-growth",
+    "/government/mayors-office/group-executive-neighborhoods",
+    "/government/mayors-office/transportation-director",
+    "/government/mayors-office/goal-detroit",
+    "/government/mayors-office/human-resources-director",
+    "/government/mayors-office/chief-learning-officer",
+    "/government/mayors-office/director-and-health-officer",
+    "/government/mayors-office/lean-training",
+    "/government/mayors-office/mayors-help-desk",
+    "/government/mayors-office/office-immigrant-affairs",
+    "/government/mayors-office/office-immigrant-affairs/community-resources",
+    "/government/mayors-office/office-immigrant-affairs/economic-empowerment",
+    "/government/mayors-office/office-immigrant-affairs/education-esl-services",
+    "/government/mayors-office/office-immigrant-affairs/employment-resources",
+    "/government/mayors-office/office-immigrant-affairs/health-care",
+    "/government/mayors-office/office-immigrant-affairs/housing",
+    "/government/mayors-office/office-immigrant-affairs/legal-help",
+    "/government/mayors-office/office-immigrant-affairs/mayors-welcoming-letter",
+    "/government/mayors-office/office-immigrant-affairs/social-services",
+    "/government/mayors-office/office-immigrant-affairs/start-business",
+    "/government/mayors-office/office-immigrant-affairs/transportation",
+    "/government/mayors-office/office-immigrant-affairs/think-detroit",
+    "/government/mayors-office/office-sustainability",
+    "/government/mayors-office/office-sustainability/current-focus-areas",
+    "/government/mayors-office/office-sustainability/mission-and-vision",
+    "/government/mayors-office/office-sustainability/sustainability-action-agenda",
+    "/government/mayors-office/properties",
+    "/government/mayors-office/real-estate-development",
+    "/government/mayors-office/real-estate-development/development-financing",
+    "/government/mayors-office/real-estate-development/development-how",
+    "/government/mayors-office/real-estate-development/development-success-stories",
+    "/government/mayors-office/real-estate-development/why-detroit",
+    "/government/mayors-office/tax-preparation-checklist",
+]
+
+# urls = mayors_office_urls
+
+
+dwsd_urls = [
+    "/departments/water-and-sewerage-department",
+    "/departments/water-and-sewerage-department/customer-care",
+    "/departments/water-and-sewerage-department/customer-care/how-am-i-charged",
+    "/departments/water-and-sewerage-department/customer-care/learn-about-your-water-and-sewer-bill",
+    "/departments/water-and-sewerage-department/customer-care/where-do-i-pay",
+    "/departments/water-and-sewerage-department/drainage-charge",
+    "/departments/water-and-sewerage-department/resources/about-dwsd",
+    "/departments/water-and-sewerage-department/resources/dwsd-associations",
+    "/departments/water-and-sewerage-department/resources/payment-kiosks",
+    "/departments/water-and-sewerage-department/resources/payment-plan",
+]
+
+# urls = dwsd_urls
+
+
+media_services_urls = [
+    "/departments/media-services-department",
+    "/departments/media-services-department/special-events",
+]
+
+urls = media_services_urls
 
 
 ocfo_urls = [
