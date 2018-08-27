@@ -50,8 +50,8 @@ def get_new_content(request, start=None, end=None, format=None):
 
     num_faqs = Faqs.objects.filter(datemodified__range = (start, end)).count()
     num_pages = Htmltext.objects.filter(lastmodifiedondate__range = (start, end)).count()
-    total_subscribers = Subscriber.objects.count()
-    new_subscribers = Subscriber.objects.filter(created_at__range = (start, end)).count()
+    total_subscribers = Subscriber.objects.filter(status='active').count()
+    new_subscribers = Subscriber.objects.filter(status='active').filter(created_at__range = (start, end)).count()
 
     content = {
         "date_start": date_json(start),
