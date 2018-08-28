@@ -307,6 +307,8 @@ pdd_urls = [
     "/departments/planning-and-development-department/east-design-region/campau-banglatown",
 ]
 
+# urls = pdd_urls
+
 
 dah_urls = [
     "/departments/department-appeals-and-hearings/blight-ticket-information",
@@ -407,7 +409,7 @@ media_services_urls = [
     "/departments/media-services-department/special-events",
 ]
 
-urls = media_services_urls
+# urls = media_services_urls
 
 
 ocfo_urls = [
@@ -424,6 +426,15 @@ ocfo_urls = [
 ]
 
 # urls = ocfo_urls
+
+
+don_urls = [
+    "/departments/department-neighborhoods",
+    "/departments/department-neighborhoods/motorcity-makeover-information",
+    "/departments/department-neighborhoods/serve-detroit",
+]
+
+# urls = don_urls
 
 
 dpw_urls = [
@@ -460,6 +471,35 @@ hrd_urls = [
 ]
 
 # urls = hrd_urls
+
+
+board_urls = [
+    "/government/boards/board-electrical-examiners",
+    "/government/boards/board-police-commissioners",
+]
+
+urls = board_urls
+
+
+faq_urls = [
+    "/node/1231",
+    "/node/1521",
+    "/node/1581",
+    "/node/2471",
+    "/node/2481",
+    "/node/2501",
+    "/node/2586",
+    "/node/3361",
+    "/node/3866",
+    "/node/3886",
+    "/node/4576",
+    "/node/501",
+    "/node/6476",
+    "/node/9466",
+    "/node/9871",
+]
+
+# urls = faq_urls
 
 
 already_exported = [
