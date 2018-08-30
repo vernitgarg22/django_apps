@@ -20,6 +20,8 @@ from slackclient import SlackClient
 import tests.disabled
 from tests import test_util
 
+from django_apps.settings import add_secret, remove_secret
+
 from waste_notifier.models import Subscriber
 from waste_notifier.util import *
 from waste_schedule.models import ScheduleDetail, BiWeekType
@@ -221,6 +223,31 @@ class WasteNotifierTests(TestCase):
             self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
             self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'inactive')
 
+    def test_subscribe_offline(self):
+
+        add_secret('SYSTEM_STATUS', value={"waste_reminder_signup": "offline"})
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "1104 Military St", "service_type": "all" } )
+
+        remove_secret('SYSTEM_STATUS')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(response.data, {'system_status': 'offline'}, "Subscription signup is disabled when system offline")
+
+    def test_subscribe_by_fone_offline(self):
+
+        add_secret('SYSTEM_STATUS', value={"waste_reminder_signup": "offline"})
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl" }, secure=True)
+
+        remove_secret('SYSTEM_STATUS')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(response.data, {'system_status': 'offline'}, "Subscription signup by fone is disabled when system offline")
 
     def test_confirm_subscription_msg(self):
 
