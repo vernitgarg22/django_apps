@@ -36,6 +36,12 @@ def get_secret(setting, secrets=secrets, default=None):
             error_msg = "Set the environment variable '{0}'".format(setting)
             raise ImproperlyConfigured(error_msg)
 
+def add_secret(setting, value):
+    secrets[setting] = value
+
+def remove_secret(setting):
+    del secrets[setting]
+
 def get_databases():
     tmp = get_secret('DATABASES')
     if tmp['default']['NAME'] == 'db.sqlite3':       # pragma: no cover
@@ -69,6 +75,14 @@ def add_vals_to_os():
         env[key] = value
 
 add_vals_to_os()
+
+def get_system_status(system):
+    """
+    Returns status for a given 'system'.  Default is 'online'.
+    """
+
+    system_status = get_secret(setting='SYSTEM_STATUS', default={"default": "online"})
+    return system_status.get(system, system_status.get('default', 'online'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/

@@ -4,6 +4,7 @@ import pytz
 from pytz import timezone
 
 from django.conf import settings
+from django_apps.settings import get_system_status
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
@@ -57,6 +58,13 @@ def get_week_start_end(date):
     end = date if days == 6 else date + datetime.timedelta(days=6-days)
 
     return start, end
+
+def is_system_online(system):
+    """
+    Returns True if the given system is currently online.
+    """
+
+    return get_system_status(system=system) == "online"
 
 def clean_list(values):
     """

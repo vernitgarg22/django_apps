@@ -17,11 +17,20 @@ from waste_notifier.util import *
 from waste_schedule.util import *
 import cod_utils.util
 import cod_utils.security
-from cod_utils.util import date_json
+from cod_utils.util import date_json, is_system_online
 from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
 
 from waste_schedule.models import ScheduleDetail
+
+
+def handle_system_offline(data, system='waste_reminder_signup'):
+
+    if not is_system_online(system=system):
+        MsgHandler().send_text(phone_number=data.get('phone_number'), text='System is currently undergoing maintenance, please try later')
+        return True
+    else:
+        return False
 
 
 @api_view(['POST'])
@@ -37,6 +46,10 @@ def subscribe_notifications(request):
         remote_addr = request.META.get('REMOTE_ADDR')
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
+
+    # Is waste notifier offline or read-only?
+    if handle_system_offline(data=request.data):
+        return Response({"system_status": "offline"})
 
     # update existing subscriber or create new one from data
     subscriber, error = Subscriber.update_or_create_from_dict(request.data)
@@ -73,6 +86,10 @@ def subscribe_address(request):
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
         return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Is waste notifier offline or read-only?
+    if handle_system_offline(data=request.data):
+        return Response({"system_status": "offline"})
 
     # Clean up phone number
     phone_number = msg_handler.get_fone_number(request)
