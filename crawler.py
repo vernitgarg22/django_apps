@@ -195,6 +195,8 @@ class Urls():
 
 class PageCrawler():
 
+    url_map = {}
+
     def __init__(self, domain, url):
 
         self.domain = domain
@@ -207,7 +209,16 @@ class PageCrawler():
             # print("url {} - {}".format(url, response.status_code))
             return []
 
+        self.url_map[self.url] = response.url
         return Urls(domain=self.domain, content=response.text)
+
+    def map_urls(self, urls):
+
+        urls_tmp = set()
+        for url in urls:
+            urls_tmp.add(self.url_map.get(url, url))
+
+        return urls_tmp
 
 
 class PageCrawlerAdmin():
@@ -242,11 +253,11 @@ class PageCrawlerAdmin():
             print("Too many levels deep")
             return
 
-        crawler = PageCrawler(domain=domain, url=url)
+        self.crawler = PageCrawler(domain=domain, url=url)
 
         self.levels_deep = self.levels_deep + 1
 
-        for url in crawler.urls():
+        for url in self.crawler.urls():
 
             if url not in self.urls_crawled:
 
@@ -270,6 +281,7 @@ class PageCrawlerAdmin():
 
     def get_urls_crawled(self):
 
+        self.urls_crawled = self.crawler.map_urls(self.urls_crawled)
         return self.urls_crawled
 
 
