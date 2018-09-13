@@ -11,12 +11,6 @@ import django
 from django.conf import settings
 
 
-import pdb
-
-
-# REVIEW:  remove all medical marijuana links?
-
-
 server = "http://detroitmi.theneighborhoods.org"
 urls = [
 
