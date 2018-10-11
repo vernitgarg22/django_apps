@@ -151,6 +151,9 @@ class Subscriber(models.Model):
         phone_number = data['phone_number']
         street_address = data['address']
 
+        if not re.fullmatch(r'[\d]{10}', phone_number):
+            return None, {"error": "phone_number must be 9 digits, no punctuation"}
+
         waste_area_ids = data.get('waste_area_ids')
         if not waste_area_ids:
             # Parse address string and get result from AddressPoint geocoder

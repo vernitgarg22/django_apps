@@ -221,6 +221,14 @@ class WasteNotifierTests(TestCase):
             self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
             self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'inactive')
 
+    # Test sign-up error-handling
+    def test_subscribe_msg(self):
+
+        c = Client()
+
+        response = c.post('/waste_notifier/subscribe/', { "phone_number": "500-555-0006", "address": "1104 Military St", "service_type": "all" } )
+        self.assertEqual(response.status_code, 400)
+        self.assertDictEqual(response.data, {'error': 'phone_number must be 9 digits, no punctuation'}, "Subscription signup identifies invalid data")
 
     def test_confirm_subscription_msg(self):
 
