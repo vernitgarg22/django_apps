@@ -113,3 +113,6 @@ google_translate_key.json
 # custom stuff
 secrets.json
 tests/test_secrets.json
+cx_Oracle-doc/
+data/
+
