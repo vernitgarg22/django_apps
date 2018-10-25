@@ -242,7 +242,7 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_user(self):
 
-        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data", "username": "TESTUSER", "pass": "TESTPASS" }
 
         c = Client()
         response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
@@ -253,12 +253,12 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_user_update(self):
 
-        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data", "username": "TESTUSER", "pass": "TESTPASS" }
 
         c = Client()
         response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
 
-        data = { "data": { "sample": "this is new sample data" }, "key": "test_data" }
+        data = { "data": { "sample": "this is new sample data" }, "key": "test_data", "username": "TESTUSER", "pass": "TESTPASS" }
 
         response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
 
@@ -268,7 +268,7 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_user_persists(self):
 
-        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data", "username": "TESTUSER", "pass": "TESTPASS" }
 
         c = Client()
         response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
@@ -282,7 +282,15 @@ class DataCacheTests(TestCase):
     def test_data_cache_user_persists_not_secure(self):
 
         c = Client()
-        response = c.post("/data_cache/user_cache/data/", data={}, secure=False, content_type="application/json")
+        response = c.post("/data_cache/user_cache/data/", data={ "username": "INVALIDUSER", "pass": "INVALIDPASS" }, secure=False, content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_data_cache_user_persists_bad_auth(self):
+
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data", "username": "INVALIDUSER", "pass": "INVALIDPASS" }
+
+        c = Client()
+        response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
         self.assertEqual(response.status_code, 403)
 
     def test_data_cache_user_persists_missing_data(self):
@@ -293,7 +301,7 @@ class DataCacheTests(TestCase):
 
     def test_data_cache_user_persists_missing_key(self):
 
-        data = { "data": { "sample": "this is sample data" } }
+        data = { "data": { "sample": "this is sample data", "username": "TESTUSER", "pass": "TESTPASS" } }
 
         c = Client()
         response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")

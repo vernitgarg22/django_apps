@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from rest_framework.decorators import api_view
@@ -74,23 +75,28 @@ def add_user_cache(request):
     if not request.is_secure():
         return Response({ "error": "must be secure" }, status=status.HTTP_403_FORBIDDEN)
 
-    data = request.data.get('data')
-    if not data:
-        return Response({ "error": "data is required" }, status.HTTP_400_BAD_REQUEST)
+    # Certain form elements are required
+    for required in [ 'key', 'data', 'username', 'pass' ]:
+        if not request.data.get(required):
+            return Response({ "error": "{} is required".format(required) }, status.HTTP_400_BAD_REQUEST)
 
-    key = request.data.get('key')
-    if not key:
-        return Response({ "error": "key is required" }, status.HTTP_400_BAD_REQUEST)
+    # Check login creds
+    user = request.data['username']
+    password = request.data['pass']
+
+    auth_values = settings.CREDENTIALS['WEB_MENU_DATA_CACHE']
+    if user != auth_values['username'] or password != auth_values['pass']:
+        return Response({ "error": "Invalid user or pass" }, status.HTTP_403_FORBIDDEN)
 
     data_set, created = DataSet.objects.get_or_create(name='user_cache')
 
     # Create a data source for this url.
-    data_source_name = "user_cache_{}".format(key)
+    data_source_name = "user_cache_{}".format(request.data['key'])
     data_source, created = DataSource.objects.get_or_create(name=data_source_name, data_set=data_set)
 
     # Create the data value for this data source.
     data_value, created = DataValue.objects.get_or_create(data_source=data_source)
-    data_value.data = json.dumps(data)
+    data_value.data = json.dumps(request.data['data'])
     data_value.save()
 
     # Retrieve the data values for this data set
