@@ -15,13 +15,10 @@ from tests import test_util
 
 from cod_utils import util
 
-from dnninternet.models import Faqs, Htmltext
 from waste_notifier.models import Subscriber
 
 
 def cleanup_db():
-    test_util.cleanup_model(Faqs)
-    test_util.cleanup_model(Htmltext)
     test_util.cleanup_model(Subscriber)
 
 
@@ -36,15 +33,6 @@ class WebsiteDataTests(TestCase):
         date = datetime.strptime('20180301', "%Y%m%d")
         date = timezone.make_aware(date)
 
-        faqs = Faqs(createdbyuser='karl', createddate=date, question='?', answer='A',
-            categoryid=None, datemodified=date, viewcount=1, vieworder=1, faqhide=False,
-            publishdate=date)
-        faqs.save()
-
-        htmltext = Htmltext(content='Dummy content', version=1, ispublished=True, 
-            createdondate=date, lastmodifiedondate=date, publishdate=date)
-        htmltext.save()
-
         c = Client()
         response = c.get("/website_data/new_content/20180101/20180701/")
 
@@ -53,8 +41,7 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-07-01T00:00:00',
             "num_days": 181,
             "website_analytics": {
-                "num_faqs": 1,
-                "num_html_pages": 1,
+                "num_html_pages": 1190,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
@@ -73,17 +60,6 @@ class WebsiteDataTests(TestCase):
 
         mocked_django_utils_timezone_now.return_value = date
 
-        # date = date - timedelta(days=7)
-
-        faqs = Faqs(createdbyuser='karl', createddate=date, question='?', answer='A',
-            categoryid=None, datemodified=date, viewcount=1, vieworder=1, faqhide=False,
-            publishdate=date)
-        faqs.save()
-
-        htmltext = Htmltext(content='Dummy content', version=1, ispublished=True, 
-            createdondate=date, lastmodifiedondate=date, publishdate=date)
-        htmltext.save()
-
         c = Client()
         response = c.get("/website_data/new_content/")
 
@@ -92,8 +68,7 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-08-19T00:00:00',
             "num_days": 6,
             "website_analytics": {
-                "num_faqs": 1,
-                "num_html_pages": 1,
+                "num_html_pages": 886,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
@@ -114,15 +89,6 @@ class WebsiteDataTests(TestCase):
 
         date = date - timedelta(days=7)
 
-        faqs = Faqs(createdbyuser='karl', createddate=date, question='?', answer='A',
-            categoryid=None, datemodified=date, viewcount=1, vieworder=1, faqhide=False,
-            publishdate=date)
-        faqs.save()
-
-        htmltext = Htmltext(content='Dummy content', version=1, ispublished=True, 
-            createdondate=date, lastmodifiedondate=date, publishdate=date)
-        htmltext.save()
-
         c = Client()
         response = c.get("/website_data/new_content/")
 
@@ -131,8 +97,7 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-08-12T00:00:00',
             "num_days": 6,
             "website_analytics": {
-                "num_faqs": 1,
-                "num_html_pages": 1,
+                "num_html_pages": 899,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
