@@ -11,7 +11,7 @@ from rest_framework import status
 
 from waste_notifier.models import Subscriber
 
-from .website_db_engine import WebsiteDBEngine
+# from .website_db_engine import WebsiteDBEngine
 
 from cod_utils.util import date_json
 
@@ -25,28 +25,30 @@ def parse_date(val):
 
 def get_page_count(start, end):
 
-    node_count = 0
-    term_count = 0
-    engine = WebsiteDBEngine('detroitmi.prod')
-    try:
-        engine.start()
-        results = engine.get(
-            "select count(distinct n.nid) as 'count' "
-            "from node n join node_revision nr on n.nid = nr.nid "
-            "where type in :types and revision_timestamp between :start and :end ;",
-            types=('faq', 'how_do_i', 'page', 'story', 'web_apps'), start=int(time.mktime(start.timetuple())), end=int(time.mktime(end.timetuple())))
+    return 0
 
-        node_count = results[0]['count']
+    # node_count = 0
+    # term_count = 0
+    # engine = WebsiteDBEngine('detroitmi.prod')
+    # try:
+    #     engine.start()
+    #     results = engine.get(
+    #         "select count(distinct n.nid) as 'count' "
+    #         "from node n join node_revision nr on n.nid = nr.nid "
+    #         "where type in :types and revision_timestamp between :start and :end ;",
+    #         types=('faq', 'how_do_i', 'page', 'story', 'web_apps'), start=int(time.mktime(start.timetuple())), end=int(time.mktime(end.timetuple())))
 
-        results = engine.get("select count(distinct tid) as 'count' from taxonomy_term_data where langcode = :lang ;", lang='en')
-        term_count = results[0]['count']
+    #     node_count = results[0]['count']
 
-    except:
-        return 0
+    #     results = engine.get("select count(distinct tid) as 'count' from taxonomy_term_data where langcode = :lang ;", lang='en')
+    #     term_count = results[0]['count']
 
-    finally:
-        engine.stop()
-        return node_count + term_count
+    # except:
+    #     return 0
+
+    # finally:
+    #     engine.stop()
+    #     return node_count + term_count
 
 @api_view(['GET'])
 def get_new_content(request, start=None, end=None, format=None):
