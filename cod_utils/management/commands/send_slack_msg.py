@@ -11,8 +11,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         parser.add_argument('-c', '--channel', default="#z_twilio", type=str, help='Specify the slack channel to use')
-        parser.add_argument('-m', '--message', default=None, type=str, help='The message to send')
-        parser.add_argument('message', default=None, type=str, help='The message to send')
+        parser.add_argument('-m', '--message', type=str, help='The message to send', required=True)
 
     def handle(self, *args, **options):
 

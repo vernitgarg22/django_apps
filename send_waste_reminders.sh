@@ -9,7 +9,7 @@ echo "" >> ${OUTPUT}
 if [ ${retval} -ne 0 ]
 then
 
-    python manage.py send_message '9178428901' 'Waste reminders failed'
+    python manage.py send_slack_msg --message="An error occurred sending curbside waste reminders ($(date))"
 
 fi
 
