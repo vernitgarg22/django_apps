@@ -350,3 +350,73 @@ class Sketch(models.Model):
         db_table = 'Sketches'
         if not settings.RUNNING_UNITTESTS:
             managed = False
+
+
+class BSAPARCELDATA(models.Model):
+
+    PARCELNO = models.CharField(max_length=25, primary_key=True)
+    DISTRICT = models.SmallIntegerField()
+    COUNCIL = models.CharField(max_length=25)
+    ECF = models.CharField(max_length=5)
+    PROPADDR = models.CharField(max_length=62)
+    PROPNO = models.FloatField()
+    PROPDIR = models.CharField(max_length=2)
+    PROPSTR = models.CharField(max_length=25)
+    ZIPCODE = models.CharField(max_length=10)
+    TAXPAYER1 = models.CharField(max_length=35)
+    TAXPAYER2 = models.CharField(max_length=35)
+    TAXPADDR = models.CharField(max_length=35)
+    TAXPCITY = models.CharField(max_length=25)
+    TAXPSTATE = models.CharField(max_length=2)
+    TAXPZIP = models.CharField(max_length=10)
+    propclass = models.CharField(max_length=5)
+    PROPCLASS1 = models.CharField(max_length=5)
+    TAXSTATUS = models.CharField(max_length=20)
+    TAXSTATUS1 = models.CharField(max_length=20)
+    zoning = models.CharField(max_length=15)
+    TOTALSQFT = models.FloatField()
+    TOTALACREAGE = models.FloatField()
+    FRONTAGE = models.FloatField()
+    DEPTH = models.FloatField()
+    useCode = models.CharField(max_length=5)
+    PRE = models. DecimalField(max_digits=18, decimal_places=0)
+    NEZ = models.CharField(max_length=50)
+    MTT = models.SmallIntegerField()
+    CIBFLAREA = models.FloatField()
+    CIBBLDGNO = models.SmallIntegerField()
+    CIBYRBUILT = models.SmallIntegerField()
+    RESFLAREA = models.IntegerField()
+    RESBLDGNO = models.SmallIntegerField()
+    RESYRBUILT = models.SmallIntegerField()
+    RESSYTLE = models.CharField(max_length=15)
+    ISIMPROVED = models.SmallIntegerField()
+    SALEPRICE = models.FloatField()
+    SALEDATE = models.DateTimeField(null=True)
+    ASV = models.FloatField()
+    ASV1 = models.FloatField()
+    TXV = models.DecimalField(max_digits=18, decimal_places=2)
+    TXV1 = models.FloatField()
+    SEV = models.FloatField()
+    landvalue = models.FloatField()
+    landMap = models.CharField(max_length=5)
+    RELATED = models.CharField(max_length=25)
+    AKA = models.CharField(max_length=25)
+    SUBDIVISION = models.CharField(max_length=30)
+    RP = models.SmallIntegerField()
+    STATUS = models.CharField(max_length=30)
+    LEGALDESC = models.TextField(null=True)
+
+    def json(self):     # pragma: no cover - these are used mostly for debugging
+
+        json = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            value = getattr(self, field.name)
+            json[field.name] = util.clean_parcel_val(value)
+
+        return json
+
+
+    class Meta:
+        managed = False
+        db_table = 'BSAPARCELDATA'
