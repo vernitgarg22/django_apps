@@ -185,6 +185,8 @@ class DjangoAppsRouter(object):
     the myapp2 application"""
 
     ModelDBMap = {
+        "BSAPARCELDATA": "oashare",
+        "bsaparceldata": "oashare",
         "DataSet": "data_cache",
         "DataCredential": "data_cache",
         "DataSource": "data_cache",
