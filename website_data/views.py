@@ -23,30 +23,42 @@ def parse_date(val):
     return dt.date()
 
 
-def get_page_count(start, end):
+def get_page_count(start=None, end=None):
 
-    node_count = 0
-    term_count = 0
-    engine = WebsiteDBEngine('detroitmi.prod')
-    try:
-        engine.start()
-        results = engine.get(
-            "select count(distinct n.nid) as 'count' "
-            "from node n join node_revision nr on n.nid = nr.nid "
-            "where type in :types and revision_timestamp between :start and :end ;",
-            types=('faq', 'how_do_i', 'page', 'story', 'web_apps'), start=int(time.mktime(start.timetuple())), end=int(time.mktime(end.timetuple())))
+    return 0
 
-        node_count = results[0]['count']
 
-        results = engine.get("select count(distinct tid) as 'count' from taxonomy_term_data where langcode = :lang ;", lang='en')
-        term_count = results[0]['count']
+    # node_count = 0
+    # term_count = 0
+    # engine = WebsiteDBEngine('detroitmi.prod')
+    # try:
+    #     engine.start()
+    #     if start and end:
+    #         start_seconds = int(time.mktime(start.timetuple()))
+    #         end_seconds = int(time.mktime(end.timetuple()))
+    #         results = engine.get(
+    #             "select count(distinct n.nid) as 'count' "
+    #             "from node n join node_revision nr on n.nid = nr.nid "
+    #             "where type in :types and revision_timestamp between :start and :end ;",
+    #             types=('faq', 'how_do_i', 'page', 'story', 'web_apps'), start=start_seconds, end=end_seconds)
+    #     else:
+    #         results = engine.get(
+    #                 "select count(distinct n.nid) as 'count' "
+    #                 "from node n join node_revision nr on n.nid = nr.nid "
+    #                 "where type in :types ;",
+    #                 types=('faq', 'how_do_i', 'page', 'story', 'web_apps'))
 
-    except:
-        return 0
+    #     node_count = results[0]['count']
 
-    finally:
-        engine.stop()
-        return node_count + term_count
+    #     results = engine.get("select count(distinct tid) as 'count' from taxonomy_term_data where langcode = :lang ;", lang='en')
+    #     term_count = results[0]['count']
+
+    # except:
+    #     return 0
+
+    # finally:
+    #     engine.stop()
+    #     return node_count + term_count
 
 @api_view(['GET'])
 def get_new_content(request, start=None, end=None, format=None):
@@ -75,21 +87,23 @@ def get_new_content(request, start=None, end=None, format=None):
         # default: most-recent sunday
         end = start + timedelta(days=6)
 
-    num_pages = get_page_count(start=start, end=end)
+    num_total_pages = get_page_count()
+    num_new_pages = get_page_count(start=start, end=end)
 
-    total_subscribers = Subscriber.objects.filter(status='active').count()
-    new_subscribers = Subscriber.objects.filter(status='active').filter(created_at__range = (start, end)).count()
+    num_total_subscribers = Subscriber.objects.filter(status='active').count()
+    num_new_subscribers = Subscriber.objects.filter(status='active').filter(created_at__range = (start, end)).count()
 
     content = {
         "date_start": date_json(start),
         "date_end": date_json(end),
         "num_days": (end - start).days,
         "website_analytics": {
-            "num_html_pages": num_pages,
+            "num_new_html_pages": num_new_pages,
+            "num_total_html_pages": num_total_pages,
         },
         "waste_reminders": {
-            "total_subscribers": total_subscribers,
-            "new_subscribers": new_subscribers,
+            "total_subscribers": num_total_subscribers,
+            "new_subscribers": num_new_subscribers,
         }
     }
 

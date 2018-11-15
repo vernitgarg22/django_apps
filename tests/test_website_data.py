@@ -41,7 +41,8 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-07-01T00:00:00',
             "num_days": 181,
             "website_analytics": {
-                "num_html_pages": 1190,
+                "num_new_html_pages": 0,
+                "num_total_html_pages": 0,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
@@ -68,7 +69,8 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-08-19T00:00:00',
             "num_days": 6,
             "website_analytics": {
-                "num_html_pages": 886,
+                "num_new_html_pages": 0,
+                "num_total_html_pages": 0,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
@@ -97,7 +99,8 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-08-12T00:00:00',
             "num_days": 6,
             "website_analytics": {
-                "num_html_pages": 899,
+                "num_new_html_pages": 0,
+                "num_total_html_pages": 0,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
