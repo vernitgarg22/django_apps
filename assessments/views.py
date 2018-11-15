@@ -11,7 +11,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.http import Http404
 
-from assessments.models import Sales, ParcelMaster, Sketch
+from assessments.models import Sales, ParcelMaster, Sketch, BSAPARCELDATA
 
 from assessments.models import Parcel, CaseMain
 from assessments import util
@@ -129,13 +129,19 @@ def get_parcel(request, pnum=None, format=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    # clean up the pnum
+    clean up the pnum
     pnum = get_parcel_id(request.path, 3)
 
     # excecute the search
     parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)
     if len(parcels) == 0:
         raise Http404("Parcel id " + pnum + " not found")
+
+
+    # bsaparcels = BSAPARCELDATA.objects.filter(PARCELNO=pnum)
+    # if bsaparcels:
+    #     bsaparcel = bsaparcels[0]
+
 
     content = parcels[0].json()
     content['field_descriptions'] = util.get_parcel_descriptions()
