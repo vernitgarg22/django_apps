@@ -116,7 +116,7 @@ class SlackMsgHandler():
 
     DRY_RUN = settings.DEBUG or settings.DRY_RUN
 
-    def send(self, message):
+    def send(self, message, channel="#z_twilio"):
         """
         Slack a message to the City of Detroit #zzz slack channel
         """
@@ -127,7 +127,7 @@ class SlackMsgHandler():
         client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
         result = client.api_call(
             "chat.postMessage",
-            channel="#z_twilio",
+            channel=channel,
             text=message
         )
         return result.get('ok', False)
