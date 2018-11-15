@@ -11,7 +11,7 @@ from rest_framework import status
 
 from waste_notifier.models import Subscriber
 
-# from .website_db_engine import WebsiteDBEngine
+# from website_data.website_db_engine import WebsiteDBEngine
 
 from cod_utils.util import date_json
 
@@ -27,7 +27,11 @@ def get_page_count(start=None, end=None):
 
     return 0
 
-
+    # node_count = 0
+    # term_count = 0
+    # engine = WebsiteDBEngine('detroitmi.prod')
+    # try:
+    #     engine.start()
     #     if start and end:
     #         start_seconds = int(time.mktime(start.timetuple()))
     #         end_seconds = int(time.mktime(end.timetuple()))
