@@ -28,7 +28,10 @@ class WebsiteDataTests(TestCase):
         cleanup_db()
         self.maxDiff = None
 
-    def test_get_amount_added(self):
+    @mock.patch('website_data.views.get_node_count')
+    def test_get_amount_added(self, mocked_get_node_count):
+
+        mocked_get_node_count.return_value = 100
 
         date = datetime.strptime('20180301', "%Y%m%d")
         date = timezone.make_aware(date)
@@ -41,8 +44,8 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-07-01T00:00:00',
             "num_days": 181,
             "website_analytics": {
-                "num_new_html_pages": 0,
-                "num_total_html_pages": 0,
+                "num_new_html_pages": 200,
+                "num_total_html_pages": 200,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
@@ -54,7 +57,10 @@ class WebsiteDataTests(TestCase):
         self.assertEqual(expected, response.data, "Summary of data added should get returned")
 
     @mock.patch('django.utils.timezone.now')
-    def test_get_amount_added_default(self, mocked_django_utils_timezone_now):
+    @mock.patch('website_data.views.get_node_count')
+    def test_get_amount_added_default(self, mocked_get_node_count, mocked_django_utils_timezone_now):
+
+        mocked_get_node_count.return_value = 100
 
         date = datetime.strptime('20180814', "%Y%m%d")
         date = timezone.make_aware(date)
@@ -69,8 +75,8 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-08-19T00:00:00',
             "num_days": 6,
             "website_analytics": {
-                "num_new_html_pages": 0,
-                "num_total_html_pages": 0,
+                "num_new_html_pages": 200,
+                "num_total_html_pages": 200,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
@@ -82,7 +88,10 @@ class WebsiteDataTests(TestCase):
         self.assertEqual(expected, response.data, "Summary of data added should get returned")
 
     @mock.patch('django.utils.timezone.now')
-    def test_get_amount_added_monday(self, mocked_django_utils_timezone_now):
+    @mock.patch('website_data.views.get_node_count')
+    def test_get_amount_added_monday(self, mocked_get_node_count, mocked_django_utils_timezone_now):
+
+        mocked_get_node_count.return_value = 100
 
         date = datetime.strptime('20180813', "%Y%m%d")
         date = timezone.make_aware(date)
@@ -99,8 +108,8 @@ class WebsiteDataTests(TestCase):
             "date_end": '2018-08-12T00:00:00',
             "num_days": 6,
             "website_analytics": {
-                "num_new_html_pages": 0,
-                "num_total_html_pages": 0,
+                "num_new_html_pages": 200,
+                "num_total_html_pages": 200,
             },
             "waste_reminders": {
                 "total_subscribers": 0,
