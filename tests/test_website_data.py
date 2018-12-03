@@ -22,6 +22,13 @@ def cleanup_db():
     test_util.cleanup_model(Subscriber)
 
 
+def check_node_count(result):
+
+    if not result or len(result[0].values()) != 1 or not result[0].values()[0]:
+        raise Exception('Invalid result value encountered')
+    return 100
+
+
 class WebsiteDataTests(TestCase):
 
     def setUp(self):
@@ -31,7 +38,7 @@ class WebsiteDataTests(TestCase):
     @mock.patch('website_data.views.get_node_count')
     def test_get_amount_added(self, mocked_get_node_count):
 
-        mocked_get_node_count.return_value = 100
+        mocked_get_node_count.side_effect = check_node_count
 
         date = datetime.strptime('20180301', "%Y%m%d")
         date = timezone.make_aware(date)
@@ -60,7 +67,7 @@ class WebsiteDataTests(TestCase):
     @mock.patch('website_data.views.get_node_count')
     def test_get_amount_added_default(self, mocked_get_node_count, mocked_django_utils_timezone_now):
 
-        mocked_get_node_count.return_value = 100
+        mocked_get_node_count.side_effect = check_node_count
 
         date = datetime.strptime('20180814', "%Y%m%d")
         date = timezone.make_aware(date)
@@ -91,7 +98,7 @@ class WebsiteDataTests(TestCase):
     @mock.patch('website_data.views.get_node_count')
     def test_get_amount_added_monday(self, mocked_get_node_count, mocked_django_utils_timezone_now):
 
-        mocked_get_node_count.return_value = 100
+        mocked_get_node_count.side_effect = check_node_count
 
         date = datetime.strptime('20180813', "%Y%m%d")
         date = timezone.make_aware(date)
