@@ -22,11 +22,11 @@ class CODUtilsTests(TestCase):
 
     def test_date_json_date(self):
         str = util.date_json(date(2017, 5, 1))
-        self.assertTrue(str == '2017-05-01T00:00:00', "date_json() converts date object to json")
+        self.assertTrue(str == '2017-05-01T00:00:00.000Z', "date_json() converts date object to json")
 
     def test_date_json_datetime(self):
         str = util.date_json(datetime(2017, 5, 1, 00, 00, 00))
-        self.assertTrue(str == '2017-05-01T00:00:00', "date_json() converts datetime object to json")
+        self.assertTrue(str == '2017-05-01T00:00:00.000Z', "date_json() converts datetime object to json")
 
     def test_date_json_none(self):
         str = util.date_json(None)
