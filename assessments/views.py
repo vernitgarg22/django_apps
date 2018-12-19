@@ -129,7 +129,7 @@ def get_parcel(request, pnum=None, format=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    clean up the pnum
+    # clean up the pnum
     pnum = get_parcel_id(request.path, 3)
 
     # excecute the search
