@@ -20,7 +20,7 @@ def date_json(date):
     if type(date) is datetime.date:
         dt = datetime.datetime(date.year, date.month, date.day)
 
-    return dt.strftime("%Y-%m-%dT%H:%M:%S")
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 def get_local_time(now_utc = None):
     """
