@@ -6,13 +6,15 @@ from django.conf import settings
 from django.db import migrations, models
 
 
-if settings.RUNNING_UNITTESTS:
+class Migration(migrations.Migration):
 
-    class Migration(migrations.Migration):
+    dependencies = [
+        ('assessments', '0004_auto_20180417_1235'),
+    ]
 
-        dependencies = [
-            ('assessments', '0004_auto_20180417_1235'),
-        ]
+    if not settings.RUNNING_UNITTESTS:
+        operations = []
+    else:
 
         operations = [
             migrations.CreateModel(
