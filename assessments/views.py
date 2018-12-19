@@ -133,15 +133,9 @@ def get_parcel(request, pnum=None, format=None):
     pnum = get_parcel_id(request.path, 3)
 
     # excecute the search
-    parcels = ParcelMaster.objects.filter(pnum__iexact=pnum)
-    if len(parcels) == 0:
+    parcels = BSAPARCELDATA.objects.filter(PARCELNO=pnum)
+    if not parcels:
         raise Http404("Parcel id " + pnum + " not found")
-
-
-    # bsaparcels = BSAPARCELDATA.objects.filter(PARCELNO=pnum)
-    # if bsaparcels:
-    #     bsaparcel = bsaparcels[0]
-
 
     content = parcels[0].json()
     content['field_descriptions'] = util.get_parcel_descriptions()
