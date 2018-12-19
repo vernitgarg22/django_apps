@@ -416,7 +416,7 @@ class BSAPARCELDATA(models.Model):
 
         return json
 
-
     class Meta:
-        managed = False
         db_table = 'BSAPARCELDATA'
+        if not settings.RUNNING_UNITTESTS:    # pragma: no cover
+            managed = False
