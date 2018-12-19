@@ -37,8 +37,8 @@ class WebsiteDataTests(TestCase):
         response = c.get("/website_data/new_content/20180101/20180701/")
 
         expected = {
-            "date_start": '2018-01-01T00:00:00',
-            "date_end": '2018-07-01T00:00:00',
+            "date_start": '2018-01-01T00:00:00.000Z',
+            "date_end": '2018-07-01T00:00:00.000Z',
             "num_days": 181,
             "website_analytics": {
                 "num_new_html_pages": 0,
@@ -65,8 +65,8 @@ class WebsiteDataTests(TestCase):
         response = c.get("/website_data/new_content/")
 
         expected = {
-            "date_start": '2018-08-13T00:00:00',
-            "date_end": '2018-08-19T00:00:00',
+            "date_start": '2018-08-13T00:00:00.000Z',
+            "date_end": '2018-08-19T00:00:00.000Z',
             "num_days": 6,
             "website_analytics": {
                 "num_new_html_pages": 0,
@@ -95,8 +95,8 @@ class WebsiteDataTests(TestCase):
         response = c.get("/website_data/new_content/")
 
         expected = {
-            "date_start": '2018-08-06T00:00:00',
-            "date_end": '2018-08-12T00:00:00',
+            "date_start": '2018-08-06T00:00:00.000Z',
+            "date_end": '2018-08-12T00:00:00.000Z',
             "num_days": 6,
             "website_analytics": {
                 "num_new_html_pages": 0,

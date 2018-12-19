@@ -24,6 +24,7 @@ from assessments import views
 
 from assessments.models import Sales, ParcelMaster
 from assessments.models import Parcel, RoleType, CaseType, CaseMain, Sketch
+from assessments.models import BSAPARCELDATA
 
 
 def cleanup_db():
@@ -34,6 +35,7 @@ def cleanup_db():
     test_util.cleanup_model(RoleType)
     test_util.cleanup_model(Parcel)
     test_util.cleanup_model(Sketch)
+    test_util.cleanup_model(BSAPARCELDATA)
 
 
 def make_sale():
@@ -42,7 +44,24 @@ def make_sale():
     sale.save()
     return sale
 
+bsaparceldata = [ 
+    {'PARCELNO': '17000074.001', 'DISTRICT': 3, 'COUNCIL': '05', 'ECF': '3142A', 'PROPADDR': '7840 VAN DYKE PL', 'PROPNO': 7840.0, 'PROPDIR': '', 'PROPSTR': 'VAN DYKE PL', 'ZIPCODE': '48214', 'TAXPAYER1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'TAXPAYER2': '', 'TAXPADDR': '7840 VAN DYKE PL', 'TAXPCITY': 'DETROIT', 'TAXPSTATE': 'MI', 'TAXPZIP': '48214', 'propclass': '401', 'PROPCLASS1': '401', 'TAXSTATUS': 'TAXABLE', 'TAXSTATUS1': 'TAXABLE', 'zoning': 'R2', 'TOTALSQFT': 8948.0, 'TOTALACREAGE': 0.205, 'FRONTAGE': 43.0, 'DEPTH': 208.0, 'useCode': '41110', 'PRE': 100.0, 'NEZ': 'WEST VILLAGE - 43', 'MTT':0, 'CIBFLAREA': 0.0, 'CIBBLDGNO': 0, 'CIBYRBUILT': 0, 'RESFLAREA': 2526, 'RESBLDGNO': 1, 'RESYRBUILT': 1914, 'RESSYTLE': 'SINGLE FAMILY', 'ISIMPROVED': 1, 'SALEPRICE': 35000.0, 'SALEDATE': '2013-06-03T00:00:00.000Z', 'ASV': 27300.0, 'ASV1': 24300.0, 'TXV': 21327.0, 'TXV1': 20828.0, 'SEV': 27300.0, 'landvalue': 13422.0, 'landMap': '464', 'RELATED': '', 'AKA': '', 'SUBDIVISION': '', 'RP': 0, 'STATUS': 'Active', 'LEGALDESC': 'S VAN DYKE PL W 25.40 FT OF 37CHAS BEWICKS SUB L21 P39 PLATS, W C R 17/550 10 EXC W 33 FT OF N 192.60 FT & EXC W 40 FT ON N LINE BG W 41.35 FT ON S LINE OF S 30.49 FT ON W LINE BG S20 FT ON E LINE 17/14 43 IRREG'}
+]
+
+def make_bsaparceldata():
+
+    for parceldata in bsaparceldata:
+        parcel = BSAPARCELDATA(**parceldata)
+        parcel.save()
+
+    return BSAPARCELDATA.objects.first()
+
 def make_parcelmaster():
+
+    # REVIEW remove parcelmaster entirely
+
+    return make_bsaparceldata()
+
     data = {'resb_priceground': 29.04669, 'resb_occ': 0, 'cib_effage': 0, 'resb_depr': 38, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_floorarea': 0.0, 'resb_value': 37325.0, 'cib_numcib': 0, 'resb_style': 'SINGLE FAMILY', 'cib_calcvalue': 0.0, 'cib_pricefloor': 0.0, 'resb_heat': 2, 'resb_calcvalue': 106948.421875, 'resb_nbed': 0, 'resb_exterior': 3, 'ownerstate': 'MI', 'ownercity': 'DETROIT', 'resb_pricefloor': 13.31134, 'resb_gartype': 1, 'resb_yearbuilt': 1914, 'resb_garagearea': 504, 'resb_groundarea': 1285, 'resb_fireplaces': 1, 'resb_styhgt': 5, 'resb_basementarea': 1110, 'resb_bldgclass': 2, 'cib_yearbuilt': 0, 'ownername2': '', 'relatedpnum': '', 'resb_avestyht': 2.1821, 'resb_plusminus': 0, 'cib_bldgclass': 0, 'pnum': '17000074.001', 'resb_effage': 52, 'resb_fullbaths': 2, 'resb_floorarea': 2804, 'cib_occ': 0, 'cibunits': 0, 'resb_halfbaths': 1, 'ownerstreetaddr': '7840 VAN DYKE PL', 'cibbedrooms': 0, 'ownerzip': '48214', 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'xstreetname_1': 'SEYBURN', 'xstreetname_0': 'VAN DYKE', 'resb_numresb': 1, 'cib_stories': 0, 'cib_value': 0.0}
     pm = ParcelMaster(**data)
     pm.save()
@@ -195,7 +214,9 @@ class AssessmentsTests(TestCase):
     
         response = c.get('/assessments/parcel/17000074_001/')
         self.assertEqual(response.status_code, 200, "/parcel/<pnum>/ succeeds")
-        expected = { 'resb_gartype': 1, 'resb_calcvalue': 106948.421875, 'cib_pricefloor': 0.0, 'resb_exterior': 3, 'resb_priceground': 29.04669, 'resb_fullbaths': 2, 'resb_depr': 38, 'resb_heat': 2, 'ownerstreetaddr': '7840 VAN DYKE PL', 'xstreetname_1': 'SEYBURN', 'cib_value': 0.0, 'cib_yearbuilt': 0, 'ownerstate': 'MI', 'cib_numcib': 0, 'resb_floorarea': 2804, 'resb_bldgclass': 2, 'ownerzip': '48214', 'cib_bldgclass': 0, 'resb_occ': 0, 'cibbedrooms': 0, 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'cib_effage': 0, 'resb_style': 'SINGLE FAMILY', 'resb_plusminus': 0, 'resb_pricefloor': 13.31134, 'resb_avestyht': 2.1821, 'ownercity': 'DETROIT', 'cibunits': 0, 'resb_halfbaths': 1, 'cib_calcvalue': 0.0, 'ownername2': '', 'resb_value': 37325.0, 'resb_garagearea': 504, 'cib_stories': 0, 'resb_numresb': 1, 'pnum': '17000074.001', 'relatedpnum': '', 'cib_floorarea': 0.0, 'field_descriptions': {'resb_gartype': 'garage type', 'resb_calcvalue': 'resb_calcvalue', 'cib_pricefloor': 'cib_pricefloor', 'resb_exterior': 'exterior', 'resb_priceground': 'resb_priceground', 'resb_fullbaths': 'full baths', 'resb_depr': 'resb_depr', 'resb_heat': 'resb_heat', 'cib_numcib': 'commercial buildings', 'xstreetname_1': 'cross street', 'cib_value': 'cib_value', 'cib_yearbuilt': 'year built', 'ownerstate': 'owner state', 'ownerstreetaddr': 'owner address', 'resb_floorarea': 'floor area', 'resb_bldgclass': 'residential buidling class', 'ownerzip': 'owner zip', 'cib_bldgclass': 'commercial building class', 'resb_occ': 'residential building occupant', 'cibbedrooms': 'cibbedrooms', 'ownername1': 'owner', 'resb_yearbuilt': 'residential year built', 'resb_style': 'residential building style', 'resb_plusminus': 'resb_plusminus', 'resb_pricefloor': 'resb_pricefloor', 'resb_avestyht': 'resb_avestyht', 'ownercity': 'owner city', 'cibunits': 'number of units', 'resb_halfbaths': 'half baths', 'cib_calcvalue': 'cib_calcvalue', 'ownername2': 'additional owner', 'resb_value': 'resb_value', 'resb_garagearea': 'garage area', 'cib_stories': 'number of stories', 'resb_numresb': 'residential buildings', 'pnum': 'parcel number', 'relatedpnum': 'related parcel', 'cib_floorarea': 'floor area', 'resb_effage': 'resb_effage', 'resb_fireplaces': 'number of fire places', 'resb_groundarea': 'ground area', 'resb_nbed': 'number of bedrooms', 'cib_effage': 'cib_effage', 'propstreetcombined': 'address', 'cib_occ': 'commercial occupant', 'resb_basementarea': 'basement area', 'xstreetname_0': 'cross street', 'resb_styhgt': 'residential height'}, 'resb_effage': 52, 'resb_fireplaces': 1, 'resb_groundarea': 1285, 'resb_nbed': 0, 'resb_yearbuilt': 1914, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_occ': 0, 'resb_basementarea': 1110, 'xstreetname_0': 'VAN DYKE', 'resb_styhgt': 5 }
+        expected = bsaparceldata[0].copy()
+        expected['field_descriptions'] = util.get_parcel_descriptions()
+
         self.assertDictEqual(expected, response.data, "/parcel/<pnum>/ returns data for a parcel of land")
 
     def test_get_parcel_property_404(self):
