@@ -416,6 +416,7 @@ class BSAPARCELDATA(models.Model):
         "ownercity": "TAXPCITY",
         "ownerstate": "TAXPSTATE",
         "ownerzip": "TAXPZIP",
+        "ownerstreetaddr": "TAXPADDR",
     }
 
     def json_data(self):     # pragma: no cover - these are used mostly for debugging
