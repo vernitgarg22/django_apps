@@ -186,7 +186,7 @@ class DataCacheTests(TestCase):
         response = c.post("/data_cache/url_cache/urls/", data={ "url": url }, secure=True)
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(len(response.data['data']), 4, "Response should contain data")
+        self.assertTrue(len(response.data['data']), "Response should contain data")
         self.assertTrue(response.data['key'].startswith('url_cache_'))
 
     def test_data_cache_url_cache_persists(self):
@@ -200,7 +200,7 @@ class DataCacheTests(TestCase):
 
         response = c.get("/data_cache/url_cache/{}/".format(key), secure=True)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['data']), 4, "Response should contain data")
+        self.assertTrue(len(response.data['data']), "Response should contain data")
 
     def test_data_cache_url_cache_not_secure(self):
 

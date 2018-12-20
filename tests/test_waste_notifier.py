@@ -1003,7 +1003,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.get("/waste_notifier/address/7840 Van Dyke Pl/{}/".format(today), secure=True)
 
-        tomorrow = '2017-12-01T00:00:00'
+        tomorrow = '2017-12-01T00:00:00.000Z'
 
         expected = {
             "next_pickups": {
@@ -1013,8 +1013,8 @@ class WasteNotifierTests(TestCase):
             },
             "details": { "schedule": [{
                     'description': 'Christmas',
-                    'newDay': '2017-12-26T00:00:00',
-                    'normalDay': '2017-12-25T00:00:00',
+                    'newDay': '2017-12-26T00:00:00.000Z',
+                    'normalDay': '2017-12-25T00:00:00.000Z',
                     'note': None,
                     'service': 'all',
                     'wasteAreaIds': ''
@@ -1037,10 +1037,10 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.get("/waste_notifier/address/7840 Van Dyke Pl/{}/".format(today), secure=True)
 
-        tomorrow = '2017-12-22T00:00:00'
+        tomorrow = '2017-12-22T00:00:00.000Z'
 
         # reschedule for next week due to alt week and 1 day late due to holiday
-        next_week = '2017-12-30T00:00:00'
+        next_week = '2017-12-30T00:00:00.000Z'
 
         expected = {
             "next_pickups": {
@@ -1050,8 +1050,8 @@ class WasteNotifierTests(TestCase):
             },
             "details": { "schedule": [{
                     'description': 'Christmas',
-                    'newDay': '2017-12-26T00:00:00',
-                    'normalDay': '2017-12-25T00:00:00',
+                    'newDay': '2017-12-26T00:00:00.000Z',
+                    'normalDay': '2017-12-25T00:00:00.000Z',
                     'note': None,
                     'service': 'all',
                     'wasteAreaIds': ''
@@ -1081,7 +1081,7 @@ class WasteNotifierTests(TestCase):
         c = Client()
         response = c.get("/waste_notifier/address/7840 Van Dyke Pl/{}/".format(today), secure=True)
 
-        tomorrow = '2017-12-30T00:00:00'
+        tomorrow = '2017-12-30T00:00:00.000Z'
 
         expected = {
             "next_pickups": {
