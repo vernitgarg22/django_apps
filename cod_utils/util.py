@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
 
-def date_json(date):
+def date_json(date, options={}):
     """
     Convert a datetime or date object to json string format
     """
@@ -20,7 +20,10 @@ def date_json(date):
     if type(date) is datetime.date:
         dt = datetime.datetime(date.year, date.month, date.day)
 
-    return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    dt_str = dt.strftime("%Y-%m-%dT%H:%M:%S.000")
+    if options.get("add_tz", True):
+        dt_str += 'Z'
+    return dt_str
 
 def get_local_time(now_utc = None):
     """

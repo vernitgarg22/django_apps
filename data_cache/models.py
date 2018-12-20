@@ -146,13 +146,13 @@ class DataSource(models.Model):
             SOCRATA_APP_TOKEN = settings.AUTO_LOADED_DATA['SOCRATA_APP_TOKEN']
             headers["X-App-Token"] = SOCRATA_APP_TOKEN
 
-        r = requests.get(url, headers=headers, timeout=120)
+        response = requests.get(url, headers=headers, timeout=120)
 
         # Test success and attempt to parse
-        if not DataSet.is_success(r):    # pragma: no cover (exception-handling should prevent us from ever getting here)
+        if not DataSet.is_success(response):    # pragma: no cover (exception-handling should prevent us from ever getting here)
             raise Exception("Data source {} not available".format(self.name))
 
-        data = r.json()
+        data = response.json()
         if self.is_multiple():
 
             # keep a dict of all previous data values
@@ -245,7 +245,7 @@ class DataSource(models.Model):
             where_clause = "$where={}".format(self.socrata_where)
             if where_clause.find("1_week_back") > 0:
                 date_val = date.today() - datetime.timedelta(days=7)
-                where_clause = where_clause.replace("1_week_back", util.date_json(date_val))
+                where_clause = where_clause.replace("1_week_back", util.date_json(date_val, options={"add_tz": False}))
 
             url = url + where_clause
 
