@@ -388,7 +388,7 @@ class BSAPARCELDATA(models.Model):
     RESFLAREA = models.IntegerField()
     RESBLDGNO = models.SmallIntegerField()
     RESYRBUILT = models.SmallIntegerField()
-    RESSYTLE = models.CharField(max_length=15)
+    RESSTYLE = models.CharField(max_length=15, db_column='RESSYTLE')
     ISIMPROVED = models.SmallIntegerField()
     SALEPRICE = models.FloatField()
     SALEDATE = models.DateTimeField(null=True)
@@ -406,15 +406,32 @@ class BSAPARCELDATA(models.Model):
     STATUS = models.CharField(max_length=30)
     LEGALDESC = models.TextField(null=True)
 
-    def json(self):     # pragma: no cover - these are used mostly for debugging
+    HISTORICAL_VALUES = {
+        "pnum": "PARCELNO",
+        "propstreetcombined": "PROPADDR",
+        "resb_yearbuilt": "RESYRBUILT",
+        "resb_value": "ASV",
+        "resb_floorarea": "RESFLAREA",
+        "resb_bldgclass": "RESSTYLE",
+        "ownercity": "TAXPCITY",
+        "ownerstate": "TAXPSTATE",
+        "ownerzip": "TAXPZIP",
+    }
 
-        json = {}
+    def json_data(self):     # pragma: no cover - these are used mostly for debugging
+
+        # Collect all the data
+        json_data = {}
         fields = self._meta.get_fields()
         for field in fields:
             value = getattr(self, field.name)
-            json[field.name] = util.clean_parcel_val(value)
+            json_data[field.name] = util.clean_parcel_val(value)
 
-        return json
+        # Map some values for backwards compatibility
+        for old, new in self.HISTORICAL_VALUES.items():
+            json_data[old] = json_data.get(new, None)
+
+        return json_data
 
     class Meta:
         db_table = 'BSAPARCELDATA'
