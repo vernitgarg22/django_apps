@@ -137,7 +137,7 @@ def get_parcel(request, pnum=None, format=None):
     if not parcels:
         raise Http404("Parcel id " + pnum + " not found")
 
-    content = parcels[0].json()
+    content = parcels[0].json_data()
     content['field_descriptions'] = util.get_parcel_descriptions()
 
     return Response(content)

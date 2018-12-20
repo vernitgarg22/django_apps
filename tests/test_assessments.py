@@ -45,27 +45,24 @@ def make_sale():
     return sale
 
 bsaparceldata = [ 
-    {'PARCELNO': '17000074.001', 'DISTRICT': 3, 'COUNCIL': '05', 'ECF': '3142A', 'PROPADDR': '7840 VAN DYKE PL', 'PROPNO': 7840.0, 'PROPDIR': '', 'PROPSTR': 'VAN DYKE PL', 'ZIPCODE': '48214', 'TAXPAYER1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'TAXPAYER2': '', 'TAXPADDR': '7840 VAN DYKE PL', 'TAXPCITY': 'DETROIT', 'TAXPSTATE': 'MI', 'TAXPZIP': '48214', 'propclass': '401', 'PROPCLASS1': '401', 'TAXSTATUS': 'TAXABLE', 'TAXSTATUS1': 'TAXABLE', 'zoning': 'R2', 'TOTALSQFT': 8948.0, 'TOTALACREAGE': 0.205, 'FRONTAGE': 43.0, 'DEPTH': 208.0, 'useCode': '41110', 'PRE': 100.0, 'NEZ': 'WEST VILLAGE - 43', 'MTT':0, 'CIBFLAREA': 0.0, 'CIBBLDGNO': 0, 'CIBYRBUILT': 0, 'RESFLAREA': 2526, 'RESBLDGNO': 1, 'RESYRBUILT': 1914, 'RESSYTLE': 'SINGLE FAMILY', 'ISIMPROVED': 1, 'SALEPRICE': 35000.0, 'SALEDATE': '2013-06-03T00:00:00.000Z', 'ASV': 27300.0, 'ASV1': 24300.0, 'TXV': 21327.0, 'TXV1': 20828.0, 'SEV': 27300.0, 'landvalue': 13422.0, 'landMap': '464', 'RELATED': '', 'AKA': '', 'SUBDIVISION': '', 'RP': 0, 'STATUS': 'Active', 'LEGALDESC': 'S VAN DYKE PL W 25.40 FT OF 37CHAS BEWICKS SUB L21 P39 PLATS, W C R 17/550 10 EXC W 33 FT OF N 192.60 FT & EXC W 40 FT ON N LINE BG W 41.35 FT ON S LINE OF S 30.49 FT ON W LINE BG S20 FT ON E LINE 17/14 43 IRREG'}
+    {
+        'PARCELNO': '17000074.001', 'DISTRICT': 3, 'COUNCIL': '05', 'ECF': '3142A', 'PROPADDR': '7840 VAN DYKE PL', 'PROPNO': 7840.0, 'PROPDIR': '', 'PROPSTR': 'VAN DYKE PL', 'ZIPCODE': '48214', 'TAXPAYER1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'TAXPAYER2': '', 'TAXPADDR': '7840 VAN DYKE PL', 'TAXPCITY': 'DETROIT', 'TAXPSTATE': 'MI', 'TAXPZIP': '48214', 'propclass': '401', 'PROPCLASS1': '401', 'TAXSTATUS': 'TAXABLE', 'TAXSTATUS1': 'TAXABLE', 'zoning': 'R2', 'TOTALSQFT': 8948.0, 'TOTALACREAGE': 0.205, 'FRONTAGE': 43.0, 'DEPTH': 208.0, 'useCode': '41110', 'PRE': 100.0, 'NEZ': 'WEST VILLAGE - 43', 'MTT':0, 'CIBFLAREA': 0.0, 'CIBBLDGNO': 0, 'CIBYRBUILT': 0, 'RESFLAREA': 2526, 'RESBLDGNO': 1, 'RESYRBUILT': 1914, 'RESSTYLE': 'SINGLE FAMILY', 'ISIMPROVED': 1, 'SALEPRICE': 35000.0, 'SALEDATE': '2013-06-03T00:00:00.000Z', 'ASV': 27300.0, 'ASV1': 24300.0, 'TXV': 21327.0, 'TXV1': 20828.0, 'SEV': 27300.0, 'landvalue': 13422.0, 'landMap': '464', 'RELATED': '', 'AKA': '', 'SUBDIVISION': '', 'RP': 0, 'STATUS': 'Active', 'LEGALDESC': 'S VAN DYKE PL W 25.40 FT OF 37CHAS BEWICKS SUB L21 P39 PLATS, W C R 17/550 10 EXC W 33 FT OF N 192.60 FT & EXC W 40 FT ON N LINE BG W 41.35 FT ON S LINE OF S 30.49 FT ON W LINE BG S20 FT ON E LINE 17/14 43 IRREG',
+        'ownercity': 'DETROIT', 'ownerstate': 'MI', 'ownerzip': '48214', 'pnum': '17000074.001', 'propstreetcombined': '7840 VAN DYKE PL', 'resb_bldgclass': 'SINGLE FAMILY', 'resb_floorarea': 2526, 'resb_value': 27300.0, 'resb_yearbuilt': 1914,
+    }
 ]
 
 def make_bsaparceldata():
 
     for parceldata in bsaparceldata:
-        parcel = BSAPARCELDATA(**parceldata)
+
+        data = parceldata.copy()
+        for key in BSAPARCELDATA.HISTORICAL_VALUES.keys():
+            del data[key]
+
+        parcel = BSAPARCELDATA(**data)
         parcel.save()
 
     return BSAPARCELDATA.objects.first()
-
-def make_parcelmaster():
-
-    # REVIEW remove parcelmaster entirely
-
-    return make_bsaparceldata()
-
-    data = {'resb_priceground': 29.04669, 'resb_occ': 0, 'cib_effage': 0, 'resb_depr': 38, 'propstreetcombined': '7840 VAN DYKE PL', 'cib_floorarea': 0.0, 'resb_value': 37325.0, 'cib_numcib': 0, 'resb_style': 'SINGLE FAMILY', 'cib_calcvalue': 0.0, 'cib_pricefloor': 0.0, 'resb_heat': 2, 'resb_calcvalue': 106948.421875, 'resb_nbed': 0, 'resb_exterior': 3, 'ownerstate': 'MI', 'ownercity': 'DETROIT', 'resb_pricefloor': 13.31134, 'resb_gartype': 1, 'resb_yearbuilt': 1914, 'resb_garagearea': 504, 'resb_groundarea': 1285, 'resb_fireplaces': 1, 'resb_styhgt': 5, 'resb_basementarea': 1110, 'resb_bldgclass': 2, 'cib_yearbuilt': 0, 'ownername2': '', 'relatedpnum': '', 'resb_avestyht': 2.1821, 'resb_plusminus': 0, 'cib_bldgclass': 0, 'pnum': '17000074.001', 'resb_effage': 52, 'resb_fullbaths': 2, 'resb_floorarea': 2804, 'cib_occ': 0, 'cibunits': 0, 'resb_halfbaths': 1, 'ownerstreetaddr': '7840 VAN DYKE PL', 'cibbedrooms': 0, 'ownerzip': '48214', 'ownername1': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'xstreetname_1': 'SEYBURN', 'xstreetname_0': 'VAN DYKE', 'resb_numresb': 1, 'cib_stories': 0, 'cib_value': 0.0}
-    pm = ParcelMaster(**data)
-    pm.save()
-    return pm
 
 def make_parcel(prc_parcel_no):
     parcel = Parcel(prc_parcel_no='1000', prc_avp_no=1, prc_vp_no=1)
@@ -102,12 +99,12 @@ class AssessmentsTests(TestCase):
         self.assertTrue(sale.json() != {})
 
     def test_parcelmaster(self):
-        pm = make_parcelmaster()
+        pm = make_bsaparceldata()
         self.assertTrue(str(pm) != '')
 
     def test_parcelmaster_json(self):
-        pm = make_parcelmaster()
-        self.assertTrue(pm.json() != {})
+        pm = make_bsaparceldata()
+        self.assertTrue(pm.json_data() != {})
 
     def test_get_sales(self):
 
@@ -209,7 +206,7 @@ class AssessmentsTests(TestCase):
 
     def test_get_parcel_property(self):
 
-        pm = make_parcelmaster()
+        pm = make_bsaparceldata()
         c = Client()
     
         response = c.get('/assessments/parcel/17000074_001/')
@@ -227,7 +224,7 @@ class AssessmentsTests(TestCase):
 
     def test_get_parcel_owner_groups(self):
 
-        pm = make_parcelmaster()
+        pm = make_bsaparceldata()
         c = Client()
 
         response = c.get('/assessments/parcel/owner_groups/')
@@ -237,7 +234,7 @@ class AssessmentsTests(TestCase):
 
     def test_get_rental_cases(self):
 
-        pm = make_parcelmaster()
+        pm = make_bsaparceldata()
         c = Client()
 
         parcel = Parcel(prc_parcel_no='1000', prc_avp_no=1, prc_vp_no=1)
