@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 import os
+import pkgutil
 import sys
 
 import django
 from django.conf import settings
 from django.test.utils import get_runner
+
+import tests
 
 
 if __name__ == "__main__":
@@ -35,6 +38,12 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_waste_wizard"]
     # test_labels = ["tests.test_waste_notifier.WasteNotifierTests.test_confirm_invalid_phone_number"]
     # test_labels = ["tests.test_website_data"]
-    test_labels = ["tests.test_assessments", "tests.test_blight_tickets", "tests.test_cod_utils", "tests.test_commands", "tests.test_data_cache", "tests.test_elections", "tests.test_photo_survey", "tests.test_property_data", "tests.test_waste_notifier", "tests.test_waste_schedule", "tests.test_waste_wizard", "tests.test_weather_info", "tests.test_website_data"]
+
+
+    all_tests = [ mod.name for mod in pkgutil.walk_packages(path=tests.__path__, prefix=tests.__name__ + '.') if mod.name.startswith('tests.test_') ]
+    test_labels = sorted(all_tests)
+
+    print("\n\nTesting the following packages: {}\n".format(test_labels))
+
     failures = test_runner.run_tests(test_labels)
     sys.exit(bool(failures))
