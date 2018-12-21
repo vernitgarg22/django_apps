@@ -332,9 +332,10 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
             schedule_changes = ScheduleDetailMgr.instance().get_date_schedule_changes(next_date)
             if schedule_changes:
                 next_date += datetime.timedelta(days = 1)
-            
+
+            # REVIEW: should really pass "-05:00" for add_tz
             content["next_pickups"][map_service_type(service)] =  {
-                "date": date_json(next_date),
+                "date": date_json(next_date, options={"add_tz": None}),
                 "provider": info['contractor']
             }
 

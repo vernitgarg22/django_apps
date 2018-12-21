@@ -53,7 +53,8 @@ def add_route_pickup_info(route, service, today):
     if schedule_changes:
         next_pickup = schedule_changes[0].new_day
 
-    route_dest['next_pickup'] = cod_utils.util.date_json(next_pickup)
+    # REVIEW: should really pass "-05:00" for add_tz
+    route_dest['next_pickup'] = cod_utils.util.date_json(next_pickup, options={"add_tz": None})
     return route_dest
 
 def get_next_pickups(route_ids, schedule_details, today=datetime.date.today()):

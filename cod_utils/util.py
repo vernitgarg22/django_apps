@@ -21,8 +21,9 @@ def date_json(date, options={}):
         dt = datetime.datetime(date.year, date.month, date.day)
 
     dt_str = dt.strftime("%Y-%m-%dT%H:%M:%S.000")
-    if options.get("add_tz", True):
-        dt_str += 'Z'
+    tzinfo = options.get("add_tz", "Z")
+    if tzinfo:
+        dt_str += tzinfo
     return dt_str
 
 def get_local_time(now_utc = None):
