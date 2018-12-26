@@ -992,6 +992,15 @@ class WasteNotifierTests(TestCase):
                 response = views.send_notifications_request(date_val=date.strftime("%Y%m%d"))
                 self.assertEqual(response['citywide']['message'], expected, "Information can be sent out")
 
+    def test_send_reminders_2019(self):
+
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
+        subscriber.activate()
+
+        expected = {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Friday, January 11, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}
+        response = views.send_notifications_request(date_val=datetime.date(2019, 1, 11).strftime("%Y%m%d"))
+        self.assertEqual(response['all'][8], expected, "Information can be sent out")
+
     def test_get_alexa_service_info(self):
 
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Christmas', normal_day=datetime.date(2017, 12, 25), new_day=datetime.date(2017, 12, 26))
