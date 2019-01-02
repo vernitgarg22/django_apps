@@ -335,7 +335,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
 
             # REVIEW: should really pass "-05:00" for add_tz
             content["next_pickups"][map_service_type(service)] =  {
-                "date": date_json(next_date, options={"add_tz": None}),
+                "date": date_json(next_date, add_tz=False),
                 "provider": info['contractor']
             }
 

@@ -245,7 +245,7 @@ class DataSource(models.Model):
             where_clause = "$where={}".format(self.socrata_where)
             if where_clause.find("1_week_back") > 0:
                 date_val = date.today() - datetime.timedelta(days=7)
-                where_clause = where_clause.replace("1_week_back", util.date_json(date_val, options={"add_tz": False}))
+                where_clause = where_clause.replace("1_week_back", util.date_json(date_val, add_tz=False))
 
             url = url + where_clause
 

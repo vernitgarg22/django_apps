@@ -91,8 +91,8 @@ class ScheduleDetail(models.Model):
             "type": self.detail_type,
             "service": self.service_type,
             "description": self.description,
-            "normalDay": util.date_json(self.normal_day, options={"add_tz": None}),
-            "newDay": util.date_json(self.new_day, options={"add_tz": None}),
+            "normalDay": util.date_json(self.normal_day, add_tz=False),
+            "newDay": util.date_json(self.new_day, add_tz=False),
             "note": self.note,
             "wasteAreaIds": self.waste_area_ids,
         }
