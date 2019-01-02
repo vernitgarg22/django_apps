@@ -132,7 +132,13 @@ class AssessmentsTests(TestCase):
         expected = [{'grantor': 'CRABTREE, ALYSON & HIRJI, FATIMA', 'grantee': 'KAEBNICK,KARL ROYDEN & HAIMERI, AMY', 'addresscombined': '7840 VAN DYKE PL', 'saledate': datetime(2013, 6, 3, 0, 0, tzinfo=pytz.utc), 'instr': 'PTA', 'saleprice': Decimal('35000'), 'terms': 'REVIEW NEEDED', 'pnum': '17000074.001'}]
         self.assertListEqual(expected, response.data, "/assessments/<address>/ returns sales data search results")
 
-    def test_get_sales_address_search_recent(self):
+    @mock.patch('django.utils.timezone.now')
+    def test_get_sales_address_search_recent(self, mocked_django_utils_timezone_now):
+
+        date = datetime.strptime('20180101', "%Y%m%d")
+        date = timezone.make_aware(date)
+
+        mocked_django_utils_timezone_now.return_value = date
 
         sale = make_sale()
         c = Client()
@@ -145,12 +151,15 @@ class AssessmentsTests(TestCase):
     def test_get_sales_address_search_recent_filters_old(self):
 
         sale = make_sale()
+
+        # create a second sale and make it 10 years old so that it gets filtered out
+        sale = make_sale()
         sale.saledate = sale.saledate - timedelta(days = 10 * 365)
         sale.save()
         c = Client()
 
         response = c.get('/assessments/address/7840 VAN DYKE PL/recent/')
-        self.assertEqual(response.status_code, 404, "/assessments/<address>/recent/ filters out old sales data search results")
+        self.assertEqual(len(response.data), 1, "/assessments/<address>/recent/ filters out old sales data search results")
 
     def test_get_sales_address_search_recent_filters_custom(self):
 
@@ -173,7 +182,13 @@ class AssessmentsTests(TestCase):
         response = c.get('/assessments/address/invalid/')
         self.assertEqual(response.status_code, 404, "/assessments/address/<address>/ returns 404 when property not found")
 
-    def test_get_sales_property_recent(self):
+    @mock.patch('django.utils.timezone.now')
+    def test_get_sales_property_recent(self, mocked_django_utils_timezone_now):
+
+        date = datetime.strptime('20180101', "%Y%m%d")
+        date = timezone.make_aware(date)
+
+        mocked_django_utils_timezone_now.return_value = date
 
         sale = make_sale()
         sale.save()
