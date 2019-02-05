@@ -5,9 +5,9 @@ import requests
 from django.test import Client
 from django.test import TestCase
 from django.conf import settings
-from unittest import skip
 
 from tests import test_util
+from unittest import skip
 
 from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataDescriptor, DataCitySummary
 from data_cache.views import SimpleJSONCache
@@ -48,6 +48,7 @@ def init_test_data_invalid_auth():
     url = "http://jsonplaceholder.typicode.com/posts?userId=1"
     DataSource(data_set=data_set, name='test', url=url, credentials=credentials).save()
 
+@skip('old hydrant data no longer available')
 def init_hydrants_data():
 
     data_set = DataSet(name='hydrants')
@@ -55,6 +56,14 @@ def init_hydrants_data():
 
     credentials = init_creds(key="HYDRANTS")
     DataSource(data_set=data_set, name='hydrants', url="https://gisweb.glwater.org/arcgis/rest/services/Hydrants/dwsd_HydrantInspection_v2/MapServer/0?f=json", credentials=credentials).save()
+
+def init_hydrants_data_new():
+
+    data_set = DataSet(name='hydrants')
+    data_set.save()
+
+    credentials = init_creds(key="HYDRANTS_NEW")
+    DataSource(data_set=data_set, name='hydrants', url="http://gis.detroitmi.gov/arcgis/rest/services/DFD/HydrantInspection/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=*&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=4236&gdbVersion=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=&resultOffset=&resultRecordCount=&f=json", credentials=credentials).save()
 
 @skip('gis token has been disabled')
 def init_gis_data():
@@ -115,9 +124,21 @@ class DataCacheTests(TestCase):
         self.assertEqual(response.status_code,  200)
         self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
 
+    @skip('old hydrant data no longer available')
     def test_hydrant_data(self):
 
         init_hydrants_data()
+
+        c = Client()
+        response = c.get("/data_cache/hydrants/", secure=True)
+
+        data_value = DataValue.objects.first()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(data_value.data), response.data['data'], "Cached data should get returned")
+
+    def test_hydrant_data_new(self):
+
+        init_hydrants_data_new()
 
         c = Client()
         response = c.get("/data_cache/hydrants/", secure=True)

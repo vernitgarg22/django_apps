@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from unittest import skip
 from django.test import TestCase
 from django.utils.six import StringIO
 from django.utils import timezone
@@ -278,6 +279,7 @@ class RefreshDataCacheTest(TestCase):
     def setUp(self):
         DataSource.objects.all().delete()
 
+    @skip('old hydrant data no longer available')
     def test_simple_data(self):
         """
         Test data cache where there is only 1 data value per data source (i.e., no param).
