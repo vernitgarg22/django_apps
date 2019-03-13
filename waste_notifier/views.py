@@ -299,13 +299,11 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     # Parse address string and get result from AddressPoint geocoder
     location, address = geocode_address(street_address=street_address)
     if not location:
-        invalid_addr_msg = 'Invalid address received in service info request: {}'.format(address)
-
+        invalid_addr_msg = 'Invalid address received in service info request: {}'.format(street_address)
         CODLogger.instance().log_error(name=__name__, area="service info request", msg=invalid_addr_msg)
-
         MsgHandler().send_admin_alert(text=invalid_addr_msg)
 
-        return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": invalid_addr_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     service_info = get_waste_area_ids(location=location, ids_only=False)
 
