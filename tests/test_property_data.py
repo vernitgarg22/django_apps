@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.conf import settings
 
 from tests import test_util
+from unittest import skip
 
 from data_cache.models import DTEActiveGasSite
 from property_data.models import EscrowBalance
@@ -41,6 +42,7 @@ class PropertyDataDTETests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    @skip('Blocking clients by IP not permitted by firewall')
     def test_get_dte_active_connections_badclient(self):
 
         # Force block_client to block us
@@ -101,6 +103,7 @@ class PropertyDataRentEscrowTests(TestCase):
         response = c.get("/property_data/rental_escrow/1/", secure=False)
         self.assertEqual(response.status_code, 403)
 
+    @skip('Blocking clients by IP not permitted by firewall')
     def test_get_escrow_balance_badclient(self):
 
         # Force block_client to block us

@@ -417,6 +417,7 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(subscriber.status, 'active')
         self.assertTrue(subscriber.last_status_update != None and subscriber.last_status_update != '')
 
+    @skip('Blocking clients by IP not permitted by firewall')
     def test_subscribe_invalid_client(self):
 
         # Force block_client to block us
