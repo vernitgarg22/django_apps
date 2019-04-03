@@ -7,7 +7,7 @@ class Tblztickets(models.Model):
     app_label = 'blight_tickets'
 
     zticketid = models.IntegerField(db_column='ZTicketID', primary_key=True)  # Field name made lowercase.
-    ticketnumber = models.CharField(db_column='TicketNumber', primary_key=True, max_length=12)  # Field name made lowercase.
+    ticketnumber = models.CharField(db_column='TicketNumber', db_index=True, max_length=12)  # Field name made lowercase.
     agencyid = models.IntegerField(db_column='AgencyID')  # Field name made lowercase.
     violstreetnumber = models.IntegerField(db_column='ViolStreetNumber')  # Field name made lowercase.
     violstreetname = models.IntegerField(db_column='ViolStreetName')  # Field name made lowercase.

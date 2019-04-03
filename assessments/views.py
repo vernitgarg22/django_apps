@@ -80,7 +80,7 @@ def get_sales_property_recent(request, pnum=None, format=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    return get_sales_property(request, pnum=pnum, years_back=5, format=format)
+    return get_sales_property(request._request, pnum=pnum, years_back=5, format=format)
 
 
 @api_view(['GET'])
@@ -118,7 +118,7 @@ def get_sales_property_address_recent(request, address=None, format=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    return get_sales_property_address(request, address=address, years_back=5, format=format)
+    return get_sales_property_address(request._request, address=address, years_back=5, format=format)
 
 
 @api_view(['GET'])
