@@ -11,6 +11,8 @@ import tests
 
 
 if __name__ == "__main__":
+
+    os.environ['DJANGO_HOME'] = os.getcwd()
     os.environ['DJANGO_SETTINGS_MODULE'] = 'django_apps.settings'
     os.environ['RUNNING_UNITTESTS'] = 'yes'
     django.setup()
