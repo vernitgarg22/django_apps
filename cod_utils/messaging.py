@@ -143,6 +143,7 @@ class SlackMsgHandler():
         if SlackMsgHandler.DRY_RUN or not self.ts:
             return False
 
+        client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
         result = client.api_call(
             "chat.postMessage",
             channel=channel,
