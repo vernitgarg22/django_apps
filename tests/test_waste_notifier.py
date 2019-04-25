@@ -1124,3 +1124,12 @@ class WasteNotifierTests(TestCase):
 
         response = c.get('/waste_notifier/address/7840 Van Dyke Pl/')
         self.assertEqual(response.status_code, 403)
+
+    def test_slack_waste_notifier_messages(self):
+
+        slack_handler = WasteNotifierSlackHandler()
+        slack_handler.slack_alerts_start()
+        slack_handler.slack_alerts_update(msg_cnt=1000)
+
+        content = {'trash': {11: {'subscribers': ['3136102012', '9174538684', '3135068800', '2484992308', '2676300369', '3133202044', '5869133397', '3134923996', '2679700026', '5863228964', '3137062742', '3135504576', '3138190143', '3138080122', '7347485413', '3138025608', '2487015166', '3134546860', '3134832492', '3138623021', '3133198115', '3137015482', '3132058535', '3133462045', '2489104129', '3134737118'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 5: {'subscribers': ['3138504195', '3135803973'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {4: {'subscribers': ['5865638822', '3135498078', '3137195691', '3137581842', '3137587477'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'date_applicable': '2017-05-31', 'dry_run': True, 'week_type': 'b', 'current_time': '2017-05-26 10:51'}, 'recycling': {22: {'subscribers': ['3134495504', '3133201794', '3134780304', '3134150028', '3134617273'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {34: {'subscribers': ['8109624844', '3132084486', '3137283175', '3136139213', '3134784213'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
+        slack_handler.slack_alerts_summary(content=content)

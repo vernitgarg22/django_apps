@@ -3,6 +3,8 @@ from datetime import datetime
 from datetime import timedelta
 import pytz
 
+from cod_utils.messaging import SlackMsgHandler
+
 from django.conf import settings
 
 from django.test import Client
@@ -137,3 +139,19 @@ class CODUtilsMsgHandlerTests(TestCase):
         MsgHandler.DRY_RUN = False
         sent = MsgHandler().send_admin_alert("testing")
         self.assertTrue(sent, "MsgHandler sends an admin alert")
+
+
+class SlackMsgHandlerTests(TestCase):
+
+    def setUp(self):
+        self.dry_run_previous = MsgHandler.DRY_RUN
+
+    def tearDown(self):
+        MsgHandler.DRY_RUN = self.dry_run_previous
+
+    def test_slack_thread(self):
+
+        slack_msg_handler = SlackMsgHandler()
+        slack_msg_handler.send(message='testing plz ignore - start thread')
+        slack_msg_handler.comment(message='testing plz ignore - continue thread')
+        slack_msg_handler.comment(message='testing plz ignore - finish thread')
