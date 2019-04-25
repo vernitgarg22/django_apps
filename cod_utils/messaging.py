@@ -116,6 +116,10 @@ class SlackMsgHandler():
 
     DRY_RUN = settings.DEBUG or settings.DRY_RUN
 
+    def __init__(self):
+
+        self.ts = None
+
     def send(self, message, channel="#z_twilio"):
         """
         Slack a message to the City of Detroit #zzz slack channel
@@ -130,4 +134,20 @@ class SlackMsgHandler():
             channel=channel,
             text=message
         )
+
+        self.ts = result.get('ts', None)
+        return result.get('ok', False)
+
+    def comment(self, message, channel="#z_twilio"):
+
+        if SlackMsgHandler.DRY_RUN or not self.ts:
+            return False
+
+        result = client.api_call(
+            "chat.postMessage",
+            channel=channel,
+            text=message,
+            thread_ts=self.ts
+        )
+
         return result.get('ok', False)

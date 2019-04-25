@@ -252,11 +252,22 @@ def send_notifications(date, dry_run_param=False):
 
         subscribers_services_details.append(subscribers_services_detail)
 
+    # Start a slack thread with progress report
+    slack_handler = WasteNotifierSlackHandler()
+    slack_handler.slack_alerts_start()
+
+    msg_cnt = 0
+
     # send text reminder to each subscriber needing a reminder
     for subscriber in subscribers_services.get_subscribers():
 
         message = get_service_message(subscribers_services.get_services(subscriber), date)
         MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
+        msg_cnt += 1
+
+        # Update a slack thread with progress report.
+        if msg_cnt % 1000 == 0:
+            slack_handler.slack_alerts_update(msg_cnt=msg_cnt)
 
     # send out notifications about any schedule changes
     for subscribers_services_detail in subscribers_services_details:
@@ -265,11 +276,16 @@ def send_notifications(date, dry_run_param=False):
             message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
 
             MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
+            msg_cnt += 1
+
+            # Update a slack thread with progress report.
+            if msg_cnt % 1000 == 0:
+                slack_handler.slack_alerts_update(msg_cnt=msg_cnt)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param)
 
-    # slack the json response to #zzz
-    slack_alerts_summary(content.get_content())
+    # Slack the json response summary
+    slack_handler.slack_alerts_summary(content=content.get_content())
 
     return content.get_content()
 

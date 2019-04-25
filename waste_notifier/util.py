@@ -61,13 +61,35 @@ def format_slack_alerts_summary(content):
 
     return summary
 
-def slack_alerts_summary(content):
-    """
-    Slacks a summary of waste pickup alerts to channel #zzz
-    """
 
-    summary = format_slack_alerts_summary(content)
-    SlackMsgHandler().send(summary)
+class WasteNotifierSlackHandler():
+
+    def __init__(self):
+
+        self.slack_msg_handler = SlackMsgHandler()
+
+    def slack_alerts_start(self):
+        """
+        Slack a message indicating that waste alerts are beginning to channel #z_twilio.
+        """
+
+        self.slack_msg_handler.send(message="Beginning DPW Waste Pickup Reminders")
+
+    def slack_alerts_update(self, msg_cnt = 0):
+        """
+        Slacks a progress update of waste pickup alerts to channel #z_twilio.
+        """
+
+        message = "{} messages sent".format(msg_cnt)
+        self.slack_msg_handler.comment(message=message)
+
+    def slack_alerts_summary(self, content):
+        """
+        Slacks a summary of waste pickup alerts to channel #z_twilio.
+        """
+
+        summary = format_slack_alerts_summary(content)
+        self.slack_msg_handler.comment(message=summary)
 
 
 def includes_yard_waste(services):
