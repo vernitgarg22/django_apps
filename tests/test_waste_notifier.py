@@ -51,7 +51,14 @@ def add_meta(content, date = cod_utils.util.tomorrow()):
     content.update(meta)
     return content
 
-def make_subscriber(waste_area_ids, service_type="all", address="7840 Van Dyke Pl", phone_number="5005550006"):
+def make_subscriber(waste_area_ids=None, service_type="all", address="7840 Van Dyke Pl", phone_number="5005550006"):
+
+    if not waste_area_ids:
+
+        location, _ = geocode_address(street_address=address)
+        waste_area_ids = get_waste_area_ids(location=location)
+        waste_area_ids = ''.join( [ str(num) + ',' for num in waste_area_ids ] )
+
     subscriber = Subscriber(phone_number=phone_number, waste_area_ids=waste_area_ids, address=address, service_type=service_type)
     subscriber.activate()
     return subscriber
@@ -559,7 +566,6 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
         response = views.send_notifications_request(date_val="20180101")
-        # self.assertEqual(response.status_code, 200)
         expected = {'citywide': {'message': 'City of Detroit Public Works:  City services have not been affected by snow storm (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
         self.assertDictEqual(expected, response, "Sending info for all services works")
@@ -573,7 +579,6 @@ class WasteNotifierTests(TestCase):
         detail.save(null_waste_area_ids=True)
 
         response = views.send_notifications_request(date_val="20170407")
-        # self.assertEqual(response.status_code, 200)
         expected = {'citywide': {'message': 'City of Detroit Public Works:  Pickups for recycling for the remainder of the week are postponed by 1 day due to test holiday (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response, "Phone number should have gotten recycling reschedule alert")
@@ -587,7 +592,6 @@ class WasteNotifierTests(TestCase):
         detail.save(null_waste_area_ids=True)
 
         response = views.send_notifications_request(date_val="20171123")
-        # self.assertEqual(response.status_code, 200)
         expected = {'citywide': {'message': 'City of Detroit Public Works:  Pickups for bulk, recycling and trash for the remainder of the week are postponed by 1 day due to Thanksgiving (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
         expected = add_meta(expected, date = datetime.date(2017, 11, 23))
         self.assertDictEqual(expected, response, "Alerts during the week after thanksgiving get pushed back by 1 day")
@@ -601,7 +605,6 @@ class WasteNotifierTests(TestCase):
         detail.save(null_waste_area_ids=True)
 
         response = views.send_notifications_request(date_val="20171124")
-        # self.assertEqual(response.status_code, 200)
         expected = add_meta({}, date = datetime.date(2017, 11, 24))
         self.assertDictEqual(expected, response, "Alerts during the week after thanksgiving get pushed back by 1 day")
 
@@ -614,7 +617,6 @@ class WasteNotifierTests(TestCase):
         detail.save(null_waste_area_ids=True)
 
         response = views.send_notifications_request(date_val="20171125")
-        # self.assertEqual(response.status_code, 200)
         expected = {'trash': {8: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Saturday, November 25, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date = datetime.date(2017, 11, 25))
         self.assertDictEqual(expected, response, "Alerts during the week after thanksgiving get pushed back by 1 day")
@@ -634,7 +636,6 @@ class WasteNotifierTests(TestCase):
 
         # now get pickup reminders for saturday
         response = views.send_notifications_request(date_val="20170408")
-        # self.assertEqual(response.status_code, 200)
         expected = add_meta({}, date = datetime.date(2017, 4, 8))
 
         self.assertDictEqual(expected, response, "Phone number should not have gotten alert")
@@ -645,7 +646,6 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
 
         response = views.send_notifications_request(date_val="20170407")
-        # self.assertEqual(response.status_code, 200)
         expected = {'all': {8: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Friday, April 07, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 7))
         self.assertDictEqual(expected, response, "Alerts for a/b onweek failed")
@@ -657,7 +657,6 @@ class WasteNotifierTests(TestCase):
 
         # get a week where only trash should be pickup up
         response = views.send_notifications_request(date_val="20170526")
-        # self.assertEqual(response.status_code, 200)
         expected = {'trash': {8: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Friday, May 26, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 5, 26))
         self.assertDictEqual(expected, response, "Alerts for a/b offweek failed")
@@ -668,47 +667,41 @@ class WasteNotifierTests(TestCase):
         subscriber.activate()
 
         date_results = {
-            '20170417': {'trash': {14: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Monday, April 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}},
-            '20170418': {},
-            '20170419': {'recycling': {22: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Wednesday, April 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}},
+            '20170417': {'all': {14: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, April 17, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}},
+            '20170418': {'all': {12: {'subscribers': ['5005550006'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Tuesday, April 18, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}},
+            '20170419': {},
         }
 
         for date, expected in date_results.items():
             response = views.send_notifications_request(date_val=date)
-            # self.assertEqual(response.status_code, 200)
             expected = add_meta(expected, date = datetime.date(int(date[0:4]), int(date[4:6]), int(date[6:8])))
+
             self.assertDictEqual(expected, response, "Alerts for subscriber with mix of pickup days failed")
 
-    def test_send_eastside_wednesday_trash(self):
+    def test_send_westside_wednesday_trash(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", address="1465 Chicago Blvd", service_type="all")
-        subscriber.activate()
+        subscriber = make_subscriber(address="1465 Chicago Blvd", service_type="all")
 
         response = views.send_notifications_request(date_val="20170419")
-        # self.assertEqual(response.status_code, 200)
-        expected = {'trash': {11: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, April 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {'all': {11: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Wednesday, April 19, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
         expected = add_meta(expected, date=datetime.date(2017, 4, 19))
         self.assertDictEqual(expected, response, "Eastside wednesday trash residents should have gotten alerts")
 
-    def test_send_eastside_thursday_bulk_a(self):
+    def test_send_westside_thursday_bulk_a(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", address="1465 Chicago Blvd", service_type="all")
-        subscriber.activate()
+        subscriber = make_subscriber(address="1465 Chicago Blvd", service_type="all")
 
         response = views.send_notifications_request(date_val="20170420")
-        # self.assertEqual(response.status_code, 200)
-        expected = {'bulk': {35: {'message': 'City of Detroit Public Works:  Your next pickup for bulk is Thursday, April 20, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {}
         expected = add_meta(expected, date=datetime.date(2017, 4, 20))
         self.assertDictEqual(expected, response, "Eastside thursday bulk A residents should have gotten alerts")
 
-    def test_send_eastside_thursday_recycling_b(self):
+    def test_send_westside_thursday_recycling_b(self):
 
-        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="11,28,35", address="1465 Chicago Blvd", service_type="all")
-        subscriber.activate()
+        subscriber = make_subscriber(address="1465 Chicago Blvd", service_type="all")
 
         response = views.send_notifications_request(date_val="20170413")
-        # self.assertEqual(response.status_code, 200)
-        expected = {'recycling': {28: {'message': 'City of Detroit Public Works:  Your next pickup for recycling is Thursday, April 13, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}}
+        expected = {}
         expected = add_meta(expected, date=datetime.date(2017, 4, 13))
         self.assertDictEqual(expected, response, "Eastside thursday recycling B residents should have gotten alerts")
 
@@ -830,8 +823,9 @@ class WasteNotifierTests(TestCase):
     #
 
     def test_get_regular_week_routes(self):
+
         week_routes = ScheduleDetailMgr.instance().get_regular_week_routes(date = datetime.date(2017, 5, 5))
-        expected = [{0: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 1: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 27: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 29: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 14: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}, {2: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 3: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 24: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 25: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 13: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 31: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}}, {34: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 4: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 5: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 22: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 11: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 21: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}}, {17: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 18: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 35: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 6: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 12: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}, {8: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 9: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 10: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}, 38: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 16: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}}, {}, {}]
+        expected = [{0: {'gid': 1, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 1: {'gid': 2, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 14: {'gid': 15, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 15: {'gid': 16, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {2: {'gid': 3, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 3: {'gid': 4, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 12: {'gid': 13, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 19: {'gid': 20, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {4: {'gid': 5, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 5: {'gid': 6, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 11: {'gid': 12, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 18: {'gid': 19, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {6: {'gid': 7, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'gid': 8, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 13: {'gid': 14, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 17: {'gid': 18, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {8: {'gid': 9, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 9: {'gid': 10, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 10: {'gid': 11, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 16: {'gid': 17, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {}, {}]
         self.assertEqual(week_routes.data, expected, "get_regular_week_routes() returns array of routes for a week")
 
     def test_get_week_schedule_changes_none(self):
@@ -871,31 +865,34 @@ class WasteNotifierTests(TestCase):
         self.assertEqual(response, expected, "Schedule change can be made for specific route")
 
     def test_get_week_routes(self):
+
         week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
-        expected = [{1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}}, {8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {}, {}]
-        expected = [{0: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 1: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 27: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 29: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 14: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {2: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 3: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 24: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 25: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 13: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 31: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}}, {34: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 4: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 5: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 22: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 11: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 21: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {17: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 18: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}, 35: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 6: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 7: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 12: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}}, {8: {'contractor': 'gfl', 'week': 'a', 'services': 'all'}, 9: {'contractor': 'gfl', 'week': 'b', 'services': 'all'}, 10: {'contractor': 'advance', 'week': ' ', 'services': 'trash'}, 38: {'contractor': 'advance', 'week': 'a', 'services': 'bulk'}, 16: {'contractor': 'advance', 'week': 'a', 'services': 'recycle'}}, {}, {}]
+        expected = [{0: {'gid': 1, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 1: {'gid': 2, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 14: {'gid': 15, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 15: {'gid': 16, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {2: {'gid': 3, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 3: {'gid': 4, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 12: {'gid': 13, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 19: {'gid': 20, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {4: {'gid': 5, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 5: {'gid': 6, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 11: {'gid': 12, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 18: {'gid': 19, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {6: {'gid': 7, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'gid': 8, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 13: {'gid': 14, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 17: {'gid': 18, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {8: {'gid': 9, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 9: {'gid': 10, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 10: {'gid': 11, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 16: {'gid': 17, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {}, {}]
         self.assertEqual(week_routes.data, expected, "get_week_routes() returns array of routes for a week")
 
     def test_get_week_routes_holiday(self):
-        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
+
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2019, 5, 1), new_day=datetime.date(2019, 5, 2))
         detail.clean()
         detail.save(null_waste_area_ids=True)
-        week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 5))
+        week_routes = ScheduleDetailMgr.instance().get_week_routes(date = datetime.date(2017, 5, 3))
         week_routes = week_routes.data
-        expected = [{}, {0: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 1: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 27: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 29: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 14: {'contractor': 'advance', 'services': 'trash', 'week': ' '}}, {2: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 3: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 24: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 25: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 13: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 31: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}}, {34: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 4: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 5: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 22: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 11: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 21: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}}, {17: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 18: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}, 35: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 6: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 7: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 12: {'contractor': 'advance', 'services': 'trash', 'week': ' '}}, {8: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 9: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 10: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 38: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 16: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}}, {}]
+        expected = [{0: {'gid': 1, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 1: {'gid': 2, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 14: {'gid': 15, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 15: {'gid': 16, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {2: {'gid': 3, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 3: {'gid': 4, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 12: {'gid': 13, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 19: {'gid': 20, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {4: {'gid': 5, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 5: {'gid': 6, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 11: {'gid': 12, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 18: {'gid': 19, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {6: {'gid': 7, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'gid': 8, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 13: {'gid': 14, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 17: {'gid': 18, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {8: {'gid': 9, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 9: {'gid': 10, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 10: {'gid': 11, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 16: {'gid': 17, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}, {}, {}]
         self.assertEqual(week_routes, expected, "get_week_routes() reschedules array of routes for a week around holidays")
 
     def test_get_day_routes(self):
+
         routes = ScheduleDetailMgr.instance().get_day_routes(date = datetime.date(2017, 5, 5))
-        expected = {8: {'contractor': 'gfl', 'services': 'all', 'week': 'a'}, 9: {'contractor': 'gfl', 'services': 'all', 'week': 'b'}, 10: {'contractor': 'advance', 'services': 'trash', 'week': ' '}, 38: {'contractor': 'advance', 'services': 'bulk', 'week': 'a'}, 16: {'contractor': 'advance', 'services': 'recycle', 'week': 'a'}}
+        expected = {8: {'gid': 9, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 9: {'gid': 10, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 10: {'gid': 11, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 16: {'gid': 17, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}
         self.assertEqual(routes, expected, "get_day_routes() returns routes for a date")
 
     def test_get_day_routes_holiday(self):
+
         detail = ScheduleDetail(detail_type='schedule', service_type='all', description='test holiday', normal_day=datetime.date(2017, 5, 1), new_day=datetime.date(2017, 5, 2))
         detail.clean()
         detail.save(null_waste_area_ids=True)
         routes = ScheduleDetailMgr.instance().get_day_routes(date = datetime.date(2017, 5, 5))
-        expected = {17: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 18: {'week': 'a', 'contractor': 'advance', 'services': 'recycle'}, 35: {'week': 'a', 'contractor': 'advance', 'services': 'bulk'}, 6: {'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 12: {'week': ' ', 'contractor': 'advance', 'services': 'trash'}}
+        expected = {6: {'gid': 7, 'week': 'b', 'contractor': 'gfl', 'services': 'all'}, 7: {'gid': 8, 'week': 'a', 'contractor': 'gfl', 'services': 'all'}, 13: {'gid': 14, 'week': 'a', 'contractor': 'advance', 'services': 'all'}, 17: {'gid': 18, 'week': 'b', 'contractor': 'advance', 'services': 'all'}}
         self.assertEqual(routes, expected, "get_day_routes() reschedules routes for a date if there is a holiday earlier in the week")
 
     def test_memorial_day_week(self):
@@ -903,37 +900,37 @@ class WasteNotifierTests(TestCase):
         prior_dry_run = settings.DRY_RUN
 
         # create memorial day and yard waste schedule details
-        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Memorial Day', normal_day=datetime.date(2017, 5, 29), new_day=datetime.date(2017, 5, 30))
+        detail = ScheduleDetail(detail_type='schedule', service_type='all', description='Memorial Day', normal_day=datetime.date(2019, 5, 27), new_day=datetime.date(2019, 5, 28))
         detail.clean()
         detail.save(null_waste_area_ids=True)
-        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2017, 3, 1))
+        detail = ScheduleDetail(detail_type='start-date', service_type='yard waste', description='Citywide yard waste pickup starts', new_day=datetime.date(2019, 3, 1))
         detail.clean()
         detail.save(null_waste_area_ids=True)
-        detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2017, 12, 1))
+        detail = ScheduleDetail(detail_type='end-date', service_type='yard waste', description='Citywide yard waste pickup ends', new_day=datetime.date(2019, 12, 1))
         detail.clean()
         detail.save(null_waste_area_ids=True)
 
         # create subscribers for each day of week (note: memorial day 2017 occurs on an "A" week)
-        sub_mon_a = make_subscriber(waste_area_ids='14,27,31', phone_number="5005550000")
-        sub_mon_b = make_subscriber(waste_area_ids='0',        phone_number="5005550001")
-        sub_tue_a = make_subscriber(waste_area_ids='2',        phone_number="5005550010")
-        sub_tue_b = make_subscriber(waste_area_ids='13,23,33', phone_number="5005550011")
-        sub_wed_a = make_subscriber(waste_area_ids='4',        phone_number="5005550020")
-        sub_wed_b = make_subscriber(waste_area_ids='5',        phone_number="5005550021")
-        sub_thu_a = make_subscriber(waste_area_ids='7',        phone_number="5005550030")
-        sub_thu_b = make_subscriber(waste_area_ids='12,28,37', phone_number="5005550031")
-        sub_fri_a = make_subscriber(waste_area_ids='8',        phone_number="5005550040")
-        sub_fri_b = make_subscriber(waste_area_ids='9',        phone_number="5005550041")
+        sub_mon_a = make_subscriber(waste_area_ids='14', phone_number="5005550000")
+        sub_mon_b = make_subscriber(waste_area_ids='0',  phone_number="5005550001")
+        sub_tue_a = make_subscriber(waste_area_ids='2',  phone_number="5005550010")
+        sub_tue_b = make_subscriber(waste_area_ids='19', phone_number="5005550011")
+        sub_wed_a = make_subscriber(waste_area_ids='4',  phone_number="5005550020")
+        sub_wed_b = make_subscriber(waste_area_ids='5',  phone_number="5005550021")
+        sub_thu_a = make_subscriber(waste_area_ids='13', phone_number="5005550030")
+        sub_thu_b = make_subscriber(waste_area_ids='17', phone_number="5005550031")
+        sub_fri_a = make_subscriber(waste_area_ids='8',  phone_number="5005550040")
+        sub_fri_b = make_subscriber(waste_area_ids='9',  phone_number="5005550041")
 
         values = [
-            ( datetime.datetime(2017, 5, 28), {} ),
-            ( datetime.datetime(2017, 5, 29), {'citywide': {'subscribers': ['5005550000', '5005550001', '5005550010', '5005550011', '5005550020', '5005550021', '5005550030', '5005550031', '5005550040', '5005550041'], 'message': 'City of Detroit Public Works:  Pickups for bulk, recycling, trash and yard waste for the remainder of the week are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}} ),
-            ( datetime.datetime(2017, 5, 30), {'recycling': {27: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is Tuesday, May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'trash': {0: {'subscribers': ['5005550001'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Tuesday, May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 14: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Tuesday, May 30, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 5, 31), {'trash': {13: {'subscribers': ['5005550011'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {31: {'subscribers': ['5005550000'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {2: {'subscribers': ['5005550010'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 6, 1),  {'all': {4: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Thursday, June 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550020']}}, 'trash': {5: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Thursday, June 01, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550021']}}} ),
-            ( datetime.datetime(2017, 6, 2),  {'trash': {12: {'subscribers': ['5005550031'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Friday, June 02, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {7: {'subscribers': ['5005550030'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Friday, June 02, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 6, 3),  {'trash': {9: {'subscribers': ['5005550041'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Saturday, June 03, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'week_type': 'b', 'date_applicable': '2017-06-03', 'dry_run': True, 'current_time': '2017-05-25 17:43'}, 'all': {8: {'subscribers': ['5005550040'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Saturday, June 03, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
-            ( datetime.datetime(2017, 6, 4), {} ),
+            ( datetime.datetime(2019, 5, 26), {} ),
+            ( datetime.datetime(2019, 5, 27), {'citywide': {'subscribers': ['5005550000', '5005550001', '5005550010', '5005550011', '5005550020', '5005550021', '5005550030', '5005550031', '5005550040', '5005550041'], 'message': 'City of Detroit Public Works:  Pickups for bulk, recycling, trash and yard waste for the remainder of the week are postponed by 1 day due to Memorial Day (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}} ),
+            ( datetime.datetime(2019, 5, 28), {'trash': {0: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Tuesday, May 28, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550001']}}, 'all': {14: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Tuesday, May 28, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550000']}}} ),
+            ( datetime.datetime(2019, 5, 29), {'all':{2:{'message':'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 29, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).','subscribers':['5005550010']}},'trash':{19:{'message':'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 29, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).','subscribers':['5005550011']}}} ),
+            ( datetime.datetime(2019, 5, 30),  {'all': {4: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Thursday, May 30, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550020']}}, 'trash': {5: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Thursday, May 30, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550021']}}} ),
+            ( datetime.datetime(2019, 5, 31),  {'trash': {17: {'message': 'City of Detroit Public Works:  Your next pickup for trash is Friday, May 31, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550031']}}, 'all': {13: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Friday, May 31, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550030']}}} ),
+            ( datetime.datetime(2019, 6, 1),  {'trash': {9: {'subscribers': ['5005550041'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Saturday, June 01, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'week_type': 'b', 'date_applicable': '2017-06-03', 'dry_run': True, 'current_time': '2017-05-25 17:43'}, 'all': {8: {'subscribers': ['5005550040'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Saturday, June 01, 2019 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}} ),
+            ( datetime.datetime(2019, 6, 2), {} ),
         ]
 
         c = Client()
@@ -945,8 +942,8 @@ class WasteNotifierTests(TestCase):
             response = views.send_notifications_request(date_val=date)
             settings.DRY_RUN = prior_dry_run
 
-            # self.assertEqual(response.status_code, 200)
             expected = add_meta(value[1], date=value[0])
+
             self.assertDictEqual(expected, response, "Memorial day week gets rescheduled properly")
 
     def test_holiday_multiple_routes(self):

@@ -231,15 +231,17 @@ class WasteScheduleTests(TestCase):
 
     def test_get_next_multiday_pickups(self):
         """
-        Test getting next pickups for routes that have all pickups on different days (e.g., route 8)
+        Test getting next pickups for routes that have all pickups on different days.
+
+        Note:  starting June 3, 2019, there should be no multiday pickups, due to Advanced Disposal's new contract.
         """
 
         values = {
-            '11,28,35': {'next_pickups': {'bulk': {'next_pickup': '2017-05-04T00:00:00.000', 'week': 'a', 'day': 'thursday', 'contractor': 'advance', 'route': 35}, 'trash': {'next_pickup': '2017-05-03T00:00:00.000', 'week': ' ', 'day': 'wednesday', 'contractor': 'advance', 'route': 11}, 'recycling': {'next_pickup': '2017-04-27T00:00:00.000', 'week': 'b', 'day': 'thursday', 'contractor': 'advance', 'route': 28}}, 'details': []},
-            '14,27,31': {'next_pickups': {'recycling': {'week': 'a', 'day': 'monday', 'contractor': 'advance', 'route': 27, 'next_pickup': '2017-05-01T00:00:00.000'}, 'bulk': {'week': 'a', 'day': 'tuesday', 'contractor': 'advance', 'route': 31, 'next_pickup': '2017-05-02T00:00:00.000'}, 'trash': {'week': ' ', 'day': 'monday', 'contractor': 'advance', 'route': 14, 'next_pickup': '2017-05-01T00:00:00.000'}}, 'details': []},
+            '11': {'next_pickups': {'trash': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-05T00:00:00.000'}, 'recycling': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-12T00:00:00.000'}, 'bulk': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-12T00:00:00.000'}}, 'details': []},
+            '14': {'next_pickups': {'trash': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-03T00:00:00.000'}, 'recycling': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-10T00:00:00.000'}, 'bulk': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-10T00:00:00.000'}}, 'details': []},
         }
 
-        today = "20170427"
+        today = "20190602"
 
         for route_ids in values.keys():
             self.util_test_get_next_pickups(today, route_ids, values[route_ids])
@@ -266,19 +268,21 @@ class WasteScheduleTests(TestCase):
 
     def test_get_next_multiday_pickups_yard_waste(self):
         """
-        Test getting next pickups for routes that have all pickups on different days (e.g., route 8),
-        with yard waste active
+        Test getting next pickups for routes that have all pickups on different days,
+        with yard waste active.
+
+        Note:  starting June 3, 2019, there should be no multiday pickups, due to Advanced Disposal's new contract.
         """
 
-        make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 3, 1))
-        make_schedule_detail(detail_type='end-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2017, 11, 1))
+        make_schedule_detail(detail_type='start-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2019, 3, 1))
+        make_schedule_detail(detail_type='end-date', service_type=ScheduleDetail.YARD_WASTE, new_day=datetime.date(2019, 11, 1))
 
         values = {
-            '11,28,35': {'next_pickups': {'bulk': {'next_pickup': '2017-05-04T00:00:00.000', 'week': 'a', 'day': 'thursday', 'contractor': 'advance', 'route': 35}, 'yard waste': {'next_pickup': '2017-05-04T00:00:00.000', 'week': 'a', 'day': 'thursday', 'contractor': 'advance', 'route': 35}, 'trash': {'next_pickup': '2017-05-03T00:00:00.000', 'week': ' ', 'day': 'wednesday', 'contractor': 'advance', 'route': 11}, 'recycling': {'next_pickup': '2017-04-27T00:00:00.000', 'week': 'b', 'day': 'thursday', 'contractor': 'advance', 'route': 28}}, 'details': [{'wasteAreaIds': '', 'normalDay': '', 'newDay': '2017-03-01T00:00:00.000', 'type': 'start-date', 'service': 'yard waste', 'description': '', 'note': None}, {'wasteAreaIds': '', 'normalDay': '', 'newDay': '2017-11-01T00:00:00.000', 'type': 'end-date', 'service': 'yard waste', 'description': '', 'note': None}]},
-            '14,27,31': {'next_pickups': {'recycling': {'week': 'a', 'day': 'monday', 'contractor': 'advance', 'route': 27, 'next_pickup': '2017-05-01T00:00:00.000'}, 'bulk': {'week': 'a', 'day': 'tuesday', 'contractor': 'advance', 'route': 31, 'next_pickup': '2017-05-02T00:00:00.000'}, 'yard waste': {'week': 'a', 'day': 'tuesday', 'contractor': 'advance', 'route': 31, 'next_pickup': '2017-05-02T00:00:00.000'}, 'trash': {'week': ' ', 'day': 'monday', 'contractor': 'advance', 'route': 14, 'next_pickup': '2017-05-01T00:00:00.000'}}, 'details': [{'wasteAreaIds': '', 'normalDay': '', 'newDay': '2017-03-01T00:00:00.000', 'type': 'start-date', 'service': 'yard waste', 'description': '', 'note': None}, {'wasteAreaIds': '', 'normalDay': '', 'newDay': '2017-11-01T00:00:00.000', 'type': 'end-date', 'service': 'yard waste', 'description': '', 'note': None}]},
+            '11': {'next_pickups': {'trash': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-05T00:00:00.000'}, 'recycling': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-12T00:00:00.000'}, 'bulk': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-12T00:00:00.000'}, 'yard waste': {'route': 11, 'day': 'wednesday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-12T00:00:00.000'}}, 'details': [{'type': 'start-date', 'service': 'yard waste', 'description': '', 'normalDay': '', 'newDay': '2019-03-01T00:00:00.000', 'note': None, 'wasteAreaIds': ''}, {'type': 'end-date', 'service': 'yard waste', 'description': '', 'normalDay': '', 'newDay': '2019-11-01T00:00:00.000', 'note': None, 'wasteAreaIds': ''}]},
+            '14': {'next_pickups': {'trash': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-03T00:00:00.000'}, 'recycling': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-10T00:00:00.000'}, 'bulk': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-10T00:00:00.000'}, 'yard waste': {'route': 14, 'day': 'monday', 'week': 'a', 'contractor': 'advance', 'next_pickup': '2019-06-10T00:00:00.000'}}, 'details': [{'type': 'start-date', 'service': 'yard waste', 'description': '', 'normalDay': '', 'newDay': '2019-03-01T00:00:00.000', 'note': None, 'wasteAreaIds': ''}, {'type': 'end-date', 'service': 'yard waste', 'description': '', 'normalDay': '', 'newDay': '2019-11-01T00:00:00.000', 'note': None, 'wasteAreaIds': ''}]},
         }
 
-        today = "20170427"
+        today = "20190602"
 
         for route_ids in values.keys():
             self.util_test_get_next_pickups(today, route_ids, values[route_ids])
