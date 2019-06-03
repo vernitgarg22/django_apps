@@ -4,8 +4,7 @@ import os
 import csv
 import django
 import warnings
-
-import pdb
+import sys
 
 
 def run_migration():
@@ -15,11 +14,7 @@ def run_migration():
 
     row_num = 0
 
-
-    pdb.set_trace()
-    
-
-    subscribers = Subscriber.objects.filter(id__gte= 41801)
+    subscribers = Subscriber.objects.filter(id__gt= 41801)
     for subscriber in subscribers:
 
         street_address = subscriber.address
@@ -32,24 +27,28 @@ def run_migration():
         # What if no location was found?
         if not location:
             print(f"Address '{street_address}' could not be geocoded")
+            sys.stdout.flush()
+
             continue
 
         waste_area_ids = get_waste_area_ids(location=location)
         if not waste_area_ids:
             print(f"ERROR:  No waste area ids found for address '{street_address}'")
+            sys.stdout.flush()
             return
 
         if type(waste_area_ids) == list:
             waste_area_ids = ''.join( [ str(num) + ',' for num in waste_area_ids ] )
 
-        # TODO uncomment this
-        # subscriber.waste_area_ids = waste_area_ids
-        # subscriber.save(force_update=True)
+        # Update subscriber waste area id and save
+        subscriber.waste_area_ids = waste_area_ids
+        subscriber.save(force_update=True)
     
         row_num += 1
-        if row_num % 50 == 0:
+        if row_num % 25 == 0:
 
             print(f"Updated {row_num} subscribers")
+            sys.stdout.flush()
 
 
 if __name__ == "__main__":

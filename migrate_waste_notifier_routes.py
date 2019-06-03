@@ -2,10 +2,9 @@
 
 import os
 import csv
+import sys
 import django
 import warnings
-
-import pdb
 
 
 def run_migration():
@@ -23,29 +22,21 @@ def run_migration():
 
             subscriber = Subscriber.objects.get(id = row['id'])
 
-            # # TODO remove this
-            # subscriber = Subscriber.objects.get(phone_number = '9178428901')
-
             new_waste_area_ids = row['routeid19']
             lat = row['lat']
             lon = row['lon']
 
-
-            # if new_waste_area_ids not in subscriber.waste_area_ids:
-
-            #     print(f"{new_waste_area_ids} -> {subscriber.waste_area_ids}")
-
-
-            # TODO un-comment this
-            # subscriber.latitude = lat
-            # subscriber.longitude = lon
-            # subscriber.waste_area_ids = waste_area_ids
-            # subscriber.save(force_update=True)
+            # Update subscriber info and save
+            subscriber.latitude = lat
+            subscriber.longitude = lon
+            subscriber.waste_area_ids = new_waste_area_ids
+            subscriber.save(force_update=True)
 
             row_num += 1
             if row_num % 250 == 0:
 
                 print(f"Updated {row_num} subscribers")
+                sys.stdout.flush()
 
 
 if __name__ == "__main__":
