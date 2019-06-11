@@ -58,7 +58,8 @@ with open(filename, newline='') as csvfile:
 
             print(f"ERROR:  No waste area ids found for address '{street_address}'")
             sys.stdout.flush()
-            return
+
+            continue
 
 
         if type(waste_area_ids) == list:
