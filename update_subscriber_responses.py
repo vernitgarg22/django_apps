@@ -46,8 +46,6 @@ with open(filename, newline='') as csvfile:
         # What if no location was found?
         if not location:
             print(f"Address '{street_address}' could not be geocoded")
-            sys.stdout.flush()
-
             continue
 
         # Lookup up the waste area id.
@@ -59,8 +57,6 @@ with open(filename, newline='') as csvfile:
 
 
             print(f"ERROR:  No waste area ids found for address '{street_address}'")
-            sys.stdout.flush()
-
             continue
 
 
