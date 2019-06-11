@@ -45,6 +45,11 @@ with open(filename, newline='') as csvfile:
 
         # What if no location was found?
         if not location:
+
+
+            pdb.set_trace()
+
+
             print(f"Address '{street_address}' could not be geocoded")
             continue
 
