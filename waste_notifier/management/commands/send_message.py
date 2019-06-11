@@ -11,9 +11,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('phone_number', type=str)
         parser.add_argument('message', type=str)
+        parser.add_argument('phone_sender', type=str, default=None)
 
     def handle(self, *args, **options):
         phone_number = options['phone_number']
         message = options['message']
-        MsgHandler().send_text(phone_number=phone_number, text=message)
-        return "Sent message '{}' to phone_number {}".format(message, phone_number)
+        phone_sender = options['phone_sender']
+        MsgHandler().send_text(phone_number=phone_number, text=message, phone_sender=phone_sender)
+        return "Sent message '{}' to phone_number {}".format(message, phone_number,)
