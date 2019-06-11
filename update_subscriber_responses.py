@@ -71,6 +71,7 @@ with open(filename, newline='') as csvfile:
 
         # Update subscriber waste area id and save
         subscriber.waste_area_ids = waste_area_ids
+        subscriber.address = street_address
         subscriber.save(force_update=True)
 
         num_updated += 1
