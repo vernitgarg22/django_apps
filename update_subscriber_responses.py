@@ -12,6 +12,7 @@ pdb.set_trace()
     
 
 filename = "subscriber_responses.csv"
+num_updated = 0
 
 with open(filename, newline='') as csvfile:
 
@@ -71,3 +72,10 @@ with open(filename, newline='') as csvfile:
         # Update subscriber waste area id and save
         subscriber.waste_area_ids = waste_area_ids
         subscriber.save(force_update=True)
+
+        num_updated += 1
+
+
+print(f"{num_updated} subscribers were updated")
+
+pdb.set_trace()
