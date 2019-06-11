@@ -21,16 +21,18 @@ with open(filename, newline='') as csvfile:
     for row in reader:
 
         phone_number = row['From']
-        subscriber = Subscriber.objects.get(phone_number = phone_number)
+        subscribers = Subscriber.objects.filter(phone_number = phone_number)
 
         # What if subscriber not found?
-        if not subscriber:
+        if not subscribers:
 
 
             pdb.set_trace()
 
 
             continue
+
+        subscriber = subscribers[0]
 
         # Don't overwrite existing address
         if subscriber.address:
