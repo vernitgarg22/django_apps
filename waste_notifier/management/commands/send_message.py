@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('phone_number', type=str)
         parser.add_argument('message', type=str)
-        parser.add_argument('phone_sender', type=str, default=None)
+        parser.add_argument('--phone_sender', type=str, default=None)
 
     def handle(self, *args, **options):
         phone_number = options['phone_number']
