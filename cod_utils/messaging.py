@@ -132,7 +132,8 @@ class SlackMsgHandler():
         result = client.api_call(
             "chat.postMessage",
             channel=channel,
-            text=message
+            text=message,
+            timeout=60
         )
 
         self.ts = result.get('ts', None)
@@ -148,7 +149,8 @@ class SlackMsgHandler():
             "chat.postMessage",
             channel=channel,
             text=message,
-            thread_ts=self.ts
+            thread_ts=self.ts,
+            timeout=60
         )
 
         return result.get('ok', False)
