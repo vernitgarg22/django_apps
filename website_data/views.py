@@ -107,3 +107,64 @@ def get_new_content(request, start=None, end=None, format=None):
     }
 
     return Response(content)
+
+@api_view(['GET'])
+def get_subscriber_metadata(request, start=None, end=None, format=None):
+    """
+    Returns metadata about people who have recently subscribed to
+    curbside waste pickup reminders:<br/>
+    <br/>
+    e.g.,
+    <pre>
+    https://apis.detroitmi.gov/website_data/waste_subscribers/
+    https://apis.detroitmi.gov/website_data/waste_subscribers/20190601/
+    https://apis.detroitmi.gov/website_data/waste_subscribers/20190601/20190610/
+    </pre>
+    <br/>
+    optional parameters
+
+    <ul>
+      <li>start-date - start date of the time window to query (default is 1 week ago) - format YYYYMMDD</li>
+      <li>end-date - end date of the time window to query (default is today) - format YYYYMMDD</li>
+    </ul>
+    """
+
+    # Parse our date filters
+    if start:
+
+        start = parse_date(start)
+
+    else:
+
+        # default start date:  1 week ago
+        start = date.today() - timedelta(days=7)
+
+    if end:
+
+        end = parse_date(end)
+
+    else:
+
+        # default end date:  today
+        end = date.today()
+
+    subscribers = Subscriber.objects.filter(status='active').filter(last_status_update__range = (start, end))
+
+    content = {
+        "filters": {
+            "start-date": date_json(start),
+            "end-date": date_json(end),
+        },
+        "subscriber_metadata": []
+    }
+
+    for subscriber in subscribers:
+
+        tmp = {
+            "address": subscriber.address,
+            "lat": subscriber.latitude,
+            "lon": subscriber.longitude,
+        }
+        content["subscriber_metadata"] += [tmp]
+
+    return Response(content)
