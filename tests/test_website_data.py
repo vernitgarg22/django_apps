@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import json
 import requests
 
@@ -110,3 +110,32 @@ class WebsiteDataTests(TestCase):
 
         self.assertEqual(response.status_code,  200)
         self.assertEqual(expected, response.data, "Summary of data added should get returned")
+
+    def test_get_subscriber_metadata(self):
+
+        sub = Subscriber(phone_number='1234567890', waste_area_ids='1', address='1 Woodward')
+        sub.activate()
+
+        c = Client()
+        response = c.get("/website_data/waste_subscribers/")
+
+        data = response.json()
+
+        self.assertEqual(response.status_code,  200)
+        self.assertEqual(data['subscriber_metadata'][0]['address'], '1 Woodward', 'Subscriber metadata gets returned')
+
+    def test_get_subscriber_metadata_daterange(self):
+
+        sub = Subscriber(phone_number='1234567890', waste_area_ids='1', address='1 Woodward')
+        sub.activate()
+
+        start = date.today() - timedelta(days=7)
+        end = date.today()
+
+        c = Client()
+        response = c.get(f"/website_data/waste_subscribers/{start.strftime('%Y%m%d')}/{end.strftime('%Y%m%d')}/")
+
+        data = response.json()
+
+        self.assertEqual(response.status_code,  200)
+        self.assertEqual(data['subscriber_metadata'][0]['address'], '1 Woodward', 'Subscriber metadata gets returned')
