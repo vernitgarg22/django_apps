@@ -143,7 +143,7 @@ curbside waste pickup reminders:
         # default end date:  today
         end = date.today()
 
-    subscribers = Subscriber.objects.filter(status='active').filter(last_status_update__range = (start, end))
+    subscribers = Subscriber.objects.filter(status='active').filter(last_status_update__range = (start, end + timedelta(days=1)))
 
     content = {
         "filters": {
