@@ -62,9 +62,7 @@ class WebsiteDBEngine():
 
     def table_names(self):
 
-        tables = self.engine.table_names()
-        for table in tables:
-            print(table)
+        return self.engine.table_names()
 
     def stop(self):
         """
