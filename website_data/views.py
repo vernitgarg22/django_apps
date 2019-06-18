@@ -111,22 +111,17 @@ def get_new_content(request, start=None, end=None, format=None):
 @api_view(['GET'])
 def get_subscriber_metadata(request, start=None, end=None, format=None):
     """
-    Returns metadata about people who have recently subscribed to
-    curbside waste pickup reminders:<br/>
-    <br/>
-    e.g.,
-    <pre>
-    https://apis.detroitmi.gov/website_data/waste_subscribers/
-    https://apis.detroitmi.gov/website_data/waste_subscribers/20190601/
-    https://apis.detroitmi.gov/website_data/waste_subscribers/20190601/20190610/
-    </pre>
-    <br/>
-    optional parameters
+Returns metadata about people who have recently subscribed to
+curbside waste pickup reminders:
 
-    <ul>
-      <li>start-date - start date of the time window to query (default is 1 week ago) - format YYYYMMDD</li>
-      <li>end-date - end date of the time window to query (default is today) - format YYYYMMDD</li>
-    </ul>
+* e.g.,
+    * https://apis.detroitmi.gov/website_data/waste_subscribers/
+    * https://apis.detroitmi.gov/website_data/waste_subscribers/20190601/
+    * https://apis.detroitmi.gov/website_data/waste_subscribers/20190601/20190610/
+
+* optional parameters:
+    * start-date - start date of the time window to query (default is 1 week ago) - format YYYYMMDD
+    * end-date - end date of the time window to query (default is today) - format YYYYMMDD
     """
 
     # Parse our date filters
