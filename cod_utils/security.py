@@ -11,8 +11,8 @@ def block_client(request):
 
     return False
 
-    REMOTE_ADDR = request.META.get('REMOTE_ADDR')
-    REMOTE_HOST = request.META.get('REMOTE_HOST')
+    # REMOTE_ADDR = request.META.get('REMOTE_ADDR')
+    # REMOTE_HOST = request.META.get('REMOTE_HOST')
 
-    client_ok = REMOTE_ADDR in settings.ALLOWED_HOSTS or REMOTE_HOST in settings.ALLOWED_HOSTS
-    return not client_ok
+    # client_ok = REMOTE_ADDR in settings.ALLOWED_HOSTS or REMOTE_HOST in settings.ALLOWED_HOSTS
+    # return not client_ok

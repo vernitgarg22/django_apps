@@ -46,7 +46,7 @@ def format_slack_alerts_summary(content):
                     for phone_number in phone_numbers:
                         count = 1
                         if all_phone_numbers.get(phone_number):
-                            count = all_phone_numbers[phone_number]
+                            count = all_phone_numbers[phone_number]    # pragma: no cover (routes now all include all services)
                         all_phone_numbers[phone_number] = count
 
                     # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))

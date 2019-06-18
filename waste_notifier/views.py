@@ -33,7 +33,7 @@ def subscribe_notifications(request):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     # Only allow certain servers to call this endpoint
-    if cod_utils.security.block_client(request):
+    if cod_utils.security.block_client(request):    # pragma: no cover (this is disabled now due)
         remote_addr = request.META.get('REMOTE_ADDR')
         MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
