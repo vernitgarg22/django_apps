@@ -7,7 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from twilio.request_validator import RequestValidator
 from twilio.rest import Client
-from slackclient import SlackClient
+import slack
 
 
 class MsgHandler():
@@ -120,6 +120,11 @@ class SlackMsgHandler():
 
         self.ts = None
 
+    @staticmethod
+    def init_client():
+
+        return slack.WebClient(token=settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"], timeout=60)
+
     def send(self, message, channel="#z_twilio"):
         """
         Slack a message to the City of Detroit #zzz slack channel
@@ -128,12 +133,10 @@ class SlackMsgHandler():
         if SlackMsgHandler.DRY_RUN:
             return False
 
-        client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
-        result = client.api_call(
-            "chat.postMessage",
+        client = SlackMsgHandler.init_client()
+        result = client.chat_postMessage(
             channel=channel,
-            text=message,
-            timeout=60
+            text=message
         )
 
         self.ts = result.get('ts', None)
@@ -144,13 +147,11 @@ class SlackMsgHandler():
         if SlackMsgHandler.DRY_RUN or not self.ts:
             return False
 
-        client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
-        result = client.api_call(
-            "chat.postMessage",
+        client = SlackMsgHandler.init_client()
+        result = client.chat_postMessage(
             channel=channel,
             text=message,
-            thread_ts=self.ts,
-            timeout=60
+            thread_ts=self.ts
         )
 
         return result.get('ok', False)
