@@ -15,7 +15,7 @@ import cod_utils.security
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import date_json
 
-from slackclient import SlackClient
+import slack
 
 import tests.disabled
 from tests import test_util
@@ -367,7 +367,7 @@ class WasteNotifierTests(TestCase):
         message = util.get_service_detail_message(['all'], detail)
         self.assertEqual(message, 'City of Detroit Public Works:  Please note that service will be unaffected by Christmas Day - Please put trash and recycling bins on the curb on normal schedule (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
 
-    @mock.patch('slackclient.SlackClient.api_call')
+    @mock.patch('slack.WebClient.chat_postMessage')
     def test_slack_msg_handler(self, mocked_slackclient_api_call):
 
         mocked_slackclient_api_call.return_value = {'ok': True}
@@ -377,7 +377,7 @@ class WasteNotifierTests(TestCase):
         self.assertTrue(SlackMsgHandler().send('test message'), "SlackMsgHandler.send() sends messages")
         SlackMsgHandler.DRY_RUN = previous_dry_run
 
-    @mock.patch('slackclient.SlackClient.api_call')
+    @mock.patch('slack.WebClient.chat_postMessage')
     def test_slack_msg_handler_error(self, mocked_slackclient_api_call):
 
         mocked_slackclient_api_call.return_value = {'ok': False}
@@ -966,7 +966,7 @@ class WasteNotifierTests(TestCase):
     def test_format_slack_alerts_summary(self):
         content = {'trash': {11: {'subscribers': ['3136102012', '9174538684', '3135068800', '2484992308', '2676300369', '3133202044', '5869133397', '3134923996', '2679700026', '5863228964', '3137062742', '3135504576', '3138190143', '3138080122', '7347485413', '3138025608', '2487015166', '3134546860', '3134832492', '3138623021', '3133198115', '3137015482', '3132058535', '3133462045', '2489104129', '3134737118'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}, 5: {'subscribers': ['3138504195', '3135803973'], 'message': 'City of Detroit Public Works:  Your next pickup for trash is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'all': {4: {'subscribers': ['5865638822', '3135498078', '3137195691', '3137581842', '3137587477'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling, trash and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'meta': {'date_applicable': '2017-05-31', 'dry_run': True, 'week_type': 'b', 'current_time': '2017-05-26 10:51'}, 'recycling': {22: {'subscribers': ['3134495504', '3133201794', '3134780304', '3134150028', '3134617273'], 'message': 'City of Detroit Public Works:  Your next pickup for recycling is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}, 'bulk': {34: {'subscribers': ['8109624844', '3132084486', '3137283175', '3136139213', '3134784213'], 'message': 'City of Detroit Public Works:  Your next pickup for bulk and yard waste is Wednesday, May 31, 2017 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).'}}}
         summary = format_slack_alerts_summary(content)
-        expected = 'DPW Waste Pickup Reminder Summary:\n\nall\n\troute 4 - 5 reminders\nbulk\n\troute 34 - 5 reminders\nrecycling\n\troute 22 - 5 reminders\ntrash\n\troute 5 - 2 reminders\n\troute 11 - 26 reminders\n\nTotal reminders sent out:  43'
+        expected = '# DPW Waste Pickup Reminder Summary:\n\n* all\n  * route 4 - 5 reminders\n* bulk\n  * route 34 - 5 reminders\n* recycling\n  * route 22 - 5 reminders\n* trash\n  * route 5 - 2 reminders\n  * route 11 - 26 reminders\n\n> Total reminders sent out:  43'
 
         self.assertEqual(summary, expected, "format_slack_alerts_summary() formats notifications summary correctly")
 

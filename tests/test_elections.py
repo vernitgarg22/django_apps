@@ -15,8 +15,6 @@ import cod_utils.security
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import date_json
 
-from slackclient import SlackClient
-
 import tests.disabled
 from tests import test_util
 

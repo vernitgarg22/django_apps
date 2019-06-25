@@ -2,6 +2,8 @@ import datetime
 import requests
 import re
 
+from django.conf import settings
+
 from waste_schedule.models import ScheduleDetail
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from cod_utils import util
@@ -17,7 +19,7 @@ def format_slack_alerts_summary(content):
     Formats summary of waste pickup alerts to be sent to slack
     """
 
-    summary = 'DPW Waste Pickup Reminder Summary:\n'
+    summary = '# DPW Waste Pickup Reminder Summary:\n'
 
     all_phone_numbers = {}
 
@@ -36,11 +38,11 @@ def format_slack_alerts_summary(content):
 
                     # make sure type of service is indicated one time
                     if not service_desc_added:
-                        summary = summary + "\n{}".format(service_type)
+                        summary = summary + f"\n* {service_type}"
                         service_desc_added = True
 
                     # give route id and number of subscribers
-                    summary = summary + "\n\troute {} - {} reminders".format(route_id, len(phone_numbers))
+                    summary = summary + f"\n  * route {route_id} - {len(phone_numbers)} reminders"
 
                     # keep track of all phone numbers receiving reminders
                     for phone_number in phone_numbers:
@@ -49,15 +51,11 @@ def format_slack_alerts_summary(content):
                             count = all_phone_numbers[phone_number]    # pragma: no cover (routes now all include all services)
                         all_phone_numbers[phone_number] = count
 
-                    # summary = summary + "\n\t\t{} subscribers".format(len(phone_numbers))
-                    # numbers_list = ''.join([ str(num) + ', ' for num in phone_numbers.keys() ])[:-2]
-                    # summary = summary + "\n\t\t{}".format(numbers_list)
-
-    summary = summary + "\n\nTotal reminders sent out:  {}".format(len(all_phone_numbers))
+    summary = summary + f"\n\n> Total reminders sent out:  {len(all_phone_numbers)}"
 
     # summarize information-only notices sent out
     if content.get('citywide'):
-        summary = summary + "\n\nTotal information notices sent out:  {}".format(len(content['citywide'].get('subscribers', [])))
+        summary = summary + f"\n\n> Total information notices sent out:  {len(content['citywide'].get('subscribers', []))}"
 
     return summary
 
@@ -194,8 +192,11 @@ def geocode_address(street_address):
     if street_address == 'detroit' or re.fullmatch('[0-9]*', street_address):
         return None, None
 
+    # Slack a notification of any failed addresses, unless we are running tests
+    notify_fail = not settings.RUNNING_UNITTESTS
+
     # Parse address string and get result from AddressPoint geocoder
-    address = direccion.Address(input=street_address, notify_fail=True)
+    address = direccion.Address(input=street_address, notify_fail=notify_fail)
     location = address.geocode()
 
     if not location or location['score'] < 50:
