@@ -98,6 +98,7 @@ INSTALLED_APPS = (
     'assessments',
     'assessors_data',
     'blight_tickets',
+    'car_info',
     'cod_utils',
     'data_cache',
     'dnninternet',
