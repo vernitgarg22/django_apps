@@ -1,8 +1,9 @@
-import datetime
+from datetime import datetime
 
 from django.db import models
+from django.utils import timezone
 
-from cod_utils.util import get_local_time
+from cod_utils.util import date_json
 
 
 class LicensePlateInfo(models.Model):
@@ -14,10 +15,10 @@ class LicensePlateInfo(models.Model):
 
         # initialize created_at timestamp
         if self.created_at is None:
-            self.created_at = get_local_time()
+            self.created_at = datetime.now(timezone.utc)
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.plate_num
+    def __str__(self):    # pragma: no cover (this is mostly just for debugging)
+        return "plate: " + self.plate_num + " created_at: " + str(date_json(self.created_at))

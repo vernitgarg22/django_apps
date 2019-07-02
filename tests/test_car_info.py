@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 import mock
 from unittest.mock import patch
@@ -29,7 +29,7 @@ class CarInfoTests(TestCase):
     # Test adding license plate info.
     def test_add_info(self):
 
-        time_right_now = timezone.localtime()
+        time_right_now = datetime.now(timezone.utc)
 
         with patch.object(timezone, 'localtime', return_value=time_right_now) as mock_now:
 
@@ -52,6 +52,7 @@ class CarInfoTests(TestCase):
         response = c.post('/car_info/', { "plate_num": "dummy12" } )
 
         expected = { "message": "Error: plate number already added", "date_added": date_json(plate_info.created_at) }
+
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(response.data, expected, "A license plate number can be added only once")
 
