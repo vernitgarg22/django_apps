@@ -5,5 +5,5 @@ from . import views
 
 app_name = 'car_info'
 urlpatterns = [
-    url(r'^$', views.add_polling_location),
+    url(r'^$', views.add_license),
 ]

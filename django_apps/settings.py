@@ -198,6 +198,7 @@ class DjangoAppsRouter(object):
         "DNNKeyword": "data_cache",
         "Faqs": "dnninternet",
         "Htmltext": "dnninternet",
+        "LicensePlateInfo": "license_plate_info",
         "Subscriber": "waste_collection",
         "ScheduleDetail": "waste_collection",
         "WasteItem": "waste_collection",

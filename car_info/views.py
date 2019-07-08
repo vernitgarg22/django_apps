@@ -12,7 +12,7 @@ from cod_utils.util import date_json
 
 
 @api_view(['POST'])
-def add_polling_location(request):
+def add_license(request):
 
     if not request.data.get('plate_num'):
         return Response({"message": "'plate_num' is required"}, status=status.HTTP_400_BAD_REQUEST)
