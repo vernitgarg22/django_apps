@@ -41,7 +41,7 @@ class CarInfoTests(TestCase):
             self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "License plate number can be added")
 
-    # Test adding license plate info twice
+    # Test adding the same license plate info twice.
     def test_add_info_twice(self):
 
         plate_info = LicensePlateInfo(plate_num='dummy12')
@@ -55,6 +55,19 @@ class CarInfoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(response.data, expected, "A license plate number can be added only once")
+
+    # Test adding the different license plate info.
+    def test_add_unique_info(self):
+
+        c = Client()
+
+        response = c.post('/car_info/', { "plate_num": "dummy12" } )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["message"], "Plate number added", "A new license plate number can be added")
+
+        response = c.post('/car_info/', { "plate_num": "dummy13" } )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["message"], "Plate number added", "Another license plate number can be added")
 
     # Test adding license plate info.
     def test_add_info_missing_plate_num(self):
