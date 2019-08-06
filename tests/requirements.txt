@@ -1,5 +1,5 @@
 certifi==2017.1.23
-Django==1.11.22
+django>=1.11.23
 django-cors-headers==2.0.2
 django-pyodbc-azure==1.11.0.0
 djangorestframework==3.6.2
