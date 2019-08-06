@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 
-from elections.models import ElectionSubscriber
+from elections.models import Poll, Precinct
 
 import cod_utils.util
 import cod_utils.security
@@ -31,9 +31,6 @@ def subscribe_notifications(request):
     #     MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
     #     return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
-    # Make sure the call came from twilio and is valid
-    MsgHandler().validate(request)
-
     phone_number = request.data.get('phone_number')
     address = request.data.get('address')
     if not (phone_number and address):
@@ -42,6 +39,18 @@ def subscribe_notifications(request):
     # text the subscriber to ask them to confirm
     MsgHandler().send_text(phone_number=phone_number, text="You will receive elections reminders for the address {}".format(address))
 
-    # TODO create the ElectionSubscriber object
-
     return Response({ "received": { "phone_number": phone_number, "address": address }, "message": "New subscriber created" }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+def get_polling_location(request, precinct):
+    """
+    Returns information about correct polling location for the precinct.
+    """
+
+    try:
+        precinct = Precinct.objects.get(number=precinct)
+    except ObjectDoesNotExist:
+        raise Http404("Precinct number " + str(precinct) + " not found")
+
+    return Response(precinct.poll.to_json())
