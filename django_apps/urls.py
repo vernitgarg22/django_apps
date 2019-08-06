@@ -4,6 +4,7 @@ from django.views.generic.base import RedirectView
 from rest_framework import routers
 import assessments.views
 import blight_tickets.views
+import car_info.views
 import data_cache.views
 import elections.views
 import photo_survey.views
@@ -31,6 +32,7 @@ urlpatterns = [
     # apis
     url(r'^assessments/', include('assessments.urls', namespace="assessments")),
     url(r'^blight_tickets/', include('blight_tickets.urls', namespace="blight_tickets")),
+    url(r'^car_info/', include('car_info.urls', namespace="car_info")),
     url(r'^data_cache/', include('data_cache.urls', namespace="data_cache")),
     url(r'^elections/', include('elections.urls', namespace="elections")),
     url(r'^photo_survey/', include('photo_survey.urls', namespace="photo_survey")),
