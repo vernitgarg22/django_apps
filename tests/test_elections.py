@@ -21,7 +21,7 @@ import tests.disabled
 from tests import test_util
 
 from elections import views
-from elections.models import Precinct, Poll
+from elections.models import ElectionNotification, ElectionSubscriber
 
 
 class ElectionsTests(TestCase):
@@ -66,55 +66,3 @@ class ElectionsTests(TestCase):
         expected = {'error': 'address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")
-
-
-class ElectionPollingInfoTests(TestCase):
-
-    def cleanup_db(self):
-        for model in [ Precinct, Poll ]:
-            test_util.cleanup_model(model)
-
-    def setUp(self):
-        """
-        Set up each unit test, including making sure database is properly cleaned up before each test
-        """
-        self.cleanup_db()
-        self.maxDiff = None
-
-    def test_get_polling_location(self):
-
-        poll = Poll(name='test', address='800 woodward detroit, mi',
-            latitude=42.0, longitude=82.1,
-            congress_rep_district=1, state_senate_district=1, state_rep_district=1,
-            map_url="https://goo.gl/maps/xfFuRHgY2dC2", image_url="https://goo.gl/maps/4ijaK7hjUKr")
-        poll.save()
-        precinct = Precinct(poll=poll, number=1)
-        precinct.save()
-
-        c = Client()
-
-        response = c.get('/elections/poll/1/', Secure=True)
-
-        expected = {
-            'name': 'test',
-            'address': '800 woodward detroit, mi',
-            'latitude': 42.0,
-            'longitude': 82.1,
-            'congress_rep_district': 1,
-            'state_senate_district': 1,
-            'state_rep_district': 1,
-            'map': 'https://goo.gl/maps/xfFuRHgY2dC2',
-            'image': 'https://goo.gl/maps/4ijaK7hjUKr',
-            'precincts': [1]
-        }
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
-
-    def test_get_polling_location_not_found(self):
-
-        c = Client()
-
-        response = c.get('/elections/poll/1/', Secure=True)
-        self.assertEqual(response.status_code, 404)
-
