@@ -216,6 +216,8 @@ class DjangoAppsRouter(object):
         # REVIEW put these somewhere else
         "Poll": "default",
         "Precinct": "default",
+        "ElectionNotification": "default",
+        "ElectionSubscriber": "default",
 
         "EscrowBalance": "property_data",
         "Sales": "eql",
