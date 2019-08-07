@@ -103,6 +103,7 @@ INSTALLED_APPS = (
     'data_cache',
     'dnninternet',
     'elections',
+    'messenger',
     'photo_survey',
     'property_data',
     'waste_schedule',
@@ -214,8 +215,9 @@ class DjangoAppsRouter(object):
         "PublicPropertyData": "photo_survey",
 
         # REVIEW put these somewhere else
-        "Poll": "default",
-        "Precinct": "default",
+        "MessengerClient": "default",
+        "MessengerNotification": "default",
+        "MessengerSubscriber": "default",
 
         "EscrowBalance": "property_data",
         "Sales": "eql",
