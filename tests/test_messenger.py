@@ -15,16 +15,13 @@ import cod_utils.security
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import date_json
 
-from slackclient import SlackClient
-
-import tests.disabled
 from tests import test_util
 
-from elections import views
-from elections.models import Precinct, Poll
+from messenger import views
+from messenger.models import MessengerClient, MessengerNotification, MessengerSubscriber
 
 
-class ElectionsTests(TestCase):
+class MessengerTests(TestCase):
 
     def cleanup_db(self):
         pass
@@ -37,11 +34,11 @@ class ElectionsTests(TestCase):
         self.maxDiff = None
 
     # Test actual API endpoints
-    def test_subscribe_msg(self):
+    def test_subscribe(self):
 
         c = Client()
 
-        response = c.post('/elections/subscribe/', { "phone_number": "5005550006", "address": "1104 Military St" } )
+        response = c.post('/messenger/subscribe/', { "phone_number": "5005550006", "address": "1104 Military St" } )
 
         expected = {'received': {'phone_number': '5005550006', 'address': '1104 Military St'}, 'message': 'New subscriber created'}
         self.assertEqual(response.status_code, 201)
@@ -51,7 +48,7 @@ class ElectionsTests(TestCase):
 
         c = Client()
 
-        response = c.post('/elections/subscribe/', { "address": "1104 Military St" } )
+        response = c.post('/messenger/subscribe/', { "address": "1104 Military St" } )
 
         expected = {'error': 'address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
@@ -61,7 +58,7 @@ class ElectionsTests(TestCase):
 
         c = Client()
 
-        response = c.post('/elections/subscribe/', { "phone_number": "5005550006" } )
+        response = c.post('/messenger/subscribe/', { "phone_number": "5005550006" } )
 
         expected = {'error': 'address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
