@@ -49,16 +49,29 @@ class MsgHandler():
         if not request_valid:
             raise PermissionDenied('Request failed twilio validation check')
 
-    def get_fone_number(self, request):
+    def get_fone_number(self, request, key='From'):
         """
         Returns phone number of message sender.
         """
 
-        number = request.data['From'].replace('+', '')
+        number = request.data[key].replace('+', '')
         if number.startswith('1'):
             number = number[1:]
 
         return number
+
+    def get_address(self, request):
+        """
+        Returns address of message sender.
+        """
+
+        address = request.data.get('Body', '').upper().strip()
+
+        pos = address.find("DETROIT")
+        if pos >= 0:
+            address = address[0 : pos]
+
+        return address
 
 
     def send_text(self, phone_number, text, phone_sender=None, dry_run_param=False):

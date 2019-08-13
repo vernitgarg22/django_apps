@@ -9,8 +9,6 @@ from cod_utils.messaging import SlackMsgHandler
 
 from waste_wizard.models import WasteItem
 
-import direccion
-
 
 def format_slack_alerts_summary(content):
     """
@@ -180,28 +178,6 @@ def get_service_detail_message(services, detail):
     message = add_message_instructions(message)
 
     return message
-
-def geocode_address(street_address):
-    """
-    Returns geocoded location and address object if address can be geocoded
-    with enough accuracy. Otherwise, returns None.
-    """
-
-    street_address = street_address.strip().lower()
-
-    # Verify address is not just 'detroit' or a zip code, because those are not
-    # specific enough.
-    if street_address == 'detroit' or re.fullmatch('[0-9]*', street_address):
-        return None, None
-
-    # Parse address string and get result from AddressPoint geocoder
-    address = direccion.Address(input=street_address, notify_fail=True)
-    location = address.geocode()
-
-    if not location or location['score'] < 50:
-        return None, None
-    else:
-        return location, address
 
 def get_waste_area_ids(location, ids_only = True):
     """

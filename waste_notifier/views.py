@@ -77,14 +77,11 @@ def subscribe_address(request):
     # Clean up phone number
     phone_number = msg_handler.get_fone_number(request)
 
-    street_address = request.data.get('Body').upper().strip()
-
-    pos = street_address.find("DETROIT")
-    if pos >= 0:
-        street_address = street_address[0:pos]
+    # Clean up street address
+    street_address = msg_handler.get_address(request)
 
     # Parse address string and get result from AddressPoint geocoder
-    location, address = geocode_address(street_address=street_address)
+    location, address = util.geocode_address(street_address=street_address)
     if not location:
         invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
 
@@ -313,7 +310,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     tomorrow = util.tomorrow(today)
 
     # Parse address string and get result from AddressPoint geocoder
-    location, address = geocode_address(street_address=street_address)
+    location, address = util.geocode_address(street_address=street_address)
     if not location:
         invalid_addr_msg = 'Invalid address received in service info request: {}'.format(street_address)
         CODLogger.instance().log_error(name=__name__, area="service info request", msg=invalid_addr_msg)

@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
-from waste_notifier.util import geocode_address, get_waste_area_ids
+from waste_notifier.util import get_waste_area_ids
 from cod_utils import util
 from cod_utils.messaging import MsgHandler
 from cod_utils.cod_logger import CODLogger
@@ -157,7 +157,7 @@ class Subscriber(models.Model):
         waste_area_ids = data.get('waste_area_ids')
         if not waste_area_ids:
             # Parse address string and get result from AddressPoint geocoder
-            location, address = geocode_address(street_address=street_address)
+            location, address = util.geocode_address(street_address=street_address)
             if not location:
                 invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
 
