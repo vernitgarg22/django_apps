@@ -17,6 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
                 ('name', models.CharField(verbose_name='Name', max_length=64, unique=True)),
                 ('description', models.CharField(verbose_name='Description', max_length=1024)),
+                ('confirmation_message', models.CharField('Confirmation Message', max_length=2048)),
             ],
         ),
 

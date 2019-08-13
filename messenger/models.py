@@ -8,6 +8,7 @@ class MessengerClient(models.Model):
 
     name = models.CharField('Name', max_length=64)
     description = models.CharField('Description', max_length=2048)
+    confirmation_message = models.CharField('Confirmation Message', max_length=2048)
 
 
 class MessengerPhoneNumber(models.Model):

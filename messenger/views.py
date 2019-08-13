@@ -73,7 +73,8 @@ def subscribe(request):
     subscriber.save()
 
     # text the subscriber to ask them to confirm
-    msg_handler.send_text(phone_number=phone_number_from, text="You will receive elections reminders for the address {}".format(street_address))
+    confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
+    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
 
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
     return Response(response, status=status.HTTP_201_CREATED)

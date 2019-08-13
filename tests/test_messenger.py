@@ -1,11 +1,14 @@
 import datetime
 
 from django.test import Client, TestCase
+from unittest.mock import MagicMock, patch
 
 from tests import test_util
 
 from messenger import views
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+
+from cod_utils import messaging
 
 
 TEXT_DATA = {
@@ -70,7 +73,7 @@ def setup_messenger():
 
     url="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=true&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 
-    client = MessengerClient(name='elections', description='Elections Messenger')
+    client = MessengerClient(name='elections', description='Elections Messenger', confirmation_message="You will receive elections reminders for the address {street_address}")
     client.save()
     phone_number = MessengerPhoneNumber(messenger_client=client, phone_number='5005550006', description='Test phone number')
     phone_number.save()
@@ -97,8 +100,12 @@ class MessengerTests(TestCase):
     # Test actual API endpoints
     def test_subscribe(self):
 
-        c = Client()
-        response = c.post('/messenger/subscribe/', TEXT_DATA)
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+
+          c = Client()
+          response = c.post('/messenger/subscribe/', TEXT_DATA)
+
+        mock_method.assert_called_once_with(phone_number='5005550006', text='You will receive elections reminders for the address 7840 VAN DYKE PL')
 
         expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New elections subscriber created'}
         self.assertEqual(response.status_code, 201)
