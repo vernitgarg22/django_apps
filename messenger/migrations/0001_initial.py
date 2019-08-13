@@ -5,35 +5,6 @@ from django.db import migrations, models
 from django.utils import timezone
 
 
-# class Notification(models.Model):
-
-#     app_label = 'messenger'
-
-#     day = models.DateField('Day on which notification should be sent')
-#     message = models.CharField('Message', max_length=1024, blank=True, null=True)
-#     geo_layer_url = models.CharField('Geo Layer URL', max_length=1024, blank=True, null=True)
-#     messenger_type = models.ForeignKey(MessengerType)
-
-
-# class Subscriber(models.Model):
-
-#     app_label = 'messenger'
-
-#     STATUS_CHOICES = (
-#         ('active', 'Active'),
-#         ('inactive', 'Inactive'),
-#     )
-
-#     phone_number = models.CharField('Subscriber phone number', unique=True, max_length=32)
-#     status = models.CharField('Subscriber status', max_length=32, choices=STATUS_CHOICES, default='inactive')
-#     address = models.CharField('Home address', max_length=128)
-#     latitude = models.CharField('Latitude', max_length=32)
-#     longitude = models.CharField('Longitude', max_length=32)
-#     created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
-#     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
-
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -48,6 +19,17 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(verbose_name='Description', max_length=1024)),
             ],
         ),
+
+        migrations.CreateModel(
+            name='MessengerPhoneNumber',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
+                ('messenger_client' , models.ForeignKey(to='messenger.MessengerClient', on_delete=models.deletion.PROTECT)),
+                ('phone_number', models.CharField(verbose_name='Phone Number', max_length=10, db_index=True, unique=True)),
+                ('description', models.CharField(verbose_name='Description', max_length=512, blank=True, null=True)),
+            ],
+        ),
+
         migrations.CreateModel(
             name='MessengerNotification',
             fields=[

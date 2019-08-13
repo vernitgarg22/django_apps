@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.db import models
 from django.utils import timezone
 
@@ -12,12 +10,22 @@ class MessengerClient(models.Model):
     description = models.CharField('Description', max_length=2048)
 
 
+class MessengerPhoneNumber(models.Model):
+
+    app_label = 'messenger'
+
+    messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
+    phone_number = models.CharField('Phone Number', max_length=10, db_index=True, unique=True)
+    description = models.CharField('Description', max_length=512, blank=True, null=True)
+
+
 class MessengerNotification(models.Model):
 
     app_label = 'messenger'
 
-    # REVIEW allow day to be null to indicate 'every day' ?
     messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
+
+    # REVIEW allow day to be null to indicate 'every day' ?
     day = models.DateField('Day on which notification should be sent')
     message = models.CharField('Message', max_length=2048, blank=True, null=True)
     geo_layer_url = models.CharField('Geo Layer URL', max_length=1024, blank=True, null=True)
