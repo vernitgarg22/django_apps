@@ -1,30 +1,89 @@
 import datetime
 
-from django.conf import settings
-
 from django.test import Client, TestCase
-
-from django.core.exceptions import ValidationError
-
-import mock
-from unittest import skip
-from unittest.mock import patch
-
-import cod_utils.util
-import cod_utils.security
-from cod_utils.messaging import MsgHandler
-from cod_utils.util import date_json
 
 from tests import test_util
 
 from messenger import views
-from messenger.models import MessengerClient, MessengerNotification, MessengerSubscriber
+from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+
+
+TEXT_DATA = {
+  'FromState': [
+    'MI'
+  ],
+  'From': [
+    '+15005550006'
+  ],
+  'ToState': [
+    'MI'
+  ],
+  'ToZip': [
+    ''
+  ],
+  'SmsStatus': [
+    'received'
+  ],
+  'FromCountry': [
+    'US'
+  ],
+  'FromCity': [
+    'DETROIT'
+  ],
+  'SmsMessageSid': [
+    'ABC'
+  ],
+  'AccountSid': [
+    'XYZ'
+  ],
+  'NumSegments': [
+    '1'
+  ],
+  'MessageSid': [
+    'DUMMY'
+  ],
+  'ToCity': [
+    ''
+  ],
+  'Body': [
+    '7840 van dyke pl'
+  ],
+  'ToCountry': [
+    'US'
+  ],
+  'SmsSid': [
+    'DUMMY'
+  ],
+  'FromZip': [
+    '10010'
+  ],
+  'NumMedia': [
+    '0'
+  ],
+  'To': [
+    '+15005550006'
+  ]
+}
+
+
+def setup_messenger():
+
+    url="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=true&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
+
+    client = MessengerClient(name='elections', description='Elections Messenger')
+    client.save()
+    phone_number = MessengerPhoneNumber(messenger_client=client, phone_number='5005550006', description='Test phone number')
+    phone_number.save()
+    notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5), message="Reminder: today is election day", geo_layer_url=url)
+    notification.save()
 
 
 class MessengerTests(TestCase):
 
     def cleanup_db(self):
-        pass
+        
+        for model in [ MessengerSubscriber, MessengerNotification, MessengerPhoneNumber, MessengerClient ]:
+            test_util.cleanup_model(model)
 
     def setUp(self):
         """
@@ -33,33 +92,57 @@ class MessengerTests(TestCase):
         self.cleanup_db()
         self.maxDiff = None
 
+        setup_messenger()
+
     # Test actual API endpoints
     def test_subscribe(self):
 
         c = Client()
+        response = c.post('/messenger/subscribe/', TEXT_DATA)
 
-        response = c.post('/messenger/subscribe/', { "phone_number": "5005550006", "address": "1104 Military St" } )
-
-        expected = {'received': {'phone_number': '5005550006', 'address': '1104 Military St'}, 'message': 'New subscriber created'}
+        expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New elections subscriber created'}
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
 
     def test_subscribe_msg_missing_fone(self):
 
         c = Client()
-
         response = c.post('/messenger/subscribe/', { "address": "1104 Military St" } )
 
-        expected = {'error': 'address and phone_number are required'}
+        expected = {'error': 'Address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
 
     def test_subscribe_msg_missing_address(self):
 
         c = Client()
-
         response = c.post('/messenger/subscribe/', { "phone_number": "5005550006" } )
 
-        expected = {'error': 'address and phone_number are required'}
+        expected = {'error': 'Address and phone_number are required'}
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+
+    def test_subscribe_msg_missing_destination_fone_number(self):
+
+        phone_number = MessengerPhoneNumber.objects.first()
+        phone_number.phone_number = '1234567890'
+        phone_number.save()
+
+        c = Client()
+        response = c.post('/messenger/subscribe/', TEXT_DATA)
+
+        expected = {'error': 'phone_number 5005550006 not found'}
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+
+    def test_subscribe_msg_invalid_address(self):
+
+        text_data = TEXT_DATA.copy()
+        text_data['Body'][0] = 'invalid address'
+
+        c = Client()
+        response = c.post('/messenger/subscribe/', text_data)
+
+        expected = {'error': "Street address 'INVALID ADDRESS' not found"}
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")

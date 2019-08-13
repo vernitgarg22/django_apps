@@ -10,7 +10,7 @@ import mock
 from unittest import skip
 from unittest.mock import patch
 
-import cod_utils.util
+from cod_utils import util
 import cod_utils.security
 from cod_utils.messaging import MsgHandler
 from cod_utils.util import date_json
@@ -26,7 +26,7 @@ from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
 from waste_notifier import views
-from waste_notifier import util
+from waste_notifier.util import get_waste_area_ids, get_service_detail_message
 
 
 def cleanup_db():
@@ -55,7 +55,7 @@ def make_subscriber(waste_area_ids=None, service_type="all", address="7840 Van D
 
     if not waste_area_ids:
 
-        location, _ = geocode_address(street_address=address)
+        location, _ = util.geocode_address(street_address=address)
         waste_area_ids = get_waste_area_ids(location=location)
         waste_area_ids = ''.join( [ str(num) + ',' for num in waste_area_ids ] )
 
@@ -364,7 +364,7 @@ class WasteNotifierTests(TestCase):
         detail.clean()
         detail.save(null_waste_area_ids=True)
 
-        message = util.get_service_detail_message(['all'], detail)
+        message = get_service_detail_message(['all'], detail)
         self.assertEqual(message, 'City of Detroit Public Works:  Please note that service will be unaffected by Christmas Day - Please put trash and recycling bins on the curb on normal schedule (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).')
 
     @mock.patch('slackclient.SlackClient.api_call')
