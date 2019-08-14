@@ -120,9 +120,22 @@ class CODUtilsMsgHandlerTests(TestCase):
         number = MsgHandler().get_phone_sender()
         self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
 
-    def test_get_phone_sender_1(self):
-        number = MsgHandler().get_phone_sender('1234567810')
-        self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
+    def test_get_phone_sender_consistent(self):
+
+        msg_handler = MsgHandler()
+
+        numbers = [
+            '1234567800', '1234567801', '1234567802', '1234567803', '1234567804', '1234567805', '1234567806', '1234567807', '1234567808', '1234567809',
+            '1234567810', '1234567811', '1234567812', '1234567813', '1234567814', '1234567815', '1234567816', '1234567817', '1234567818', '1234567819',
+            ]
+
+        for number in numbers:
+            key = MsgHandler.get_phone_number_key(number)
+            msg_handler.phone_senders[key] = number
+
+        for number in numbers:
+            sender = msg_handler.get_phone_sender(dest_phone_number=number)
+            self.assertEqual(sender, number, "MsgHandler uses consistent fone numbers")
 
     def test_send_message(self):
         MsgHandler.DRY_RUN = False
