@@ -117,7 +117,11 @@ class CODUtilsMsgHandlerTests(TestCase):
         MsgHandler.DRY_RUN = self.dry_run_previous
 
     def test_get_phone_sender(self):
-        number = MsgHandler.get_phone_sender()
+        number = MsgHandler().get_phone_sender()
+        self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
+
+    def test_get_phone_sender_1(self):
+        number = MsgHandler().get_phone_sender('1234567810')
         self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
 
     def test_send_message(self):

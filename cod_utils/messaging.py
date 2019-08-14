@@ -33,8 +33,7 @@ class MsgHandler():
             key = MsgHandler.get_phone_number_key(phone_sender)
             self.phone_senders[key] = phone_sender
 
-    @staticmethod
-    def get_phone_sender(dest_phone_number=None):
+    def get_phone_sender(self, dest_phone_number=None):
         """
         Return one of the available phone numbers, randomly selected
         """
@@ -95,7 +94,7 @@ class MsgHandler():
             return False
 
         if not phone_sender:
-            phone_sender = MsgHandler.get_phone_sender()
+            phone_sender = self.get_phone_sender()
 
         try:
             message = client.messages.create(
@@ -125,7 +124,7 @@ class MsgHandler():
             try:
                 message = client.messages.create(
                     to = "+1" + number,
-                    from_ = MsgHandler.get_phone_sender(),
+                    from_ = self.get_phone_sender(),
                     body = text,
                 )
                 if message.status == 'failed':
