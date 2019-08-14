@@ -21,7 +21,7 @@ class MsgHandler():
 
     @staticmethod
     def get_phone_number_key(phone_number):
-        return phone_number[-2:]
+        return int(phone_number[-2:]) % 20
 
     def __init__(self):
 
