@@ -94,7 +94,7 @@ class MsgHandler():
             return False
 
         if not phone_sender:
-            phone_sender = self.get_phone_sender()
+            phone_sender = self.get_phone_sender(dest_phone_number=phone_number)
 
         try:
             message = client.messages.create(
