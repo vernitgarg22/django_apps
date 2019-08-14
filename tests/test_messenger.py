@@ -2,6 +2,8 @@ import datetime
 
 from django.test import Client, TestCase
 from unittest.mock import MagicMock, patch
+from django.core.management import call_command
+from django.utils.six import StringIO
 
 from tests import test_util
 
@@ -153,3 +155,29 @@ class MessengerTests(TestCase):
         expected = {'error': "Street address 'INVALID ADDRESS' not found"}
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+
+    def test_send_messages(self):
+
+
+        #     MessengerSubscriber(messenger_client=MessengerClient.objects.first(),
+        #       phone_number='+15005550006',
+        #       status='active',
+        #       )
+
+        # status = models.CharField('Subscriber status', max_length=32, choices=STATUS_CHOICES, default='inactive')
+        # address = models.CharField('Home address', max_length=128)
+        # latitude = models.CharField('Latitude', max_length=32)
+        # longitude = models.CharField('Longitude', max_length=32)
+        # created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
+        # last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
+
+
+
+        out = StringIO()
+        call_command('send_messages', 'elections', '--today=20191105', stdout=out)
+
+
+        pdb.set_trace()
+
+
+        self.assertEqual(User.objects.using('photo_survey').first().email, 'bob.smith@test.com', 'add_user adds a photo_survey user')

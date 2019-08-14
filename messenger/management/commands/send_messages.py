@@ -1,4 +1,5 @@
 from datetime import date
+import re
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -14,12 +15,14 @@ class Command(BaseCommand):
         """
 
     def add_arguments(self, parser):
+        parser.add_argument('client', help='Name of client whose messages should be sent')
         parser.add_argument('--today', default=date.today(), help="Date value to treat as today. Format=YYYYMMDD")
         parser.add_argument('--dry_run', default='no', help="Pass 'yes' to do a dry run")
 
     def handle(self, *args, **options):
 
         # Validate and parse our command-line params
+        client_name = options['client']
         today = options['today']
         dry_run_param = options['dry_run']
 
@@ -35,6 +38,6 @@ class Command(BaseCommand):
 
         dry_run_param = dry_run_param == "yes"
 
-        response = send_notifications(date=util.tomorrow(today=today), dry_run_param=dry_run_param)
+        send_messages(client_name, day=today, dry_run_param=dry_run_param)
 
-        return json.dumps({ "status": 200, "data": OrderedDict(response) })
+        # TODO send return value?
