@@ -163,9 +163,7 @@ class MessengerTests(TestCase):
         street_address = '7840 Van Dyke Pl'
         location, address = geocode_address(street_address=street_address)
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active',
-            address=street_address, latitude=location['location']['y'], longitude=location['location']['x']
-        )
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address=street_address)
         subscriber.save()
 
         out = StringIO()
