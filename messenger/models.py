@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from cod_utils.util import geocode_address
+
 
 class MessengerClient(models.Model):
 
@@ -56,5 +58,19 @@ class MessengerSubscriber(models.Model):
     created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
 
-    # REVIEW TODO override save() to update latitude / longitude based on subscriber's address, as
-    # well as created_at / last_status_update
+    def save(self, *args, **kwargs):
+        """
+        Override Model.save() to update latitude / longitude based on subscriber's address, as
+        well as created_at / last_status_update.
+        """
+
+        location, address = geocode_address(street_address=self.address)
+        if address:
+
+            self.latitude=location['location']['y']
+            self.longitude=location['location']['x']
+
+        self.last_status_update = timezone.now()
+
+        # Call the "real" save() method in base class
+        super().save(*args, **kwargs)

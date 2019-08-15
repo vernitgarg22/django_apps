@@ -6,6 +6,7 @@ from urllib.parse import quote_plus
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
 
 from cod_utils.messaging import MsgHandler
+from cod_utils.util import date_json
 
 
 class NotificationException(Exception):
@@ -92,14 +93,69 @@ def format_message(notification, subscriber):
     return formatter.format_message()
 
 
+class MessagesMeta():
+
+    class NotificationMeta():
+
+        def __init__(self, notification_id, message, geo_layer_url, formatter, num_messages_sent):
+
+            self.notification_id = notification_id
+            self.message = message
+            self.geo_layer_url = geo_layer_url
+            self.formatter = formatter
+            self.num_messages_sent = num_messages_sent
+
+        def describe(self):
+
+            description = """
+id:                 {id}
+message:            {message}
+geo layer url:      {geo_layer_url}
+formatter:          {formatter}
+num messages sent:  {num_messages_sent}
+""".format(id=self.notification_id, 
+message=self.message, geo_layer_url=self.geo_layer_url, formatter=self.formatter, num_messages_sent=self.num_messages_sent)
+
+            return description
+
+    def __init__(self, client_name, day):
+
+        self.client_name = client_name
+        self.day = day
+        self.notifications_meta = []
+
+    def add_notification_meta(self, notification, num_messages_sent):
+
+        notification_meta = MessagesMeta.NotificationMeta(notification_id=notification.id, message=notification.message,
+            geo_layer_url=notification.geo_layer_url, formatter=notification.formatter, num_messages_sent=num_messages_sent)
+        self.notifications_meta.append(notification_meta)
+
+    def describe(self):
+
+        description = """
+client: {client_name}
+day:    {day}
+
+notifications:""".format(client_name=self.client_name, day=self.day)
+
+        if self.notifications_meta:
+
+            for notification_meta in self.notifications_meta:
+                description += "\n" + notification_meta.describe()
+
+
+        else:
+            description += "  (No notifications sent)"
+
+        return description
+
+
 def send_messages(client_name, day, dry_run_param):
     """
     Send out any and all notifications.
+
+    Return Value:  dict with info about number of messages sent
     """
-
-
-    # TODO figure out what the return value should be
-
 
     if not MessengerClient.objects.filter(name=client_name).exists():
         raise CommandError(f"Messenger Client '{client_name}' not found")
@@ -111,7 +167,9 @@ def send_messages(client_name, day, dry_run_param):
     if not notifications:
         return
 
-    # Filter subscribers by client and status
+    message_counter = {}
+
+    # Filter subscribers by client and status and send the notifications
     subscribers = client.messengersubscriber_set.filter(status='active')
     for subscriber in subscribers:
 
@@ -119,3 +177,12 @@ def send_messages(client_name, day, dry_run_param):
 
             message = format_message(notification=notification, subscriber=subscriber)
             MsgHandler().send_text(phone_number=subscriber.phone_number, text=message)
+
+            message_counter[notification.id] = message_counter.get(notification.id, 0) + 1
+
+    # Return metadata about notifications sent
+    messages_meta = MessagesMeta(client_name=client_name, day=day)
+    for notification in notifications:
+        messages_meta.add_notification_meta(notification=notification, num_messages_sent=message_counter.get(notification.id, 0))
+
+    return messages_meta

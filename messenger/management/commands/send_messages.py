@@ -38,6 +38,6 @@ class Command(BaseCommand):
 
         dry_run_param = dry_run_param == "yes"
 
-        send_messages(client_name, day=today, dry_run_param=dry_run_param)
+        messages_meta = send_messages(client_name, day=today, dry_run_param=dry_run_param)
 
-        # TODO send return value?
+        print(messages_meta.describe())
