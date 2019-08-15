@@ -80,7 +80,8 @@ def setup_messenger():
     client.save()
     phone_number = MessengerPhoneNumber(messenger_client=client, phone_number='5005550006', description='Test phone number')
     phone_number.save()
-    notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5), message="Reminder: today is election day.  Your polling location is {name}, located at {location}", geo_layer_url=url, formatter='ElectionFormatter')
+    notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5),
+        message='Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}', geo_layer_url=url, formatter='ElectionFormatter')
     notification.save()
 
 
@@ -173,4 +174,5 @@ class MessengerTests(TestCase):
 
             call_command('send_messages', 'elections', '--today=20191105', stdout=out)
 
-        mock_method.assert_called_once_with(phone_number='+15005550006', text='Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST.')
+        message = 'Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST. - open in maps: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
+        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
