@@ -39,6 +39,7 @@ class Migration(migrations.Migration):
                 ('day', models.DateField(verbose_name='Day on which notification should be sent')),
                 ('message', models.CharField(verbose_name='Messae', max_length=2048, blank=True, null=True)),
                 ('geo_layer_url', models.CharField(verbose_name='Geo Layer URL', max_length=1024, blank=True, null=True)),
+                ('formatter', models.CharField(verbose_name='Formatter class to render message', max_length=64, blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
