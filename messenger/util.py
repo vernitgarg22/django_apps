@@ -1,6 +1,7 @@
 import sys
 from abc import ABC, abstractmethod
 import requests
+from urllib.parse import quote_plus
 
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
 
@@ -51,8 +52,12 @@ class ElectionFormatter():
 
                 precinct_location = feature["attributes"]["precinct_location"]
                 precinct_name = feature["attributes"]["precinct_name"]
+                pollxy = feature["attributes"]["pollxy"]
+                comma_pos = pollxy.find(',')
+                lat = pollxy[comma_pos + 1 : ]
+                lng = pollxy[0 : comma_pos]
 
-                return self.notification.message.format(location=precinct_location, name=precinct_name)
+                return self.notification.message.format(location=precinct_location, name=precinct_name, url_safe_name=quote_plus(precinct_name), lat=lat, lng=lng)
 
         return self.notification.message
 
