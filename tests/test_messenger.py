@@ -11,6 +11,7 @@ from messenger import views
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
 
 from cod_utils import messaging
+from cod_utils.util import geocode_address
 
 
 TEXT_DATA = {
@@ -73,13 +74,13 @@ TEXT_DATA = {
 
 def setup_messenger():
 
-    url="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=true&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
+    url="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 
     client = MessengerClient(name='elections', description='Elections Messenger', confirmation_message="You will receive elections reminders for the address {street_address}")
     client.save()
     phone_number = MessengerPhoneNumber(messenger_client=client, phone_number='5005550006', description='Test phone number')
     phone_number.save()
-    notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5), message="Reminder: today is election day", geo_layer_url=url)
+    notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5), message="Reminder: today is election day.  Your polling location is {name}, located at {location}", geo_layer_url=url, formatter='ElectionFormatter')
     notification.save()
 
 
@@ -158,26 +159,18 @@ class MessengerTests(TestCase):
 
     def test_send_messages(self):
 
+        street_address = '7840 Van Dyke Pl'
+        location, address = geocode_address(street_address=street_address)
 
-        #     MessengerSubscriber(messenger_client=MessengerClient.objects.first(),
-        #       phone_number='+15005550006',
-        #       status='active',
-        #       )
-
-        # status = models.CharField('Subscriber status', max_length=32, choices=STATUS_CHOICES, default='inactive')
-        # address = models.CharField('Home address', max_length=128)
-        # latitude = models.CharField('Latitude', max_length=32)
-        # longitude = models.CharField('Longitude', max_length=32)
-        # created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
-        # last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
-
-
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active',
+            address=street_address, latitude=location['location']['y'], longitude=location['location']['x']
+        )
+        subscriber.save()
 
         out = StringIO()
-        call_command('send_messages', 'elections', '--today=20191105', stdout=out)
 
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
 
-        pdb.set_trace()
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
 
-
-        self.assertEqual(User.objects.using('photo_survey').first().email, 'bob.smith@test.com', 'add_user adds a photo_survey user')
+        mock_method.assert_called_once_with(phone_number='+15005550006', text='Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST.')
