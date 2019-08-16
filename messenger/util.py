@@ -176,6 +176,8 @@ def send_messages(client_name, day, dry_run_param):
         for notification in notifications:
 
             message = format_message(notification=notification, subscriber=subscriber)
+
+            # REVIEW find a way to specify correct set of sender phone #s
             MsgHandler().send_text(phone_number=subscriber.phone_number, text=message)
 
             message_counter[notification.id] = message_counter.get(notification.id, 0) + 1
