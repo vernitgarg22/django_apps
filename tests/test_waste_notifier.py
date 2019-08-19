@@ -199,7 +199,7 @@ class WasteNotifierTests(TestCase):
         """
         Verify our system can handle multiple phone numbers
         """
-        phone_number = MsgHandler.get_phone_sender()
+        phone_number = MsgHandler().get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
     # Test some of the ScheduleDetail utility functions

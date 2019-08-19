@@ -20,14 +20,38 @@ class MsgHandler():
     DRY_RUN = settings.DEBUG or settings.DRY_RUN
 
     @staticmethod
-    def get_phone_sender():
+    def get_phone_number_key(phone_number):
+        return int(phone_number[-2:]) % 20
+
+    def __init__(self):
+
+        self.phone_senders = {}
+
+        phone_senders = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
+        for phone_sender in phone_senders:
+
+            key = MsgHandler.get_phone_number_key(phone_sender)
+            self.phone_senders[key] = phone_sender
+
+    def get_phone_sender(self, dest_phone_number=None):
         """
         Return one of the available phone numbers, randomly selected
         """
-        PHONE_SENDERS = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
-        random.seed()
-        index = random.randrange(len(PHONE_SENDERS))
-        return PHONE_SENDERS[index]
+
+        phone_sender = None
+        if dest_phone_number:
+
+            key = MsgHandler.get_phone_number_key(dest_phone_number)
+            phone_sender = self.phone_senders.get(key)
+
+        if not phone_sender:
+
+            PHONE_SENDERS = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
+            random.seed()
+            index = random.randrange(len(PHONE_SENDERS))
+            phone_sender = PHONE_SENDERS[index]
+
+        return phone_sender
 
     def validate(self, request):   # pragma: no cover
         """
@@ -70,7 +94,7 @@ class MsgHandler():
             return False
 
         if not phone_sender:
-            phone_sender = MsgHandler.get_phone_sender()
+            phone_sender = self.get_phone_sender(dest_phone_number=phone_number)
 
         try:
             message = client.messages.create(
@@ -100,7 +124,7 @@ class MsgHandler():
             try:
                 message = client.messages.create(
                     to = "+1" + number,
-                    from_ = MsgHandler.get_phone_sender(),
+                    from_ = self.get_phone_sender(),
                     body = text,
                 )
                 if message.status == 'failed':
