@@ -12,7 +12,7 @@ from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from waste_notifier.util import geocode_address, get_waste_area_ids
 from cod_utils import util
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import get_dpw_msg_handler, SlackMsgHandler
 from cod_utils.cod_logger import CODLogger
 
 
@@ -163,11 +163,11 @@ class Subscriber(models.Model):
 
                 CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
 
-                MsgHandler().send_admin_alert(invalid_addr_msg)
+                SlackMsgHandler().send_admin_alert(invalid_addr_msg)
 
                 msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
                 text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
-                MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
+                get_dpw_msg_handler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
 
                 return None, { "error": "Address not found" }
 

@@ -25,7 +25,7 @@ def get_dte_active_connection(request, parcel_id, param=None):
     # Only allow certain servers to call this endpoint
     if security.block_client(request):    # pragma: no cover
         remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        SlackMsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # Only call via https...
@@ -51,7 +51,7 @@ def get_escrow_data(request, item_num, param=None):
     # Only allow certain servers to call this endpoint
     if security.block_client(request):    # pragma: no cover
         remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        SlackMsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # Only call via https...

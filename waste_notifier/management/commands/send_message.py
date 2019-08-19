@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import get_dpw_msg_handler
 
 
 class Command(BaseCommand):
@@ -17,5 +17,5 @@ class Command(BaseCommand):
         phone_number = options['phone_number']
         message = options['message']
         phone_sender = options['phone_sender']
-        MsgHandler().send_text(phone_number=phone_number, text=message, phone_sender=phone_sender)
+        get_dpw_msg_handler().send_text(phone_number=phone_number, text=message, phone_sender=phone_sender)
         return "Sent message '{}' to phone_number {}".format(message, phone_number,)
