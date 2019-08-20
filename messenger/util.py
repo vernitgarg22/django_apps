@@ -3,10 +3,13 @@ from abc import ABC, abstractmethod
 import requests
 from urllib.parse import quote_plus
 
+from django.core.management.base import CommandError
+
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
 
 from cod_utils.messaging import MsgHandler, get_elections_msg_handler
 from cod_utils.util import date_json
+
 
 def get_messenger_msg_handler(client):
     """
@@ -19,7 +22,7 @@ def get_messenger_msg_handler(client):
 
         return get_elections_msg_handler(phone_sender_list=phone_sender_list)
 
-    else:
+    else:  # pragma: nocover (should never get here)
 
         raise NotificationException("Msg handler for client '{}' not available".format(client.name))
 
@@ -48,16 +51,9 @@ class BaseNotificationFormatter(ABC):
 
     @abstractmethod
     def format_message(self):
-        while False:
-            yield None
+        pass    # pragma: nocover (abstract method never gets called)
 
-class ElectionFormatter():
-
-    def __init__(self, notification, subscriber, geo_layer_data):
-
-        self.notification = notification
-        self.subscriber = subscriber
-        self.geo_layer_data = geo_layer_data
+class ElectionFormatter(BaseNotificationFormatter):
 
     def format_message(self):
 
@@ -75,7 +71,7 @@ class ElectionFormatter():
 
                 return self.notification.message.format(location=precinct_location, name=precinct_name, url_safe_name=quote_plus(precinct_name), lat=lat, lng=lng)
 
-        return self.notification.message
+        raise NotificationException(client_name=notification.messenger_client.name, message="No geo layer found")   # pragma: nocover (should never get here)
 
 BaseNotificationFormatter.register(ElectionFormatter)
 
@@ -90,18 +86,18 @@ def format_message(notification, subscriber):
         return notification.message
 
     url = notification.geo_layer_url.format(lng=subscriber.longitude, lat=subscriber.latitude)
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
     if not response.ok:
-        raise NotificationException(client_name=notification.messenger_client.name, 
+        raise NotificationException(client_name=notification.messenger_client.name,
                 message="Notification geo layer url not available")
 
     if not notification.formatter:
-        raise NotificationException(client_name=notification.messenger_client.name, 
+        raise NotificationException(client_name=notification.messenger_client.name,
                 message="Notification formatter not set")
 
-    klz = getattr(sys.modules[__name__], notification.formatter)
+    klz = getattr(sys.modules[__name__], notification.formatter, None)
     if not klz:
-        raise NotificationException(client_name=notification.messenger_client.name, 
+        raise NotificationException(client_name=notification.messenger_client.name,
             message="Notification formatter {} not found".format(notification.formatter))
 
     formatter = klz(notification=notification, subscriber=subscriber, geo_layer_data=response.json())
@@ -165,7 +161,7 @@ notifications:""".format(client_name=self.client_name, day=self.day)
         return description
 
 
-def send_messages(client_name, day, dry_run_param):
+def send_messages(client_name, day, dry_run_param=False):
     """
     Send out any and all notifications.
 
@@ -178,11 +174,12 @@ def send_messages(client_name, day, dry_run_param):
     client = MessengerClient.objects.get(name=client_name)
 
     msg_handler = get_messenger_msg_handler(client)
+    messages_meta = MessagesMeta(client_name=client_name, day=day)
 
     # Filter notification objects by client and day
     notifications = client.messengernotification_set.filter(day=day)
     if not notifications:
-        return
+        return messages_meta
 
     message_counter = {}
 
@@ -199,7 +196,6 @@ def send_messages(client_name, day, dry_run_param):
             message_counter[notification.id] = message_counter.get(notification.id, 0) + 1
 
     # Return metadata about notifications sent
-    messages_meta = MessagesMeta(client_name=client_name, day=day)
     for notification in notifications:
         messages_meta.add_notification_meta(notification=notification, num_messages_sent=message_counter.get(notification.id, 0))
 
