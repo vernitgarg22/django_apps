@@ -76,7 +76,7 @@ def subscribe_address(request):
     phone_number = MsgHandler.get_fone_number(request)
 
     # Clean up street address
-    street_address = msg_handler.get_address(request)
+    street_address = MsgHandler.get_address(request)
 
     # Parse address string and get result from AddressPoint geocoder
     location, address = util.geocode_address(street_address=street_address)

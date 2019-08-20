@@ -5,8 +5,23 @@ from urllib.parse import quote_plus
 
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
 
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import MsgHandler, get_elections_msg_handler
 from cod_utils.util import date_json
+
+def get_messenger_msg_handler(client):
+    """
+    Returns the msg handler for this client.
+    """
+
+    phone_sender_list = [ phone_number.phone_number for phone_number in client.messengerphonenumber_set.all() ]
+
+    if client.name == 'elections':
+
+        return get_elections_msg_handler(phone_sender_list=phone_sender_list)
+
+    else:
+
+        raise NotificationException("Msg handler for client '{}' not available".format(client.name))
 
 
 class NotificationException(Exception):
@@ -162,6 +177,8 @@ def send_messages(client_name, day, dry_run_param):
 
     client = MessengerClient.objects.get(name=client_name)
 
+    msg_handler = get_messenger_msg_handler(client)
+
     # Filter notification objects by client and day
     notifications = client.messengernotification_set.filter(day=day)
     if not notifications:
@@ -177,8 +194,7 @@ def send_messages(client_name, day, dry_run_param):
 
             message = format_message(notification=notification, subscriber=subscriber)
 
-            # REVIEW find a way to specify correct set of sender phone #s
-            MsgHandler().send_text(phone_number=subscriber.phone_number, text=message)
+            msg_handler.send_text(phone_number=subscriber.phone_number, text=message)
 
             message_counter[notification.id] = message_counter.get(notification.id, 0) + 1
 

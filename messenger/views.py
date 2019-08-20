@@ -10,10 +10,11 @@ from rest_framework import status
 from django.http import Http404
 
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+from messenger.util import get_messenger_msg_handler
 
 from cod_utils import util
 import cod_utils.security
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import SlackMsgHandler, MsgHandler
 from cod_utils.cod_logger import CODLogger
 
 
@@ -28,30 +29,33 @@ def subscribe(request):
     # # Only allow certain servers to call this endpoint
     # if cod_utils.security.block_client(request):
     #     remote_addr = request.META.get('REMOTE_ADDR')
-    #     MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+    #     SlackMsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
     #     return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
-    msg_handler = MsgHandler()
 
     # Make sure the call came from twilio and is valid
-    msg_handler.validate(request)
+    MsgHandler.validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
         return Response({"error": "Address and phone_number are required"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Clean up phone numbers
-    phone_number_from = msg_handler.get_fone_number(request, key='From')
-    phone_number_to = msg_handler.get_fone_number(request, key='To')
+    phone_number_from = MsgHandler.get_fone_number(request, key='From')
+    phone_number_to = MsgHandler.get_fone_number(request, key='To')
 
-    # Clean up street address
-    street_address = msg_handler.get_address(request)
-
+    # Make sure phone number is set up and valid.
     if not MessengerPhoneNumber.objects.filter(phone_number=phone_number_to).exists():
         return Response({"error": f"phone_number {phone_number_to} not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    messenger_phone_number = MessengerPhoneNumber.objects.get(phone_number=phone_number_to)
-    client = messenger_phone_number.messenger_client
+    # Figure out what messenger client this is and get the msg handler for this client.
+    phone_number_to_object = MessengerPhoneNumber.objects.get(phone_number=phone_number_to)
+    client = phone_number_to_object.messenger_client
+
+    msg_handler = get_messenger_msg_handler(client)
+
+    # Clean up street address
+    street_address = MsgHandler.get_address(request)
 
     # Parse address string and get result from AddressPoint geocoder
     location, address = util.geocode_address(street_address=street_address)
@@ -60,7 +64,7 @@ def subscribe(request):
 
         CODLogger.instance().log_error(name=__name__, area="Messenger signup by text", msg=invalid_addr_msg)
 
-        msg_handler.send_admin_alert(invalid_addr_msg)
+        SlackMsgHandler().send_admin_alert(invalid_addr_msg)
 
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
 
