@@ -18,6 +18,8 @@ from cod_utils import security
 from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
 import tests.disabled
 
+from slackclient import SlackClient
+
 
 class CODUtilsTests(TestCase):
 
@@ -173,9 +175,29 @@ class SlackMsgHandlerTests(TestCase):
     def tearDown(self):
         MsgHandler.DRY_RUN = self.dry_run_previous
 
+    def test_slack_thread_dryrun(self):
+
+        SlackMsgHandler.DRY_RUN = True
+        slack_msg_handler = SlackMsgHandler()
+
+        self.assertFalse(slack_msg_handler.send(message='testing plz ignore - start thread'))
+        self.assertFalse(slack_msg_handler.comment(message='testing plz ignore - continue thread'))
+        self.assertFalse(slack_msg_handler.comment(message='testing plz ignore - finish thread'))
+
     def test_slack_thread(self):
 
+        MockedReturnValue = {
+            'ok': True,
+            'ts': 1,
+        }
+
+        SlackMsgHandler.DRY_RUN = False
         slack_msg_handler = SlackMsgHandler()
-        slack_msg_handler.send(message='testing plz ignore - start thread')
-        slack_msg_handler.comment(message='testing plz ignore - continue thread')
-        slack_msg_handler.comment(message='testing plz ignore - finish thread')
+
+        with patch.object(SlackClient, 'api_call') as mock_method:
+
+            mock_method.return_value = MockedReturnValue
+
+            self.assertTrue(slack_msg_handler.send(message='testing plz ignore - start thread'))
+            self.assertTrue(slack_msg_handler.comment(message='testing plz ignore - continue thread'))
+            self.assertTrue(slack_msg_handler.comment(message='testing plz ignore - finish thread'))

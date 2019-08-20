@@ -1,14 +1,18 @@
 import datetime
+from datetime import date
 
 from django.test import Client, TestCase
+import mock
 from unittest.mock import MagicMock, patch
 from django.core.management import call_command
 from django.utils.six import StringIO
+from django.core.management.base import CommandError
 
 from tests import test_util
 
 from messenger import views
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+from messenger.util import NotificationException, send_messages
 
 from cod_utils import messaging
 from cod_utils.util import geocode_address
@@ -174,3 +178,88 @@ class MessengerTests(TestCase):
 
         message = 'Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST. - open in maps: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
         mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+
+    def test_send_messages_simple(self):
+        "Test sending a message with no geo layer (just the message itself"
+
+        street_address = '7840 Van Dyke Pl'
+        location, address = geocode_address(street_address=street_address)
+
+        notification = MessengerNotification.objects.first()
+        notification.geo_layer_url = None
+        notification.message = "Don't forget to vote today!"
+        notification.save()
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address=street_address)
+        subscriber.save()
+
+        out = StringIO()
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
+
+        message = "Don't forget to vote today!"
+        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+
+    def test_send_messages_no_notifications(self):
+
+        MessengerNotification.objects.all().delete()
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber.save()
+
+        messages_meta = send_messages(client_name='elections', day=date(2019, 11, 5))
+        self.assertEqual('\nclient: elections\nday:    2019-11-05\n\nnotifications:  (No notifications sent)', messages_meta.describe(), "No messages can be sent")
+
+    def test_send_messages_no_formatter(self):
+
+        notification = MessengerNotification.objects.first()
+        notification.formatter = None
+        notification.save()
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber.save()
+
+        out = StringIO()
+        with self.assertRaises(NotificationException):
+
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
+
+    def test_send_messages_invalid_formatter(self):
+
+        notification = MessengerNotification.objects.first()
+        notification.formatter = "invalid"
+        notification.save()
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber.save()
+
+        out = StringIO()
+        with self.assertRaises(NotificationException):
+
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
+
+    def test_send_messages_invalid_client_name(self):
+
+        out = StringIO()
+        with self.assertRaises(CommandError):
+
+            call_command('send_messages', 'invalid', '--today=20191105', stdout=out)
+
+    @mock.patch('requests.get')
+    def test_send_messages_invalid_geo_layer_url(self, mocked_requests_get):
+
+        class MockedResponse():
+
+            def __init__(self):
+                self.ok = False
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber.save()
+
+        out = StringIO()
+        with self.assertRaises(NotificationException):
+
+            mocked_requests_get.return_value = MockedResponse()
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
