@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 from cod_utils import util
 import cod_utils.security
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
 from cod_utils.util import date_json
 
 from slackclient import SlackClient
@@ -199,7 +199,7 @@ class WasteNotifierTests(TestCase):
         """
         Verify our system can handle multiple phone numbers
         """
-        phone_number = MsgHandler().get_phone_sender()
+        phone_number = get_dpw_msg_handler().get_phone_sender()
         self.assertTrue(phone_number and type(phone_number) is str, "get_phone_sender() should return a phone number")
 
     # Test some of the ScheduleDetail utility functions

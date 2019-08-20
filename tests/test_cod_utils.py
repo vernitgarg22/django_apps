@@ -10,10 +10,12 @@ from django.conf import settings
 from django.test import Client
 from django.test import TestCase, RequestFactory
 from unittest import skip
+import mock
+from unittest.mock import patch
 
 from cod_utils import util
 from cod_utils import security
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
 import tests.disabled
 
 
@@ -117,12 +119,12 @@ class CODUtilsMsgHandlerTests(TestCase):
         MsgHandler.DRY_RUN = self.dry_run_previous
 
     def test_get_phone_sender(self):
-        number = MsgHandler().get_phone_sender()
+        number = get_dpw_msg_handler().get_phone_sender()
         self.assertTrue(type(number) is str and len(number) == 12, "get_phone_sender() returns a valid phone number")
 
     def test_get_phone_sender_consistent(self):
 
-        msg_handler = MsgHandler()
+        msg_handler = get_dpw_msg_handler()
 
         numbers = [
             '1234567800', '1234567801', '1234567802', '1234567803', '1234567804', '1234567805', '1234567806', '1234567807', '1234567808', '1234567809',
@@ -139,23 +141,28 @@ class CODUtilsMsgHandlerTests(TestCase):
 
     def test_send_message(self):
         MsgHandler.DRY_RUN = False
-        sent = MsgHandler().send_text("5005550006", "testing")
+        sent = get_dpw_msg_handler().send_text("5005550006", "testing")
         self.assertTrue(sent, "MsgHandler sends a text")
 
     def test_send_message_dry_run(self):
         MsgHandler.DRY_RUN = True
-        sent = MsgHandler().send_text("5005550006", "testing")
+        sent = get_dpw_msg_handler().send_text("5005550006", "testing")
         self.assertFalse(sent, "MsgHandler sends no texts when DRY_RUN is set")
 
     def test_send_message_dry_run_param(self):
         MsgHandler.DRY_RUN = False
-        sent = MsgHandler().send_text("5005550006", "testing", dry_run_param = True)
+        sent = get_dpw_msg_handler().send_text("5005550006", "testing", dry_run_param = True)
         self.assertFalse(sent, "MsgHandler sends no texts when dry_run_param is True")
 
-    def test_send_admin_alert(self):
+    @mock.patch('slackclient.SlackClient.api_call')
+    def test_send_admin_alert(self, mocked_slackclient_api_call):
+
+        mocked_slackclient_api_call.return_value = {'ok': True}
+        previous_dry_run = SlackMsgHandler.DRY_RUN
         MsgHandler.DRY_RUN = False
-        sent = MsgHandler().send_admin_alert("testing")
+        sent = SlackMsgHandler().send_admin_alert(message="testing")
         self.assertTrue(sent, "MsgHandler sends an admin alert")
+        MsgHandler.DRY_RUN = previous_dry_run
 
 
 class SlackMsgHandlerTests(TestCase):

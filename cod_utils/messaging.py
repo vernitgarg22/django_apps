@@ -10,32 +10,59 @@ from twilio.rest import Client
 from slackclient import SlackClient
 
 
+class MsgHandlerConfig():
+
+    def __init__(self, account_sid, auth_token, phone_sender_list):
+
+        self.account_sid = account_sid
+        self.auth_token = auth_token
+        self.phone_sender_list = phone_sender_list
+
+def get_dpw_msg_handler():
+
+    account_sid = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
+    auth_token = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
+    phone_sender_list = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
+
+    return MsgHandler(config=MsgHandlerConfig(account_sid=account_sid, auth_token=auth_token, phone_sender_list=phone_sender_list))
+
+def get_elections_msg_handler(phone_sender_list):
+
+    # REVIEW TODO once elections has set up a twilio acct, add their account strings
+    # REVIEW move these config classes and functions somewhere else?
+
+    account_sid = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
+    auth_token = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
+
+    return MsgHandler(config=MsgHandlerConfig(account_sid=account_sid, auth_token=auth_token, phone_sender_list=phone_sender_list))
+
+
 class MsgHandler():
     """
-    Validates requests received from twilio
+    Handles sending text messages via twilio.
     """
 
-    ACCOUNT_SID = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
-    AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
     DRY_RUN = settings.DEBUG or settings.DRY_RUN
 
     @staticmethod
     def get_phone_number_key(phone_number):
         return int(phone_number[-2:]) % 20
 
-    def __init__(self):
+    def __init__(self, config):
 
+        self.config = config
         self.phone_senders = {}
 
-        phone_senders = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
-        for phone_sender in phone_senders:
+        for phone_sender in self.config.phone_sender_list:
 
             key = MsgHandler.get_phone_number_key(phone_sender)
             self.phone_senders[key] = phone_sender
 
     def get_phone_sender(self, dest_phone_number=None):
         """
-        Return one of the available phone numbers, randomly selected
+        Return one of the available phone numbers, either randomly selected
+        or selected based on a hash of the destination phone number, so that
+        the destination will always receive messages from the same number.
         """
 
         phone_sender = None
@@ -53,15 +80,14 @@ class MsgHandler():
 
         return phone_sender
 
-    def validate(self, request):   # pragma: no cover
+    @staticmethod
+    def validate(request):   # pragma: no cover
         """
         Make sure the call came from twilio and is valid.
         Raise an exception if it is not.
         """
 
-        AUTH_TOKEN = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
-
-        validator = RequestValidator(AUTH_TOKEN)
+        validator = RequestValidator(self.config.auth_token)
 
         # Validate the request using its URL, POST data,
         # and X-TWILIO-SIGNATURE header
@@ -73,7 +99,8 @@ class MsgHandler():
         if not request_valid:
             raise PermissionDenied('Request failed twilio validation check')
 
-    def get_fone_number(self, request, key='From'):
+    @staticmethod
+    def get_fone_number(request, key='From'):
         """
         Returns phone number of message sender.
         """
@@ -84,7 +111,8 @@ class MsgHandler():
 
         return number
 
-    def get_address(self, request):
+    @staticmethod
+    def get_address(request):
         """
         Returns address of message sender.
         """
@@ -102,7 +130,7 @@ class MsgHandler():
         """
         Send a text message via twilio rest client
         """
-        client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
+        client = Client(self.config.account_sid, self.config.auth_token)
         if MsgHandler.DRY_RUN or dry_run_param:
             return False
 
@@ -120,34 +148,6 @@ class MsgHandler():
             print("Error received sending twilio msg to number {}".format(phone_number))
             return False
 
-    def send_admin_alert(self, text, dry_run_param = False):
-        """
-        Alert admins via twilio rest client
-        """
-
-        admin_numbers = settings.AUTO_LOADED_DATA['ADMIN_PHONE_NUMBERS']
-
-        client = Client(MsgHandler.ACCOUNT_SID, MsgHandler.AUTH_TOKEN)
-        if MsgHandler.DRY_RUN or dry_run_param:
-            return False    # pragma: no cover
-
-        success = True
-
-        for number in admin_numbers:
-            try:
-                message = client.messages.create(
-                    to = "+1" + number,
-                    from_ = self.get_phone_sender(),
-                    body = text,
-                )
-                if message.status == 'failed':
-                    success = FALSE    # pragma: no cover
-            except:    # pragma: no cover
-                print("Error received sending twilio msg")
-                return False
-
-        return success
-
 
 class SlackMsgHandler():
 
@@ -155,6 +155,7 @@ class SlackMsgHandler():
 
     def __init__(self):
 
+        self.client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
         self.ts = None
 
     def send(self, message, channel="#z_twilio"):
@@ -165,13 +166,7 @@ class SlackMsgHandler():
         if SlackMsgHandler.DRY_RUN:
             return False
 
-        client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
-        result = client.api_call(
-            "chat.postMessage",
-            channel=channel,
-            text=message,
-            timeout=60
-        )
+        result = self.client.api_call("chat.postMessage", channel=channel, text=message, timeout=60)
 
         self.ts = result.get('ts', None)
         return result.get('ok', False)
@@ -181,8 +176,7 @@ class SlackMsgHandler():
         if SlackMsgHandler.DRY_RUN or not self.ts:
             return False
 
-        client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
-        result = client.api_call(
+        result = self.client.api_call(
             "chat.postMessage",
             channel=channel,
             text=message,
@@ -190,4 +184,18 @@ class SlackMsgHandler():
             timeout=60
         )
 
+        return result.get('ok', False)
+
+    def send_admin_alert(self, message, dry_run_param = False):
+        """
+        Send admins an alert.
+        """
+
+        if MsgHandler.DRY_RUN or dry_run_param:
+            return False    # pragma: no cover
+
+        # REVIEW: use a better channel (e.g., #alerts-admin?)
+        result = self.client.api_call("chat.postMessage", channel="#z_testing", text=message, timeout=60)
+
+        self.ts = result.get('ts', None)
         return result.get('ok', False)

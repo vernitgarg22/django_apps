@@ -177,5 +177,5 @@ class Command(BaseCommand):
 
             if missing_emails:
                 msg = "User ids {} need email added".format(list(missing_emails.keys()))
-                MsgHandler().send_admin_alert(text=msg)
+                SlackMsgHandler().send_admin_alert(text=msg)
                 raise CommandError(msg)

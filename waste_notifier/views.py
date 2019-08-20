@@ -18,7 +18,7 @@ from waste_schedule.util import *
 import cod_utils.util
 import cod_utils.security
 from cod_utils.util import date_json
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
 from cod_utils.cod_logger import CODLogger
 
 from waste_schedule.models import ScheduleDetail
@@ -35,7 +35,7 @@ def subscribe_notifications(request):
     # Only allow certain servers to call this endpoint
     if cod_utils.security.block_client(request):    # pragma: no cover (this is disabled now due)
         remote_addr = request.META.get('REMOTE_ADDR')
-        MsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
+        SlackMsgHandler().send_admin_alert(message="Address {} was blocked from subscribing waste alerts".format(remote_addr))
         return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
     # update existing subscriber or create new one from data
@@ -52,7 +52,7 @@ def subscribe_notifications(request):
     add_subscriber_comment(subscriber=subscriber, comment='signed up via web')
 
     # text the subscriber to ask them to confirm
-    MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
+    get_dpw_msg_handler().send_text(phone_number=subscriber.phone_number, text=body)
 
     return Response({ "received": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
@@ -65,17 +65,15 @@ def subscribe_address(request):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    msg_handler = MsgHandler()
-
     # Make sure the call came from twilio and is valid
-    msg_handler.validate(request)
+    MsgHandler.validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
         return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Clean up phone number
-    phone_number = msg_handler.get_fone_number(request)
+    phone_number = MsgHandler.get_fone_number(request)
 
     # Clean up street address
     street_address = msg_handler.get_address(request)
@@ -87,11 +85,11 @@ def subscribe_address(request):
 
         CODLogger.instance().log_error(name=__name__, area="waste notifier signup by text", msg=invalid_addr_msg)
 
-        MsgHandler().send_admin_alert(invalid_addr_msg)
+        SlackMsgHandler().send_admin_alert(message=invalid_addr_msg)
 
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
         text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
-        MsgHandler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
+        get_dpw_msg_handler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
 
         return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -134,7 +132,7 @@ def update_subscription(phone_number, activate, subscriber=None):
     body = body.format(services_desc)
 
     # send the subscriber a confirmation message
-    MsgHandler().send_text(phone_number=subscriber.phone_number, text=body)
+    get_dpw_msg_handler().send_text(phone_number=subscriber.phone_number, text=body)
 
     return subscriber, Response({ "subscriber": str(subscriber), "message": body }, status=status.HTTP_201_CREATED)
 
@@ -165,17 +163,15 @@ def confirm_notifications(request):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    msg_handler = MsgHandler()
-
     # Make sure the call came from twilio and is valid
-    msg_handler.validate(request)
+    MsgHandler.validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
         return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Clean up phone number
-    phone_number = msg_handler.get_fone_number(request)
+    phone_number = MsgHandler.get_fone_number(request)
 
     body = request.data['Body']
     body = body.lower()
@@ -255,11 +251,13 @@ def send_notifications(date, dry_run_param=False):
 
     msg_cnt = 0
 
+    msg_handler = get_dpw_msg_handler()
+
     # send text reminder to each subscriber needing a reminder
     for subscriber in subscribers_services.get_subscribers():
 
         message = get_service_message(subscribers_services.get_services(subscriber), date)
-        MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
+        msg_handler.send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
         msg_cnt += 1
 
         # Update a slack thread with progress report.
@@ -272,7 +270,7 @@ def send_notifications(date, dry_run_param=False):
 
             message = get_service_detail_message(subscribers_services_detail.get_services(subscriber), subscribers_services_detail.schedule_detail)
 
-            MsgHandler().send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
+            msg_handler.send_text(phone_number=subscriber.phone_number, text=message, dry_run_param=dry_run_param)
             msg_cnt += 1
 
             # Update a slack thread with progress report.
@@ -314,7 +312,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     if not location:
         invalid_addr_msg = 'Invalid address received in service info request: {}'.format(street_address)
         CODLogger.instance().log_error(name=__name__, area="service info request", msg=invalid_addr_msg)
-        MsgHandler().send_admin_alert(text=invalid_addr_msg)
+        SlackMsgHandler().send_admin_alert(message=invalid_addr_msg)
 
         return Response({"error": invalid_addr_msg}, status=status.HTTP_400_BAD_REQUEST)
 

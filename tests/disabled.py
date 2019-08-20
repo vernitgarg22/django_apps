@@ -1,7 +1,7 @@
 from cod_utils.messaging import MsgHandler
 
 
-def no_validate(self, request):
+def no_validate(request):
     pass
 
 MsgHandler.validate = no_validate
