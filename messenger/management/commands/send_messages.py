@@ -29,12 +29,10 @@ class Command(BaseCommand):
         if dry_run_param not in ['yes', 'no']:
             raise CommandError("--dry_run must be 'yes' or 'no'")
 
-        if type(today) == str:
-            if not re.fullmatch(r'^\d{8}$', today):
-                raise CommandError("Date format for 'today' must be YYYYMMDD")
-            today = date(int(today[0:4]), int(today[4:6]), int(today[6:8]))
-        elif not type(today) == date:
-            raise CommandError("Invalid data type for today param")    # pragma: no cover (should never get here)
+        if not type(today) == str or not re.fullmatch(r'^\d{8}$', today):
+            raise CommandError("Date format for 'today' must be YYYYMMDD")
+
+        today = date(int(today[0:4]), int(today[4:6]), int(today[6:8]))
 
         dry_run_param = dry_run_param == "yes"
 
