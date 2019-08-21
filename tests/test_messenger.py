@@ -11,7 +11,7 @@ from django.core.management.base import CommandError
 from tests import test_util
 
 from messenger import views
-from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerMessage, MessengerNotification, MessengerSubscriber
 from messenger.util import NotificationException, send_messages
 
 from cod_utils import messaging
@@ -85,15 +85,18 @@ def setup_messenger():
     phone_number = MessengerPhoneNumber(messenger_client=client, phone_number='5005550006', description='Test phone number')
     phone_number.save()
     notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5),
-        message='Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}', geo_layer_url=url, formatter='ElectionFormatter')
+      geo_layer_url=url, formatter='ElectionFormatter')
     notification.save()
+    message = MessengerMessage(messenger_notification=notification,
+      message='Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}')
+    message.save()
 
 
 class MessengerTests(TestCase):
 
     def cleanup_db(self):
         
-        for model in [ MessengerSubscriber, MessengerNotification, MessengerPhoneNumber, MessengerClient ]:
+        for model in [ MessengerSubscriber, MessengerMessage, MessengerNotification, MessengerPhoneNumber, MessengerClient ]:
             test_util.cleanup_model(model)
 
     def setUp(self):
@@ -163,11 +166,9 @@ class MessengerTests(TestCase):
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")
 
     def test_send_messages(self):
+        "Test sending a basic formatted message"
 
-        street_address = '7840 Van Dyke Pl'
-        location, address = geocode_address(street_address=street_address)
-
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address=street_address)
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
 
         out = StringIO()
@@ -179,18 +180,38 @@ class MessengerTests(TestCase):
         message = 'Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST. - open in maps: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
         mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
 
+    def test_send_messages_multi_lang(self):
+        "Test sending a basic formatted message with multi-language support"
+
+        message = MessengerMessage(messenger_notification=MessengerNotification.objects.first(), lang='es',
+            message='Recordatorio: hoy es el día de las elecciones. Su lugar de votación es {name}, situado en {location} - abrir en mapas: https://www.google.com/maps/search/?api=1&query={lat},{lng}')
+        message.save()
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl', lang='es')
+        subscriber.save()
+
+        out = StringIO()
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
+
+        message = 'Recordatorio: hoy es el día de las elecciones. Su lugar de votación es MAR. GARVEY ACADEMY, situado en 2301 VAN DYKE ST. - abrir en mapas: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
+        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+
     def test_send_messages_simple(self):
         "Test sending a message with no geo layer (just the message itself"
-
-        street_address = '7840 Van Dyke Pl'
-        location, address = geocode_address(street_address=street_address)
 
         notification = MessengerNotification.objects.first()
         notification.geo_layer_url = None
         notification.message = "Don't forget to vote today!"
         notification.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address=street_address)
+        messenger_message = notification.messengermessage_set.first()
+        messenger_message.message = "Don't forget to vote today!"
+        messenger_message.save()
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
 
         out = StringIO()
@@ -204,13 +225,27 @@ class MessengerTests(TestCase):
 
     def test_send_messages_no_notifications(self):
 
-        MessengerNotification.objects.all().delete()
+        test_util.cleanup_model(MessengerMessage)
+        test_util.cleanup_model(MessengerNotification)
 
         subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
 
         messages_meta = send_messages(client_name='elections', day=date(2019, 11, 5))
         self.assertEqual('\nclient: elections\nday:    2019-11-05\n\nnotifications:  (No notifications sent)', messages_meta.describe(), "No messages can be sent")
+
+    def test_send_messages_no_message(self):
+        "Test sending a message with no message set in database"
+
+        test_util.cleanup_model(MessengerMessage)
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber.save()
+
+        out = StringIO()
+        with self.assertRaises(NotificationException):
+
+            call_command('send_messages', 'elections', '--today=20191105', stdout=out)
 
     def test_send_messages_no_formatter(self):
 
@@ -263,3 +298,17 @@ class MessengerTests(TestCase):
 
             mocked_requests_get.return_value = MockedResponse()
             call_command('send_messages', 'elections', '--today=20191105', stdout=out)
+
+    def test_send_messages_invalid_dryrun_param(self):
+
+        out = StringIO()
+        with self.assertRaises(CommandError):
+
+            call_command('send_messages', 'elections', '--today=20191105', '--dry_run=maybe', stdout=out)
+
+    def test_send_messages_invalid_date_param(self):
+
+        out = StringIO()
+        with self.assertRaises(CommandError):
+
+            call_command('send_messages', 'elections', '--today=201911050', stdout=out)

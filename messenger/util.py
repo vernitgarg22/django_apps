@@ -48,6 +48,7 @@ class BaseNotificationFormatter(ABC):
         self.notification = notification
         self.subscriber = subscriber
         self.geo_layer_data = geo_layer_data
+        self.message = notification.get_message(subscriber)
 
     @abstractmethod
     def format_message(self):
@@ -69,7 +70,7 @@ class ElectionFormatter(BaseNotificationFormatter):
                 lat = pollxy[comma_pos + 1 : ]
                 lng = pollxy[0 : comma_pos]
 
-                return self.notification.message.format(location=precinct_location, name=precinct_name, url_safe_name=quote_plus(precinct_name), lat=lat, lng=lng)
+                return self.message.message.format(location=precinct_location, name=precinct_name, url_safe_name=quote_plus(precinct_name), lat=lat, lng=lng)
 
         raise NotificationException(client_name=notification.messenger_client.name, message="No geo layer found")   # pragma: nocover (should never get here)
 
@@ -81,9 +82,15 @@ def format_message(notification, subscriber):
     Creates a message for the given notification.
     """
 
+    # Make sure a message is available.
+    message = notification.get_message(subscriber)
+    if not message:
+        raise NotificationException(client_name=notification.messenger_client.name,
+            message="Notification {id} has no message available for lang {lang}".format(id=notification.id, lang=subscriber.lang))
+
     # If the notification has no geo layer, just use the notification's message as is.
     if not notification.geo_layer_url:
-        return notification.message
+        return message.message
 
     url = notification.geo_layer_url.format(lng=subscriber.longitude, lat=subscriber.latitude)
     response = requests.get(url, timeout=60)
@@ -108,15 +115,18 @@ class MessagesMeta():
 
     class NotificationMeta():
 
-        def __init__(self, notification_id, message, geo_layer_url, formatter, num_messages_sent):
+        def __init__(self, notification):
 
-            self.notification_id = notification_id
-            self.message = message
-            self.geo_layer_url = geo_layer_url
-            self.formatter = formatter
-            self.num_messages_sent = num_messages_sent
+            self.notification = notification
+            self.num_messages_sent = 0
+
+        def update(self):
+
+            self.num_messages_sent += 1
 
         def describe(self):
+
+            messenger_message = self.notification.get_message_by_lang(lang=None)
 
             description = """
 id:                 {id}
@@ -124,8 +134,8 @@ message:            {message}
 geo layer url:      {geo_layer_url}
 formatter:          {formatter}
 num messages sent:  {num_messages_sent}
-""".format(id=self.notification_id, 
-message=self.message, geo_layer_url=self.geo_layer_url, formatter=self.formatter, num_messages_sent=self.num_messages_sent)
+""".format(id=self.notification.id,
+message=messenger_message.message, geo_layer_url=self.notification.geo_layer_url, formatter=self.notification.formatter, num_messages_sent=self.num_messages_sent)
 
             return description
 
@@ -133,13 +143,19 @@ message=self.message, geo_layer_url=self.geo_layer_url, formatter=self.formatter
 
         self.client_name = client_name
         self.day = day
-        self.notifications_meta = []
+        self.notifications_meta = {}
 
-    def add_notification_meta(self, notification, num_messages_sent):
+    def update(self, notification):
+        """
+        Updates the notification metadata for each message sent.
+        """
 
-        notification_meta = MessagesMeta.NotificationMeta(notification_id=notification.id, message=notification.message,
-            geo_layer_url=notification.geo_layer_url, formatter=notification.formatter, num_messages_sent=num_messages_sent)
-        self.notifications_meta.append(notification_meta)
+        if not self.notifications_meta.get(notification.id, None):
+
+            notification_meta = MessagesMeta.NotificationMeta(notification=notification)
+            self.notifications_meta[notification.id] = notification_meta
+
+        self.notifications_meta[notification.id].update()
 
     def describe(self):
 
@@ -151,7 +167,7 @@ notifications:""".format(client_name=self.client_name, day=self.day)
 
         if self.notifications_meta:
 
-            for notification_meta in self.notifications_meta:
+            for notification_meta in self.notifications_meta.values():
                 description += "\n" + notification_meta.describe()
 
 
@@ -181,8 +197,6 @@ def send_messages(client_name, day, dry_run_param=False):
     if not notifications:
         return messages_meta
 
-    message_counter = {}
-
     # Filter subscribers by client and status and send the notifications
     subscribers = client.messengersubscriber_set.filter(status='active')
     for subscriber in subscribers:
@@ -193,10 +207,6 @@ def send_messages(client_name, day, dry_run_param=False):
 
             msg_handler.send_text(phone_number=subscriber.phone_number, text=message)
 
-            message_counter[notification.id] = message_counter.get(notification.id, 0) + 1
-
-    # Return metadata about notifications sent
-    for notification in notifications:
-        messages_meta.add_notification_meta(notification=notification, num_messages_sent=message_counter.get(notification.id, 0))
+            messages_meta.update(notification=notification)
 
     return messages_meta

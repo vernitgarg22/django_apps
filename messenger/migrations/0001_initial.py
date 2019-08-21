@@ -37,11 +37,21 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
                 ('messenger_client' , models.ForeignKey(to='messenger.MessengerClient', on_delete=models.deletion.PROTECT)),
                 ('day', models.DateField(verbose_name='Day on which notification should be sent')),
-                ('message', models.CharField(verbose_name='Messae', max_length=2048, blank=True, null=True)),
                 ('geo_layer_url', models.CharField(verbose_name='Geo Layer URL', max_length=1024, blank=True, null=True)),
                 ('formatter', models.CharField(verbose_name='Formatter class to render message', max_length=64, blank=True, null=True)),
             ],
         ),
+
+        migrations.CreateModel(
+            name='MessengerMessage',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
+                ('messenger_notification' , models.ForeignKey(to='messenger.MessengerNotification', on_delete=models.deletion.PROTECT)),
+                ('lang', models.CharField(verbose_name='Language', max_length=32, default='en')),
+                ('message', models.CharField(verbose_name='Messae', max_length=2048, blank=True, null=True)),
+            ],
+        ),
+
         migrations.CreateModel(
             name='MessengerSubscriber',
             fields=[
@@ -52,6 +62,7 @@ class Migration(migrations.Migration):
                 ('address', models.CharField(verbose_name='Home address', max_length=128)),
                 ('latitude', models.CharField(verbose_name='Latitude', max_length=32)),
                 ('longitude', models.CharField(verbose_name='Longitude', max_length=32)),
+                ('lang', models.CharField(verbose_name='Preferred Language', max_length=32, blank=True, null=True)),
                 ('created_at', models.DateTimeField(verbose_name='Time of last status change', default=timezone.now())),
                 ('last_status_update', models.DateTimeField(verbose_name='Time of last status change', default=timezone.now())),
             ],
