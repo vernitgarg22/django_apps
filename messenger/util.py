@@ -72,7 +72,8 @@ class ElectionFormatter(BaseNotificationFormatter):
 
                 return self.message.message.format(location=precinct_location, name=precinct_name, url_safe_name=quote_plus(precinct_name), lat=lat, lng=lng)
 
-        raise NotificationException(client_name=notification.messenger_client.name, message="No geo layer found")   # pragma: nocover (should never get here)
+        # Subscriber is not inside area affected by the notification: send no message
+        return None
 
 BaseNotificationFormatter.register(ElectionFormatter)
 
@@ -204,9 +205,10 @@ def send_messages(client_name, day, dry_run_param=False):
         for notification in notifications:
 
             message = format_message(notification=notification, subscriber=subscriber)
+            if message:
 
-            msg_handler.send_text(phone_number=subscriber.phone_number, text=message)
+                msg_handler.send_text(phone_number=subscriber.phone_number, text=message)
 
-            messages_meta.update(notification=notification)
+                messages_meta.update(notification=notification)
 
     return messages_meta
