@@ -15,7 +15,6 @@ from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerMes
 from messenger.util import NotificationException, send_messages
 
 from cod_utils import messaging
-from cod_utils.util import geocode_address
 
 
 TEXT_DATA = {
@@ -222,6 +221,16 @@ class MessengerTests(TestCase):
 
         message = "Don't forget to vote today!"
         mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+
+    def test_send_message_subscriber_outside_geo(self):
+        "Test sending messages when subscriber is outside notification's polygon"
+
+        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active',
+            address='132 Dikeman Street Ann Arbor, MI', latitude='42.201225', longitude='-83.150925')
+        super(MessengerSubscriber, subscriber).save()
+
+        messages_meta = send_messages(client_name='elections', day=date(2019, 11, 5))
+        self.assertEqual('\nclient: elections\nday:    2019-11-05\n\nnotifications:  (No notifications sent)', messages_meta.describe(), "No messages can be sent")
 
     def test_send_messages_no_notifications(self):
 
