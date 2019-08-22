@@ -186,7 +186,7 @@ def send_messages(client_name, day, dry_run_param=False):
     """
 
     if not MessengerClient.objects.filter(name=client_name).exists():
-        raise CommandError(f"Messenger Client '{client_name}' not found")
+        raise CommandError("Messenger Client '{client_name}' not found".format(client_name=client_name))
 
     client = MessengerClient.objects.get(name=client_name)
 

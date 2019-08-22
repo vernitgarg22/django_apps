@@ -59,7 +59,8 @@ def subscribe(request):
 
     # Make sure phone number is set up and valid.
     if not MessengerPhoneNumber.objects.filter(phone_number=phone_number_to).exists():
-        return Response({"error": f"phone_number {phone_number_to} not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "phone_number {phone_number_to} not found".format(phone_number_to=phone_number_to)},
+            status=status.HTTP_404_NOT_FOUND)
 
     # Figure out what messenger client this is and get the msg handler for this client.
     phone_number_to_object = MessengerPhoneNumber.objects.get(phone_number=phone_number_to)
