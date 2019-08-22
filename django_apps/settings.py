@@ -212,12 +212,11 @@ class DjangoAppsRouter(object):
         "ImageMetadata": "photo_survey",
         "ParcelMetadata": "photo_survey",
         "PublicPropertyData": "photo_survey",
-
-        # REVIEW put these somewhere else
-        "MessengerClient": "default",
-        "MessengerNotification": "default",
-        "MessengerSubscriber": "default",
-
+        "MessengerClient": "messenger",
+        "MessengerPhoneNumber": "messenger",
+        "MessengerMessage": "messenger",
+        "MessengerNotification": "messenger",
+        "MessengerSubscriber": "messenger",
         "EscrowBalance": "property_data",
         "Sales": "eql",
         "Sketch": "eql",

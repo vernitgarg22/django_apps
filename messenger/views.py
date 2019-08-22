@@ -22,6 +22,19 @@ from cod_utils.cod_logger import CODLogger
 def subscribe(request):
     """
     Parse subscription request and text user request for confirmation.
+
+{
+  'From': [
+    '5005550007'
+  ],
+  'Body': [
+    '7840 van dyke pl'
+  ],
+  'To': [
+    '5005550006'
+  ]
+}
+
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
