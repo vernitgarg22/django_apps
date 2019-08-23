@@ -21,9 +21,6 @@ from cod_utils import messaging
 from twilio.request_validator import RequestValidator
 
 
-import pdb
-
-
 TEXT_DATA = {
   'FromState': [
     'MI'
@@ -98,7 +95,7 @@ def setup_messenger():
     message.save()
 
 
-class MessengerTests(TestCase):
+class MessengerBaseTests(TestCase):
 
     def cleanup_db(self):
         
@@ -113,6 +110,9 @@ class MessengerTests(TestCase):
         self.maxDiff = None
 
         setup_messenger()
+
+
+class MessengerTests(MessengerBaseTests):
 
     # Test actual API endpoints
     def test_subscribe(self):
@@ -347,3 +347,53 @@ class MessengerTests(TestCase):
         with self.assertRaises(CommandError):
 
             call_command('send_messages', 'elections', '--today=201911050', stdout=out)
+
+
+class MessengerDashboardTests(MessengerBaseTests):
+
+    def test_add_notification(self):
+        "Test adding a notification"
+
+        c = Client()
+        response = c.post('/messenger/notifications/', {})
+
+        expected = {}
+        self.assertEqual(response.status_code, 201)
+        self.assertDictEqual(response.data, expected, "Notification gets added")
+
+    def test_get_notifications(self):
+        "Test returning all notifications for a client"
+
+        c = Client()
+        response = c.get('/messenger/notifications/1/')
+
+        expected = {
+            'notifications': [
+                {
+                    'id': 1,
+                    'day': '2019-11-05T00:00:00.000Z',
+                    'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+                    'formatter': 'ElectionFormatter',
+                    'messages': [
+                        {
+                            'id': 1,
+                            'lang': 'en',
+                            'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(response.data, expected, "Notifications get returned")
+
+    def test_add_message(self):
+        "Test adding a message"
+
+        c = Client()
+        response = c.post('/messenger/notifications/1/messages/', { "lang": "en", "message": "Get out the vote!" })
+
+        expected = { 'id': 2, 'lang': 'en', 'message': 'Get out the vote!' }
+        self.assertEqual(response.status_code, 201)
+        self.assertDictEqual(response.data, expected, "Notifications get returned")
