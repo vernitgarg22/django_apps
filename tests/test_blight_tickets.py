@@ -9,7 +9,6 @@ from django.utils import timezone
 from django.test import Client
 from django.test import TestCase
 
-import tests.disabled
 from tests import test_util
 
 from blight_tickets.models import Tblztickets

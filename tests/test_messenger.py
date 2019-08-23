@@ -8,6 +8,8 @@ from django.core.management import call_command
 from django.utils.six import StringIO
 from django.core.management.base import CommandError
 
+from rest_framework.exceptions import PermissionDenied
+
 from tests import test_util
 
 from messenger import views
@@ -15,6 +17,11 @@ from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerMes
 from messenger.util import NotificationException, send_messages
 
 from cod_utils import messaging
+
+from twilio.request_validator import RequestValidator
+
+
+import pdb
 
 
 TEXT_DATA = {
@@ -110,10 +117,11 @@ class MessengerTests(TestCase):
     # Test actual API endpoints
     def test_subscribe(self):
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-          c = Client()
-          response = c.post('/messenger/subscribe/', TEXT_DATA)
+            c = Client()
+            response = c.post('/messenger/subscribe/', TEXT_DATA)
 
         mock_method.assert_called_once_with(phone_number='5005550006', text='You will receive elections reminders for the address 7840 VAN DYKE PL')
 
@@ -123,8 +131,11 @@ class MessengerTests(TestCase):
 
     def test_subscribe_msg_missing_fone(self):
 
-        c = Client()
-        response = c.post('/messenger/subscribe/', { "address": "1104 Military St" } )
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/subscribe/', { "address": "1104 Military St" } )
 
         expected = {'error': 'Address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
@@ -132,8 +143,11 @@ class MessengerTests(TestCase):
 
     def test_subscribe_msg_missing_address(self):
 
-        c = Client()
-        response = c.post('/messenger/subscribe/', { "phone_number": "5005550006" } )
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/subscribe/', { "phone_number": "5005550006" } )
 
         expected = {'error': 'Address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
@@ -145,8 +159,11 @@ class MessengerTests(TestCase):
         phone_number.phone_number = '1234567890'
         phone_number.save()
 
-        c = Client()
-        response = c.post('/messenger/subscribe/', TEXT_DATA)
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/subscribe/', TEXT_DATA)
 
         expected = {'error': 'phone_number 5005550006 not found'}
         self.assertEqual(response.status_code, 404)
@@ -157,12 +174,21 @@ class MessengerTests(TestCase):
         text_data = TEXT_DATA.copy()
         text_data['Body'][0] = 'invalid address'
 
-        c = Client()
-        response = c.post('/messenger/subscribe/', text_data)
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/subscribe/', text_data)
 
         expected = {'error': "Street address 'INVALID ADDRESS' not found"}
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+
+    def test_subscribe_no_authentication(self):
+
+        c = Client()
+        response = c.post('/messenger/subscribe/', TEXT_DATA)
+        self.assertEqual(response.status_code, 403, "MsgHandler.validate() catches invalid requests")
 
     def test_send_messages(self):
         "Test sending a basic formatted message"

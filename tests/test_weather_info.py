@@ -1,8 +1,6 @@
 from django.test import Client
 from django.test import TestCase
 
-import tests.disabled
-
 import weather_info.views
 
 

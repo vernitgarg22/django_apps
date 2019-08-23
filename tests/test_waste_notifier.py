@@ -17,7 +17,6 @@ from cod_utils.util import date_json
 
 from slackclient import SlackClient
 
-import tests.disabled
 from tests import test_util
 
 from waste_notifier.models import Subscriber
@@ -27,6 +26,8 @@ from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 
 from waste_notifier import views
 from waste_notifier.util import get_waste_area_ids, get_service_detail_message
+
+from twilio.request_validator import RequestValidator
 
 
 def cleanup_db():
@@ -252,7 +253,10 @@ class WasteNotifierTests(TestCase):
             subscriber = Subscriber(phone_number="5005550006", waste_area_ids='0', address="1104 Military St", service_type=service)
             subscriber.save()
 
-            response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
+            with patch.object(RequestValidator, 'validate') as mock_validate:
+                mock_validate.return_value = True
+                response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
+
             self.assertEqual(response.status_code, 201)
             self.assertDictEqual(response.data, expected, "Subscription confirmation returns correct message")
             self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'active')
@@ -265,7 +269,13 @@ class WasteNotifierTests(TestCase):
 
         expected = {'subscriber': '5005550006 - routes: ,0, - status: inactive - services: all', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been cancelled (reply to this message at any time with ADD ME to start receiving reminders again)'}
 
-        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            with patch.object(RequestValidator, 'validate') as mock_validate:
+                mock_validate.return_value = True
+                response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
+
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(response.data, expected, "Subscription confirmation returns correct message")
         self.assertEqual(Subscriber.objects.get(phone_number = "5005550006").status, 'inactive')
@@ -274,30 +284,47 @@ class WasteNotifierTests(TestCase):
 
         c = Client()
 
-        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl" }, secure=True)
+        with patch.object(MsgHandler, 'send_text') as mock_send_text, patch.object(RequestValidator, 'validate') as mock_validate:
+
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl" }, secure=True)
+
+        text = 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'
+        mock_send_text.assert_called_once_with(phone_number='5005550006', text=text)
         self.assertEqual(response.status_code, 201)
         expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
         self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
 
     def test_sign_up_by_fone_missing_number(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/subscribe/address/', { "From": "", "Body": "7840 van dyke pl" }, secure=True)
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/address/', { "From": "", "Body": "7840 van dyke pl" }, secure=True)
+
         self.assertEqual(response.status_code, 400)
 
     def test_sign_up_by_fone_bad_address(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "invalid address" }, secure=True)
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "invalid address" }, secure=True)
+
         self.assertEqual(response.status_code, 400)
 
     def test_sign_up_by_fone_city_included(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl detroit, mi" }, secure=True)
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "7840 van dyke pl detroit, mi" }, secure=True)
+
         self.assertEqual(response.status_code, 201)
         expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
         self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
@@ -305,18 +332,24 @@ class WasteNotifierTests(TestCase):
     @skip('virginia park address not working yet')
     def test_sign_up_by_fone_virginia_park_st(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "670 virginia park st" }, secure=True)
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "670 virginia park st" }, secure=True)
+
         self.assertEqual(response.status_code, 201)
         expected = {'subscriber': '5005550006 - routes: ,8, - status: active - services: all (signed up via text)', 'message': 'City of Detroit Public Works:  your bulk, recycling, trash and yard waste pickup reminders have been confirmed\n(reply REMOVE ME to any of the reminders to stop receiving them)'}
         self.assertDictEqual(response.data, expected, "Subscribing address returns correct message")
 
     def test_sign_up_by_fone_vague_address(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "Detroit" }, secure=True)
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/address/', { "From": "5005550006", "Body": "Detroit" }, secure=True)
+
         self.assertEqual(response.status_code, 400)
 
     def test_includes_yard_waste_all(self):
@@ -417,7 +450,10 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "16772 Sunderland Rd", "service_type": "all" } )
         self.assertEqual(response.status_code, 201)
 
-        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+            response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "ADD ME" } )
+
         self.assertEqual(response.status_code, 201)
 
         subscriber = Subscriber.objects.first()
@@ -438,9 +474,12 @@ class WasteNotifierTests(TestCase):
 
     def test_subscribe_invalid_form(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/subscribe/', { "Body": "oops" } )
+            c = Client()
+            response = c.post('/waste_notifier/subscribe/', { "Body": "oops" } )
+
         self.assertEqual(response.status_code, 400, "/waste_notifier/subscribe/ rejects malformed content")
 
     def test_subscribe_invalid_address(self):
@@ -467,16 +506,22 @@ class WasteNotifierTests(TestCase):
 
     def test_confirm_invalid_phone_number(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/confirm/', { "From": "1111111111", "Body": "add me" } )
+            c = Client()
+            response = c.post('/waste_notifier/confirm/', { "From": "1111111111", "Body": "add me" } )
+
         self.assertEqual(response.status_code, 404, "/waste_notifier/confirm/ rejects invalid phone number")
 
     def test_confirm_invalid_form(self):
 
-        c = Client()
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
 
-        response = c.post('/waste_notifier/confirm/', { "Body": "add me" } )
+            c = Client()
+            response = c.post('/waste_notifier/confirm/', { "Body": "add me" } )
+
         self.assertEqual(response.status_code, 400, "/waste_notifier/confirm/ rejects invalid form content")
 
     def test_invalid_confirm(self):
@@ -486,7 +531,10 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke pl", "service_type": "all" } )
         self.assertEqual(response.status_code, 201)
 
-        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+            response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
+
         self.assertEqual(response.status_code, 201)
 
         subscriber = Subscriber.objects.first()
@@ -500,7 +548,10 @@ class WasteNotifierTests(TestCase):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", address="1104 Military St", comment="test comment")
         subscriber.save()
-        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
+
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+            response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "oops" } )
 
         subscriber = Subscriber.objects.first()
         self.assertTrue(subscriber.comment.find('test comment') == 0)
@@ -513,7 +564,10 @@ class WasteNotifierTests(TestCase):
         response = c.post('/waste_notifier/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl", "service_type": "all" } )
         self.assertEqual(response.status_code == 201, True)
 
-        response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
+        with patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+            response = c.post('/waste_notifier/confirm/', { "From": "5005550006", "Body": "REMOVE ME" } )
+
         self.assertEqual(response.status_code == 201, True)
 
         subscriber = Subscriber.objects.first()

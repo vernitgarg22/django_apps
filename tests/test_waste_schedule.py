@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError
 
 import cod_utils.util
 
-import tests.disabled
 from tests import test_util
 
 from waste_schedule.models import ScheduleDetail

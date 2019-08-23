@@ -16,7 +16,6 @@ from unittest.mock import patch
 from cod_utils import util
 from cod_utils import security
 from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
-import tests.disabled
 
 from slackclient import SlackClient
 

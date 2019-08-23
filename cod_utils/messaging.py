@@ -80,8 +80,7 @@ class MsgHandler():
 
         return phone_sender
 
-    @staticmethod
-    def validate(request):   # pragma: no cover
+    def validate(self, request):
         """
         Make sure the call came from twilio and is valid.
         Raise an exception if it is not.

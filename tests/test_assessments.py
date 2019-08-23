@@ -15,7 +15,6 @@ from django.test import TestCase
 
 import mock
 
-import tests.disabled
 from tests import test_util
 from unittest import skip
 

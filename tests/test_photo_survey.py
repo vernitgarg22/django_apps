@@ -11,7 +11,6 @@ from rest_framework.test import APIClient
 from django.test import Client
 from django.test import TestCase
 
-import tests.disabled
 from tests import test_util
 
 from photo_survey.models import Image, ImageMetadata

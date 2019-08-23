@@ -3,7 +3,6 @@ from django.test import TestCase
 
 import cod_utils.util
 
-import tests.disabled
 from tests import test_util
 
 from waste_wizard.models import WasteItem
