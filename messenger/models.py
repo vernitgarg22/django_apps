@@ -12,6 +12,9 @@ class MessengerClient(models.Model):
     description = models.CharField('Description', max_length=2048)
     confirmation_message = models.CharField('Confirmation Message', max_length=2048)
 
+    def __str__(self):    # pragma: nocover (mostly just for debugging)
+        return self.name
+
 
 class MessengerPhoneNumber(models.Model):
 
@@ -20,6 +23,9 @@ class MessengerPhoneNumber(models.Model):
     messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
     phone_number = models.CharField('Phone Number', max_length=10, db_index=True, unique=True)
     description = models.CharField('Description', max_length=512, blank=True, null=True)
+
+    def __str__(self):    # pragma: nocover (mostly just for debugging)
+        return str(self.messenger_client) + ' - ' + self.phone_number
 
 
 class MessengerNotification(models.Model):
@@ -58,6 +64,9 @@ class MessengerNotification(models.Model):
 
         return self.get_message_by_lang(lang=subscriber.lang)
 
+    def __str__(self):    # pragma: nocover (mostly just for debugging)
+        return str(self.messenger_client) + ' - ' + str(self.day)
+
 # "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry=-82.9988157%2C+42.351591&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 # "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 
@@ -69,6 +78,9 @@ class MessengerMessage(models.Model):
     messenger_notification = models.ForeignKey(MessengerNotification, on_delete=models.PROTECT)
     lang = models.CharField('Language', max_length=32, default='en')
     message = models.CharField('Message', max_length=2048)
+
+    def __str__(self):    # pragma: nocover (mostly just for debugging)
+        return str(self.messenger_client) + ' - ' + self.lang + ' - ' + self.message
 
 
 class MessengerSubscriber(models.Model):
@@ -99,10 +111,13 @@ class MessengerSubscriber(models.Model):
         location, address = geocode_address(street_address=self.address)
         if address:
 
-            self.latitude=location['location']['y']
-            self.longitude=location['location']['x']
+            self.latitude = round(location['location']['y'], 8)
+            self.longitude = round(location['location']['x'], 8)
 
         self.last_status_update = timezone.now()
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
+
+    def __str__(self):    # pragma: nocover (mostly just for debugging)
+        return str(self.messenger_client) + ' - ' + self.phone_number + ' - ' + self.address
