@@ -133,7 +133,8 @@ class WebsiteDataTests(TestCase):
         end = date.today()
 
         c = Client()
-        response = c.get(f"/website_data/waste_subscribers/{start.strftime('%Y%m%d')}/{end.strftime('%Y%m%d')}/")
+        # response = c.get(f"/website_data/waste_subscribers/{start.strftime('%Y%m%d')}/{end.strftime('%Y%m%d')}/")
+        response = c.get("/website_data/waste_subscribers/{}/{}/".format(start.strftime('%Y%m%d'), end.strftime('%Y%m%d')))
 
         data = response.json()
 
