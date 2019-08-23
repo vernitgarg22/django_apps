@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 
-from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+from messenger.models import *
 from messenger.util import get_messenger_msg_handler
 
 from cod_utils import util
@@ -101,3 +101,55 @@ def subscribe(request):
 
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
     return Response(response, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def add_notification(request, notification_id=None):
+    """
+    Creates or modifies a notification.
+    """
+
+    return Response({}, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def get_notifications(request, client_id):
+    """
+    Returns all notifications for a client.
+    """
+
+    if not MessengerClient.objects.filter(id=client_id).exists():
+        return Response({"error": "Client {client_id} not found".format(client_id=client_id)},
+            status=status.HTTP_404_NOT_FOUND)
+
+    client = MessengerClient.objects.get(id=client_id)
+
+    response = {"notifications": []}
+    for notification in client.messengernotification_set.all():
+
+        response["notifications"].append(notification.to_json())
+
+    return Response(response)
+
+@api_view(['POST'])
+def add_notification_message(request, notification_id, message_id=None):
+    """
+    Adds or updates a message for a notification.
+    """
+
+    notification_id = int(notification_id)
+
+    if not MessengerNotification.objects.filter(id=notification_id).exists():
+        return Response({"error": "Notification {notification_id} not found".format(notification_id=notification_id)},
+            status=status.HTTP_404_NOT_FOUND)
+
+    notification = MessengerNotification.objects.get(id=notification_id)
+
+    if not request.data.get('lang') or not request.data.get('message'):
+        return Response({"error": "lang and message are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    lang = request.data['lang']
+    message = request.data['message']
+
+    message = MessengerMessage(messenger_notification=notification, lang=lang, message=message)
+    message.save()
+
+    return Response(message.to_json(), status=status.HTTP_201_CREATED)

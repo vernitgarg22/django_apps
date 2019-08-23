@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from cod_utils.util import geocode_address
+from cod_utils.util import geocode_address, date_json
 
 
 class MessengerClient(models.Model):
@@ -11,6 +11,18 @@ class MessengerClient(models.Model):
     name = models.CharField('Name', max_length=64)
     description = models.CharField('Description', max_length=2048)
     confirmation_message = models.CharField('Confirmation Message', max_length=2048)
+
+    def to_json(self):
+        """
+        Returns json representing this client.
+        """
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "confirmation_message": self.confirmation_message,
+            }
 
     def __str__(self):    # pragma: nocover (mostly just for debugging)
         return self.name
@@ -64,8 +76,27 @@ class MessengerNotification(models.Model):
 
         return self.get_message_by_lang(lang=subscriber.lang)
 
+    def to_json(self):
+        """
+        Returns json representing this notification.
+        """
+
+        data = {
+            "id": self.id,
+            "day": date_json(self.day),
+            "geo_layer_url": self.geo_layer_url,
+            "formatter": self.formatter,
+            "messages": []
+            }
+
+        for message in self.messengermessage_set.all():
+
+            data["messages"].append(message.to_json())
+
+        return data
+
     def __str__(self):    # pragma: nocover (mostly just for debugging)
-        return str(self.messenger_client) + ' - ' + str(self.day)
+        return str(self.id) + ' - ' + str(self.messenger_client) + ' - ' + str(self.day)
 
 # "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry=-82.9988157%2C+42.351591&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 # "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
@@ -79,8 +110,19 @@ class MessengerMessage(models.Model):
     lang = models.CharField('Language', max_length=32, default='en')
     message = models.CharField('Message', max_length=2048)
 
+    def to_json(self):
+        """
+        Returns json representing this message.
+        """
+
+        return {
+            "id": self.id,
+            "lang": self.lang,
+            "message": self.message,
+            }
+
     def __str__(self):    # pragma: nocover (mostly just for debugging)
-        return str(self.messenger_client) + ' - ' + self.lang + ' - ' + self.message
+        return str(self.messenger_notification) + ' - ' + self.lang + ' - ' + self.message
 
 
 class MessengerSubscriber(models.Model):
