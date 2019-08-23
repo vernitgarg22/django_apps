@@ -45,10 +45,6 @@ def subscribe(request):
     #     SlackMsgHandler().send_admin_alert("Address {} was blocked from subscribing waste alerts".format(remote_addr))
     #     return Response("Invalid caller ip or host name: " + remote_addr, status=status.HTTP_403_FORBIDDEN)
 
-
-    # Make sure the call came from twilio and is valid
-    MsgHandler.validate(request)
-
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
         return Response({"error": "Address and phone_number are required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -67,6 +63,11 @@ def subscribe(request):
     client = phone_number_to_object.messenger_client
 
     msg_handler = get_messenger_msg_handler(client)
+
+    # Make sure the call came from twilio and is valid
+    # REVIEW: would be nice to validate earlier but we haven't yet been
+    # able to construct our msg_handler until now...
+    msg_handler.validate(request)
 
     # Clean up street address
     street_address = MsgHandler.get_address(request)

@@ -74,9 +74,7 @@ add_vals_to_os()
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # Monkey-patch stuff that we want disabled locally
-if DEBUG:
-    import tests.disabled
-else:    # pragma: no cover
+if not DEBUG:    # pragma: no cover
 
     # TODO review following settings for security
     # SESSION_COOKIE_SECURE = True

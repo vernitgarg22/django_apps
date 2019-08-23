@@ -65,8 +65,10 @@ def subscribe_address(request):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
+    msg_handler = get_dpw_msg_handler()
+
     # Make sure the call came from twilio and is valid
-    MsgHandler.validate(request)
+    msg_handler.validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
@@ -89,7 +91,7 @@ def subscribe_address(request):
 
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
         text_signup_number = settings.AUTO_LOADED_DATA["WASTE_REMINDER_TEXT_SIGNUP_NUMBERS"][0]
-        get_dpw_msg_handler().send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
+        msg_handler.send_text(phone_number=phone_number, phone_sender=text_signup_number, text=msg)
 
         return Response({"error": "Address not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -163,8 +165,10 @@ def confirm_notifications(request):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
+    msg_handler = get_dpw_msg_handler()
+
     # Make sure the call came from twilio and is valid
-    MsgHandler.validate(request)
+    msg_handler.validate(request)
 
     # Verify required fields are present
     if not request.data.get('From') or not request.data.get('Body'):
