@@ -256,6 +256,10 @@ class DjangoAppsRouter(object):
             database = DjangoAppsRouter.ModelDBMapDev.get(name)
         if not database:
             database = DjangoAppsRouter.ModelDBMap.get(name)
+
+        if RUNNING_UNITTESTS:
+            database = DjangoAppsRouter.ModelDBMap.get("default")
+
         return database
 
     def db_for_read(self, model, **hints):
