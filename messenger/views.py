@@ -1,6 +1,7 @@
 import requests
 import datetime
 from datetime import date
+import re
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -106,9 +107,37 @@ def subscribe(request):
 def add_notification(request, notification_id=None):
     """
     Creates or modifies a notification.
+
+    {
+        "client_id": 1,
+        "day": "2019/11/05",
+        "geo_layer_url": "https://arcgis.com/layer",
+        "formatter": "ElectionsFormatter"
+    }
     """
 
-    return Response({}, status=status.HTTP_201_CREATED)
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    client_id = request.data.get("client_id", None)
+    if not client_id or not re.fullmatch(r'(\d)+', client_id) or not MessengerClient.objects.filter(id=int(client_id)).exists():
+        return Response({"error": "Client {client_id} not found".format(client_id=client_id)},
+            status=status.HTTP_404_NOT_FOUND)
+
+    client = MessengerClient.objects.get(id=client_id)
+
+    day_str = request.data.get("day", None)
+    if not day_str or not re.fullmatch(r'(\d){4}/(\d){2}/(\d){2}', day_str):
+        return Response({ "error": "Notification day is required and must use format YYYY/MM/DD" },
+            status=status.HTTP_400_BAD_REQUEST)
+
+    day = date(year=int(day_str[0:4]), month=int(day_str[5:7]), day=int(day_str[8:10]))
+    geo_layer_url = request.data.get('geo_layer_url', None)
+    formatter = request.data.get('formatter', None)
+
+    notification = MessengerNotification(messenger_client=client, day=day, geo_layer_url=geo_layer_url, formatter=formatter)
+    notification.save()
+
+    return Response(notification.to_json(), status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
 def get_notifications(request, client_id):
@@ -116,13 +145,19 @@ def get_notifications(request, client_id):
     Returns all notifications for a client.
     """
 
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
     if not MessengerClient.objects.filter(id=client_id).exists():
         return Response({"error": "Client {client_id} not found".format(client_id=client_id)},
             status=status.HTTP_404_NOT_FOUND)
 
     client = MessengerClient.objects.get(id=client_id)
 
-    response = {"notifications": []}
+    response = {
+        "client": client.to_json(),
+        "notifications": []
+    }
+
     for notification in client.messengernotification_set.all():
 
         response["notifications"].append(notification.to_json())
@@ -134,6 +169,8 @@ def add_notification_message(request, notification_id, message_id=None):
     """
     Adds or updates a message for a notification.
     """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     notification_id = int(notification_id)
 
