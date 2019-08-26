@@ -1,4 +1,14 @@
+#!/usr/bin/env bash
+
 OUTPUT="${DJANGO_HOME}/waste_notifier_output.txt"
+
+# Activate local environment
+if [ -e bin/activate ]
+then
+    source bin/activate
+else
+    source scripts/activate # windows-only
+fi
 
 echo $(date) >> ${OUTPUT}
 echo "" >> ${OUTPUT}
