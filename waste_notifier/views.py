@@ -208,6 +208,10 @@ def send_notifications_request(date_val=cod_utils.util.tomorrow(), date_name=Non
     return send_notifications(date_val, dry_run_param)
 
 
+def do_send_alerts_update(msg_cnt):
+    return msg_cnt % 1000 == 0
+
+
 def send_notifications(date, dry_run_param=False):
 
     if type(date) is str:
@@ -265,7 +269,7 @@ def send_notifications(date, dry_run_param=False):
         msg_cnt += 1
 
         # Update a slack thread with progress report.
-        if msg_cnt % 1000 == 0:
+        if do_send_alerts_update(msg_cnt):
             slack_handler.slack_alerts_update(msg_cnt=msg_cnt)
 
     # send out notifications about any schedule changes
@@ -278,7 +282,7 @@ def send_notifications(date, dry_run_param=False):
             msg_cnt += 1
 
             # Update a slack thread with progress report.
-            if msg_cnt % 1000 == 0:
+            if do_send_alerts_update(msg_cnt):
                 slack_handler.slack_alerts_update(msg_cnt=msg_cnt)
 
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param)
@@ -470,7 +474,7 @@ def get_route_info(request, format=None):
     # Loop through the routes, adding each one to the correct day
     for route in routes:
         day = route.pop('day')
-        if route['services'] == 'trash':
+        if route['services'] == 'trash':   # pragma: no cover (should never get here now that services are normalized)
             del route['week']
         index = ScheduleDetail.DAYS.index(day)
         routes_by_day[index][day].append(route)

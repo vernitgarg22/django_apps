@@ -168,6 +168,11 @@ def get_notifications(request, client_id):
 def add_notification_message(request, notification_id, message_id=None):
     """
     Adds or updates a message for a notification.
+
+    {
+        "lang": "es",
+        "message": "<insert message here>"
+    }
     """
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)

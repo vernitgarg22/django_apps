@@ -624,6 +624,22 @@ class WasteNotifierTests(TestCase):
         expected = add_meta(expected, date = datetime.date(2018, 1, 1))
         self.assertDictEqual(expected, response, "Sending info for all services works")
 
+    def test_send_reminder_alerts_thread(self):
+
+        detail = ScheduleDetail(detail_type='info', service_type='all', description='City services have not been affected by snow storm', normal_day=datetime.date(2018, 1, 1))
+        detail.clean()
+        detail.save(null_waste_area_ids=True)
+
+        subscriber = Subscriber(phone_number="5005550006", waste_area_ids="0", address="1104 Military St", service_type="all")
+        subscriber.activate()
+
+        with patch.object(views, 'do_send_alerts_update', return_value=True) as mock_do_send_alerts_update:
+            response = views.send_notifications_request(date_val="20180101")
+
+        expected = {'all': {0: {'message': 'City of Detroit Public Works:  Your next pickup for bulk, recycling and trash is Monday, January 01, 2018 (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}, 'citywide': {'message': 'City of Detroit Public Works:  City services have not been affected by snow storm (reply with REMOVE ME to cancel pickup reminders; begin your reply with FEEDBACK to give us feedback on this service).', 'subscribers': ['5005550006']}}
+        expected = add_meta(expected, date=datetime.date(2018, 1, 1))
+        self.assertDictEqual(expected, response, "Phone number did not get reminder")
+
     def test_send_schedule_change(self):
 
         subscriber = Subscriber(phone_number="5005550006", waste_area_ids="8", address="7840 Van Dyke Pl", service_type="all")
