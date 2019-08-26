@@ -355,11 +355,45 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test adding a notification"
 
         c = Client()
-        response = c.post('/messenger/notifications/', {})
+        response = c.post('/messenger/notifications/', {
+            "client_id": 1,
+            "day": "2019/11/05",
+            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "formatter": "ElectionFormatter"
+            })
 
-        expected = {}
+        expected = {
+            'id': 2,
+            'day': '2019-11-05T00:00:00.000Z',
+            'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+            'formatter': 'ElectionFormatter',
+            'messages': []
+        }
+
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(response.data, expected, "Notification gets added")
+
+    def test_add_notification_invalid_client(self):
+        "Test adding a notification with invalid client id"
+
+        c = Client()
+        response = c.post('/messenger/notifications/', {
+            "client_id": "invalid",
+            "day": "2019/11/05"
+            })
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_notification_invalid_day(self):
+        "Test adding a notification with invalid day format"
+
+        c = Client()
+        response = c.post('/messenger/notifications/', {
+            "client_id": 1,
+            "day": "2019/11/5"
+            })
+
+        self.assertEqual(response.status_code, 400)
 
     def test_get_notifications(self):
         "Test returning all notifications for a client"
@@ -368,6 +402,12 @@ class MessengerDashboardTests(MessengerBaseTests):
         response = c.get('/messenger/notifications/1/')
 
         expected = {
+            'client': {
+                'id': 1,
+                'name': 'elections',
+                'description': 'Elections Messenger',
+                'confirmation_message': 'You will receive elections reminders for the address {street_address}'
+            },
             'notifications': [
                 {
                     'id': 1,
@@ -388,6 +428,13 @@ class MessengerDashboardTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(response.data, expected, "Notifications get returned")
 
+    def test_get_notifications_invalid_client(self):
+        "Test returning all notifications for a client with invalid client id"
+
+        c = Client()
+        response = c.get('/messenger/notifications/99/')
+        self.assertEqual(response.status_code, 404)
+
     def test_add_message(self):
         "Test adding a message"
 
@@ -397,3 +444,17 @@ class MessengerDashboardTests(MessengerBaseTests):
         expected = { 'id': 2, 'lang': 'en', 'message': 'Get out the vote!' }
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(response.data, expected, "Notifications get returned")
+
+    def test_add_message_invalid_notification(self):
+        "Test adding a message with invalid notification"
+
+        c = Client()
+        response = c.post('/messenger/notifications/99/messages/', { "lang": "en", "message": "Get out the vote!" })
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_message_missing_msg(self):
+        "Test adding a message with missing msg"
+
+        c = Client()
+        response = c.post('/messenger/notifications/1/messages/', { "lang": "en" })
+        self.assertEqual(response.status_code, 400)
