@@ -16,7 +16,6 @@ from django.test import TestCase
 import mock
 
 from tests import test_util
-from unittest import skip
 
 from assessments import util
 from assessments import views
@@ -95,7 +94,7 @@ class AssessmentsTests(TestCase):
 
     def test_sales_json(self):
         sale = make_sale()
-        self.assertTrue(sale.json() != {})
+        self.assertTrue(sale.to_json() != {})
 
     def test_parcelmaster(self):
         pm = make_bsaparceldata()
@@ -103,7 +102,7 @@ class AssessmentsTests(TestCase):
 
     def test_parcelmaster_json(self):
         pm = make_bsaparceldata()
-        self.assertTrue(pm.json_data() != {})
+        self.assertTrue(pm.to_json() != {})
 
     def test_get_sales(self):
 
@@ -286,7 +285,6 @@ class AssessmentsTests(TestCase):
         response = c.get('/assessments/1/images/')
         self.assertEqual(response.status_code, 200)
 
-    @skip('test_get_image fails due to desktop on network drive')
     def test_get_image(self):
 
         c = Client()

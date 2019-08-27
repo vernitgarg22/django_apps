@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_data_cache"]
     # test_labels = ["tests.test_data_cache.DataCitySummaryTests"]
     # test_labels = ["tests.test_data_cache.DataCacheTests.test_data_cache_invalid_source"]
-    test_labels = ["tests.test_messenger.MessengerDashboardTests"]
+    # test_labels = ["tests.test_messenger"]
     # test_labels = ["tests.test_photo_survey"]
     # test_labels = ["tests.test_property_data"]
     # test_labels = ["tests.test_photo_survey.BridgingNeighborhoodsTests"]
