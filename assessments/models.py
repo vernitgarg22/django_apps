@@ -29,7 +29,7 @@ class Sales(models.Model):
     def __str__(self):
         return str(id) + ' - ' + self.pnum + " - " + self.addresscombined
 
-    def json(self):
+    def to_json(self):
         return {
             "pnum": self.pnum,
             "saleprice": self.saleprice,
@@ -105,19 +105,19 @@ class ParcelMaster(models.Model):
             managed = False
             db_table = 'ParcelMaster'
 
-    def __str__(self):
+    def __str__(self):    # pragma: no cover (mostly for debugging)
         return str(id) + ' - ' + self.pnum + " - " + self.propstreetcombined
 
-    def json(self):
+    # def to_json(self):
 
-        json = {}
-        fields = self._meta.get_fields()
-        for field in fields:
-            if field.name not in ParcelMaster.IGNORED_FIELDS:
-                value = getattr(self, field.name)
-                json[field.name] = util.clean_parcel_val(value)
+    #     data = {}
+    #     fields = self._meta.get_fields()
+    #     for field in fields:
+    #         if field.name not in ParcelMaster.IGNORED_FIELDS:
+    #             value = getattr(self, field.name)
+    #             data[field.name] = util.clean_parcel_val(value)
 
-        return json
+    #     return data
 
 
 #
@@ -197,15 +197,15 @@ class Parcel(models.Model):
 
     IGNORED_FIELDS = [ 'casemain' ]
 
-    def json(self):     # pragma: no cover - these are used mostly for debugging
+    def to_json(self):     # pragma: no cover - these are used mostly for debugging
 
-        json = {}
+        data = {}
         fields = self._meta.get_fields()
         for field in fields:
             value = getattr(self, field.name)
-            json[field.name] = util.clean_parcel_val(value)
+            data[field.name] = util.clean_parcel_val(value)
 
-        return json
+        return data
 
     def pp(self):     # pragma: no cover - these are used mostly for debugging
 
@@ -270,7 +270,7 @@ class CaseMain(models.Model):
             managed = False
             db_table = 'CaseMain'
 
-    def json(self):
+    def to_json(self):
         return {
             "csm_caseno": self.csm_caseno,
             "case_type": self.case_type.case_type,
@@ -333,7 +333,7 @@ class Sketch(models.Model):
 
         return filename, fileurl
 
-    def get_json(self):
+    def to_json(self):
 
         filename, fileurl = self.move_files()
 
@@ -419,20 +419,20 @@ class BSAPARCELDATA(models.Model):
         "ownerstreetaddr": "TAXPADDR",
     }
 
-    def json_data(self):     # pragma: no cover - these are used mostly for debugging
+    def to_json(self):     # pragma: no cover - these are used mostly for debugging
 
         # Collect all the data
-        json_data = {}
+        data = {}
         fields = self._meta.get_fields()
         for field in fields:
             value = getattr(self, field.name)
-            json_data[field.name] = util.clean_parcel_val(value)
+            data[field.name] = util.clean_parcel_val(value)
 
         # Map some values for backwards compatibility
         for old, new in self.HISTORICAL_VALUES.items():
-            json_data[old] = json_data.get(new, None)
+            data[old] = data.get(new, None)
 
-        return json_data
+        return data
 
     class Meta:
         db_table = 'BSAPARCELDATA'

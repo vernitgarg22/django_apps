@@ -32,7 +32,7 @@ def get_parcels(parcels):
     parcels = sorted(parcels, key=attrgetter('saledate'), reverse=True)
 
     # return json for each parcel
-    content = [parcel.json() for parcel in parcels]
+    content = [parcel.to_json() for parcel in parcels]
     return Response(content)
 
 
@@ -137,7 +137,7 @@ def get_parcel(request, pnum=None, format=None):
     if not parcels:
         raise Http404("Parcel id " + pnum + " not found")
 
-    content = parcels[0].json_data()
+    content = parcels[0].to_json()
     content['field_descriptions'] = util.get_parcel_descriptions()
 
     return Response(content)
@@ -162,7 +162,7 @@ def get_images(request, pnum=None, format=None):
 
     for sketch in sketch_data:
 
-        content.append(sketch.get_json())
+        content.append(sketch.to_json())
 
     return Response(content)
 
@@ -258,6 +258,6 @@ def get_rental_cases(request, pnum=None, format=None):
     if not casemains.exists():
         raise Http404("Parcel id " + pnum + " not found")
 
-    content = [ casemain.json() for casemain in casemains ]
+    content = [ casemain.to_json() for casemain in casemains ]
 
     return Response(content)
