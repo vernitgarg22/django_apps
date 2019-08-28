@@ -8,11 +8,12 @@ from django.conf import settings
 
 from tests import test_util
 from unittest import skip
+from unittest.mock import patch
 
 from data_cache.models import DataCredential, DataSource, DataValue, DataSet, DataDescriptor, DataCitySummary
 from data_cache.views import SimpleJSONCache
 
-from cod_utils import util
+from cod_utils import util, security
 
 
 def cleanup_db():
@@ -402,19 +403,6 @@ class DataCacheTests(TestCase):
         response = c.get("/data_cache/test/")
         self.assertEqual(response.status_code, 403)
 
-    @skip('Blocking clients by IP not permitted by firewall')
-    def test_data_cache_blocked_client(self):
-
-        # Force block_client to block us
-        settings.ALLOWED_HOSTS.remove("127.0.0.1")
-
-        c = Client()
-        response = c.get("/data_cache/test/")
-
-        settings.ALLOWED_HOSTS.append("127.0.0.1")
-
-        self.assertEqual(response.status_code, 403)
-
     def test_data_cache_params(self):
 
         init_gis_data()
@@ -473,6 +461,73 @@ class DataCacheTests(TestCase):
 
         with self.assertRaises(Exception, msg="DataSource.get() should flag failed get") as error:
             data_value = data_source.get()
+
+
+class DataCacheSecurityTests(TestCase):
+
+    def setUp(self):
+        init_test_data()
+        self.maxDiff = None
+
+    def tearDown(self):
+        cleanup_db()
+
+    def test_data_cache_get_data_blocked_client(self):
+
+        "Retrieving data can be blocked by ip"
+
+        with patch.object(security, 'block_client', return_value=True):
+
+            c = Client()
+            response = c.get("/data_cache/test/", secure=True)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_data_cache_add_url_blocked_client(self):
+
+        "Adding url can be blocked by ip"
+
+        url = "https://jsonplaceholder.typicode.com/posts/1"
+        with patch.object(security, 'block_client', return_value=True):
+
+            c = Client()
+            response = c.post("/data_cache/url_cache/urls/", data={ "url": url }, secure=True)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_data_cache_add_user_cache_blocked_client(self):
+
+        "Adding user cache can be blocked by ip"
+
+        data = { "data": { "sample": "this is sample data" }, "key": "test_data" }
+        with patch.object(security, 'block_client', return_value=True):
+
+            c = Client()
+            response = c.post("/data_cache/user_cache/data/", data=json.dumps(data), secure=True, content_type="application/json")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_data_cache_refresh_cache_blocked_client(self):
+
+        "Refreshing cache can be blocked by ip"
+
+        with patch.object(security, 'block_client', return_value=True):
+
+            c = Client()
+            response = c.post("/data_cache/refresh/", secure=True)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_city_data_summaries_blocked_client(self):
+
+        "Retrieving city data summaries can be blocked by ip"
+
+        with patch.object(security, 'block_client', return_value=True):
+
+            c = Client()
+            response = c.get("/data_cache/city_data_summaries/")
+
+        self.assertEqual(response.status_code, 403)
 
 
 class DataCitySummaryTests(TestCase):
