@@ -102,7 +102,7 @@ def subscribe(request):
     return Response(response, status=status.HTTP_201_CREATED)
 
 
-def get_existing_object(cl_type, obj_id, cl_name=None, required=False):
+def get_existing_object(cl_type, obj_id, cl_name, required=False):
     """
     Returns existing object with id matching obj_id, if any.
     If obj_id is not None and the object cannot be found, a 404
@@ -115,15 +115,12 @@ def get_existing_object(cl_type, obj_id, cl_name=None, required=False):
 
     if not obj_id:
         if required:
-            raise_obj_error()
+            raise_obj_error()    # pragma: no cover (should never get here)
         else:
             return None
 
     if type(obj_id) is str and not re.fullmatch(r'(\d)+', obj_id):
         raise_obj_error()
-
-    if not cl_name:
-        cl_name = cl_type.__name__
 
     obj_id = int(obj_id)
     if not cl_type.objects.filter(id=obj_id).exists():

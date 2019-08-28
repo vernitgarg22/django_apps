@@ -373,6 +373,37 @@ class MessengerDashboardTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Notification gets added")
 
+    def test_add_notification_invalid_client(self):
+        "Test adding a notification with invalid client id"
+
+        c = Client()
+        response = c.post('/messenger/clients/1/notifications/', {
+            "client_id": "invalid",
+            "day": "2019/11/05"
+            })
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual({'error': 'Client invalid not found'}, response.json())
+
+    def test_add_notification_invalid_day(self):
+        "Test adding a notification with invalid day format"
+
+        c = Client()
+        response = c.post('/messenger/clients/1/notifications/', {
+            "client_id": 1,
+            "day": "2019/11/5"
+            })
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_add_notification_missing_day(self):
+        "Test adding a notification with invalid day format"
+
+        c = Client()
+        response = c.post('/messenger/clients/1/notifications/', { "client_id": 1 })
+
+        self.assertEqual(response.status_code, 400)
+
     def test_update_notification(self):
         "Test updating a notification"
 
@@ -395,29 +426,37 @@ class MessengerDashboardTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Notification gets added")
 
-    def test_add_notification_invalid_client(self):
-        "Test adding a notification with invalid client id"
+    def test_update_notification_geo_only(self):
+        "Test updating a notification"
 
         c = Client()
-        response = c.post('/messenger/clients/1/notifications/', {
+        response = c.post('/messenger/clients/1/notifications/1/', {
+            "client_id": 1,
+            "geo_layer_url": "https://gis.detroitmi.gov",
+            })
+
+        expected = {
+            'id': 1,
+            'day': '2019-11-05T00:00:00.000Z',
+            'geo_layer_url': 'https://gis.detroitmi.gov',
+            'formatter': 'ElectionFormatter',
+            'messages': [{'id': 1, 'lang': 'en', 'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'}]
+        }
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, expected, "Notification gets added")
+
+    def test_update_notification_invalid_notification(self):
+        "Test adding a notification with invalid notification id"
+
+        c = Client()
+        response = c.post('/messenger/clients/1/notifications/99/', {
             "client_id": "invalid",
             "day": "2019/11/05"
             })
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual({'error': 'Client invalid not found'}, response.json())
-
-
-    def test_add_notification_invalid_day(self):
-        "Test adding a notification with invalid day format"
-
-        c = Client()
-        response = c.post('/messenger/clients/1/notifications/', {
-            "client_id": 1,
-            "day": "2019/11/5"
-            })
-
-        self.assertEqual(response.status_code, 400)
 
     def test_get_clients(self):
         "Test returning all notifications for all clients"
@@ -498,3 +537,13 @@ class MessengerDashboardTests(MessengerBaseTests):
         c = Client()
         response = c.post('/messenger/notifications/1/messages/', { "lang": "en" })
         self.assertEqual(response.status_code, 400)
+
+    def test_update_message(self):
+        "Test updating a message"
+
+        c = Client()
+        response = c.post('/messenger/notifications/1/messages/1/', { "lang": "en", "message": "Get out the vote!" })
+
+        expected = { 'id': 1, 'lang': 'en', 'message': 'Get out the vote!' }
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, expected, "Notifications get returned")
