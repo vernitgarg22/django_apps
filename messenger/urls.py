@@ -5,6 +5,7 @@ from messenger import views
 app_name = 'messenger'
 urlpatterns = [
     url(r'^subscribe/$', views.subscribe),
+    url(r'^clients/$', views.get_notifications),
     url(r'^clients/(?P<client_id>[0-9]+)/$', views.get_notifications),
     url(r'^clients/(?P<client_id>[0-9]+)/notifications/$', views.add_notification),
     url(r'^clients/(?P<client_id>[0-9]+)/notifications/(?P<notification_id>[0-9]+)/$', views.add_notification),

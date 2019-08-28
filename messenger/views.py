@@ -119,7 +119,7 @@ def get_existing_object(cl_type, obj_id, cl_name=None, required=False):
         else:
             return None
 
-    if not re.fullmatch(r'(\d)+', obj_id):
+    if type(obj_id) is str and not re.fullmatch(r'(\d)+', obj_id):
         raise_obj_error()
 
     if not cl_name:
@@ -189,15 +189,15 @@ def add_notification(request, client_id, notification_id=None):
 
     return Response(notification.to_json(), status=status.HTTP_201_CREATED)
 
-@api_view(['GET'])
-def get_notifications(request, client_id):
+def get_notifications_helper(client_id, client_only=False):
     """
     Returns all notifications for a client.
     """
 
-    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
-
     client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
+
+    if client_only:
+        return client.to_json()
 
     response = {
         "client": client.to_json(),
@@ -208,7 +208,31 @@ def get_notifications(request, client_id):
 
         response["notifications"].append(notification.to_json())
 
-    return Response(response)
+    return response
+
+
+@api_view(['GET'])
+def get_notifications(request, client_id=None):
+    """
+    Returns all notifications for a client.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    if client_id:
+
+        return Response(get_notifications_helper(client_id=client_id))
+
+    else:
+
+        response = []
+
+        for client in MessengerClient.objects.all():
+
+            response.append(get_notifications_helper(client_id=client.id, client_only=True))
+
+        return Response(response)
+
 
 @api_view(['POST'])
 def add_notification_message(request, notification_id, message_id=None):

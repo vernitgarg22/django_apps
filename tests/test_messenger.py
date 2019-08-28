@@ -127,7 +127,7 @@ class MessengerTests(MessengerBaseTests):
 
         expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New elections subscriber created'}
         self.assertEqual(response.status_code, 201)
-        self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
 
     def test_subscribe_msg_missing_fone(self):
 
@@ -139,7 +139,7 @@ class MessengerTests(MessengerBaseTests):
 
         expected = {'error': 'Address and phone_number are required'}
         self.assertEqual(response.status_code, 400)
-        self.assertDictEqual(response.data, expected, "Subscription signup returns correct message")
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
 
     def test_subscribe_msg_missing_address(self):
 
@@ -371,7 +371,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         }
 
         self.assertEqual(response.status_code, 201)
-        self.assertDictEqual(response.data, expected, "Notification gets added")
+        self.assertEqual(response.data, expected, "Notification gets added")
 
     def test_update_notification(self):
         "Test updating a notification"
@@ -419,6 +419,22 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_get_clients(self):
+        "Test returning all notifications for all clients"
+
+        c = Client()
+        response = c.get('/messenger/clients/')
+
+        expected = [{
+                'id': 1,
+                'name': 'elections',
+                'description': 'Elections Messenger',
+                'confirmation_message': 'You will receive elections reminders for the address {street_address}'
+            }]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), expected, "Notifications get returned")
+
     def test_get_notifications(self):
         "Test returning all notifications for a client"
 
@@ -450,7 +466,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         }
 
         self.assertEqual(response.status_code, 200)
-        self.assertDictEqual(response.data, expected, "Notifications get returned")
+        self.assertEqual(response.data, expected, "Notifications get returned")
 
     def test_get_notifications_invalid_client(self):
         "Test returning all notifications for a client with invalid client id"
@@ -467,7 +483,7 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         expected = { 'id': 2, 'lang': 'en', 'message': 'Get out the vote!' }
         self.assertEqual(response.status_code, 201)
-        self.assertDictEqual(response.data, expected, "Notifications get returned")
+        self.assertEqual(response.data, expected, "Notifications get returned")
 
     def test_add_message_invalid_notification(self):
         "Test adding a message with invalid notification"
