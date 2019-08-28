@@ -3,12 +3,10 @@ import datetime
 from datetime import date
 import re
 
-from django.core.exceptions import ObjectDoesNotExist
-
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import Http404
+from rest_framework.exceptions import NotFound
 
 from messenger.models import *
 from messenger.util import get_messenger_msg_handler
@@ -103,8 +101,38 @@ def subscribe(request):
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
     return Response(response, status=status.HTTP_201_CREATED)
 
+
+def get_existing_object(cl_type, obj_id, cl_name=None, required=False):
+    """
+    Returns existing object with id matching obj_id, if any.
+    If obj_id is not None and the object cannot be found, a 404
+    exception is thrown.
+    if 'required' is True, then obj_id must not be None.
+    """
+
+    def raise_obj_error():
+        raise NotFound(detail={ "error": "{cl_name} {obj_id} not found".format(cl_name=cl_name, obj_id=obj_id) })
+
+    if not obj_id:
+        if required:
+            raise_obj_error()
+        else:
+            return None
+
+    if not re.fullmatch(r'(\d)+', obj_id):
+        raise_obj_error()
+
+    if not cl_name:
+        cl_name = cl_type.__name__
+
+    obj_id = int(obj_id)
+    if not cl_type.objects.filter(id=obj_id).exists():
+        raise_obj_error()
+    return cl_type.objects.get(id=obj_id)
+
+
 @api_view(['POST'])
-def add_notification(request, notification_id=None):
+def add_notification(request, client_id, notification_id=None):
     """
     Creates or modifies a notification.
 
@@ -119,22 +147,44 @@ def add_notification(request, notification_id=None):
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
     client_id = request.data.get("client_id", None)
-    if not client_id or not re.fullmatch(r'(\d)+', client_id) or not MessengerClient.objects.filter(id=int(client_id)).exists():
-        return Response({"error": "Client {client_id} not found".format(client_id=client_id)},
-            status=status.HTTP_404_NOT_FOUND)
+    client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
 
-    client = MessengerClient.objects.get(id=client_id)
+    # Are we updating an existing notification?
+    notification = get_existing_object(cl_type=MessengerNotification, obj_id=notification_id, cl_name="Notification")
 
+    # Parse day.
     day_str = request.data.get("day", None)
-    if not day_str or not re.fullmatch(r'(\d){4}/(\d){2}/(\d){2}', day_str):
-        return Response({ "error": "Notification day is required and must use format YYYY/MM/DD" },
-            status=status.HTTP_400_BAD_REQUEST)
+    if not notification and not day_str:
+        return Response({ "error": "Notification day is required" }, status=status.HTTP_400_BAD_REQUEST)
 
-    day = date(year=int(day_str[0:4]), month=int(day_str[5:7]), day=int(day_str[8:10]))
+    if day_str:
+
+        if not re.fullmatch(r'(\d){4}/(\d){2}/(\d){2}', day_str):
+            return Response({ "error": "Notification day must use format YYYY/MM/DD" },
+                status=status.HTTP_400_BAD_REQUEST)
+
+        day = date(year=int(day_str[0:4]), month=int(day_str[5:7]), day=int(day_str[8:10]))
+
+    else:
+
+        day = notification.day
+
+    # Parse geo layer url and formatter.
     geo_layer_url = request.data.get('geo_layer_url', None)
     formatter = request.data.get('formatter', None)
 
-    notification = MessengerNotification(messenger_client=client, day=day, geo_layer_url=geo_layer_url, formatter=formatter)
+    # Create or update notification and save it.
+    if not notification:
+        notification = MessengerNotification(messenger_client=client, day=day, geo_layer_url=geo_layer_url, formatter=formatter)
+    else:
+
+        if day:
+            notification.day = day
+        if geo_layer_url:
+            notification.geo_layer_url = geo_layer_url
+        if formatter:
+            notification.formatter = formatter
+
     notification.save()
 
     return Response(notification.to_json(), status=status.HTTP_201_CREATED)
@@ -147,11 +197,7 @@ def get_notifications(request, client_id):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    if not MessengerClient.objects.filter(id=client_id).exists():
-        return Response({"error": "Client {client_id} not found".format(client_id=client_id)},
-            status=status.HTTP_404_NOT_FOUND)
-
-    client = MessengerClient.objects.get(id=client_id)
+    client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
 
     response = {
         "client": client.to_json(),
@@ -177,13 +223,9 @@ def add_notification_message(request, notification_id, message_id=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    notification_id = int(notification_id)
+    notification = get_existing_object(cl_type=MessengerNotification, obj_id=notification_id, cl_name="Notification", required=True)
 
-    if not MessengerNotification.objects.filter(id=notification_id).exists():
-        return Response({"error": "Notification {notification_id} not found".format(notification_id=notification_id)},
-            status=status.HTTP_404_NOT_FOUND)
-
-    notification = MessengerNotification.objects.get(id=notification_id)
+    messenger_message = get_existing_object(cl_type=MessengerMessage, obj_id=message_id, cl_name="Message")
 
     if not request.data.get('lang') or not request.data.get('message'):
         return Response({"error": "lang and message are required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -191,7 +233,12 @@ def add_notification_message(request, notification_id, message_id=None):
     lang = request.data['lang']
     message = request.data['message']
 
-    message = MessengerMessage(messenger_notification=notification, lang=lang, message=message)
-    message.save()
+    if not messenger_message:
+        messenger_message = MessengerMessage(messenger_notification=notification, lang=lang, message=message)
+    else:
+        messenger_message.lang = lang
+        messenger_message.message = message
 
-    return Response(message.to_json(), status=status.HTTP_201_CREATED)
+    messenger_message.save()
+
+    return Response(messenger_message.to_json(), status=status.HTTP_201_CREATED)
