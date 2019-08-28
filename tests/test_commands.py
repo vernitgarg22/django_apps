@@ -1,11 +1,13 @@
 import csv, datetime, json, os, re
 from datetime import datetime
+import requests
 
 from django.contrib.auth.models import User
 from django.db import models
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from unittest import skip
+from unittest.mock import patch
 from django.test import TestCase
 from django.utils.six import StringIO
 from django.utils import timezone
@@ -13,14 +15,15 @@ from django.utils import timezone
 from cod_utils.util import get_local_time
 
 from assessments.models import ParcelMaster, Sales
-from data_cache.models import DataSource, DataValue
+from data_cache.models import DataSource, DataSet, DataValue
 from photo_survey.models import Survey, Image, ImageMetadata, ParcelMetadata, PublicPropertyData
 from waste_notifier.models import Subscriber
 from waste_schedule.models import ScheduleDetail
 
+from tests import test_util
 from tests.test_photo_survey import cleanup_db, PhotoSurveyTests
 from tests.models import TestDataA, TestDataB, TestDupe
-from tests.test_data_cache import init_hydrants_data, init_gis_data
+from tests.test_data_cache import init_hydrants_data, init_gis_data, MockedGISResponse
 
 
 class SendMessageTest(TestCase):
@@ -277,7 +280,16 @@ class ExportDataCSVTest(TestCase):
 class RefreshDataCacheTest(TestCase):
 
     def setUp(self):
-        DataSource.objects.all().delete()
+
+        test_util.cleanup_model(DataValue)
+        test_util.cleanup_model(DataSource)
+        test_util.cleanup_model(DataSet)
+
+    def tearDown(self):
+
+        test_util.cleanup_model(DataValue)
+        test_util.cleanup_model(DataSource)
+        test_util.cleanup_model(DataSet)
 
     @skip('old hydrant data no longer available')
     def test_simple_data(self):
@@ -300,10 +312,12 @@ class RefreshDataCacheTest(TestCase):
         """
 
         init_gis_data()
-        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 0)
+        self.assertEqual(DataSource.objects.first().datavalue_set.count(), 0)
 
-        call_command('refresh_data_cache')
-        self.assertTrue(DataSource.objects.first().datavalue_set.count() == 101)
+        with patch.object(requests, 'post', return_value=MockedGISResponse()), patch.object(requests, 'get', return_value=MockedGISResponse()):
+            call_command('refresh_data_cache')
+
+        self.assertEqual(DataSource.objects.first().datavalue_set.count(), 1)
 
 
 class SendWasteRemindersTest(TestCase):

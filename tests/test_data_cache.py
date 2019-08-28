@@ -66,14 +66,13 @@ def init_hydrants_data_new():
     credentials = init_creds(key="HYDRANTS_NEW")
     DataSource(data_set=data_set, name='hydrants', url="http://gis.detroitmi.gov/arcgis/rest/services/DFD/HydrantInspection/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=*&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=4236&gdbVersion=&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=&resultOffset=&resultRecordCount=&f=json", credentials=credentials).save()
 
-@skip('gis token has been disabled')
 def init_gis_data():
 
     data_set = DataSet(name='bridging_neighborhoods')
     data_set.save()
 
     credentials = init_creds(key="GIS")
-    url = 'https://gis.detroitmi.gov/arcgis/rest/services/DoIT/bridging_neighborhoods/MapServer/0/query?where=1%3D1&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=FID%2C+parcelno%2C+programare&returnGeometry=false&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json'
+    url = 'https://foobar.com'
     DataSource(data_set=data_set, name='bridging_neighborhoods', url=url, credentials=credentials, data_parse_path="features", data_id_parse_path="attributes/FID").save()
 
 def init_test_data_invalid_source():
@@ -84,11 +83,34 @@ def init_test_data_invalid_source():
     url = "https://invalid"
     DataSource(data_set=data_set, name='test', url=url).save()
 
+class MockedGISResponse():
+
+    def __init__(self):
+
+        self.ok = True
+        self.status_code = 200
+        self.text = "dummy_token"
+
+    def json(self):
+        return {
+            "error": { "code": 200 },
+            "features": [
+                {
+                    "attributes": {
+                        "FID": 100
+                    }
+                }
+            ]
+        }
+
+
 class DataCacheTests(TestCase):
 
     def setUp(self):
-        cleanup_db()
         self.maxDiff = None
+
+    def tearDown(self):
+        cleanup_db()
 
     def test_data_cache(self):
 
@@ -407,8 +429,11 @@ class DataCacheTests(TestCase):
 
         init_gis_data()
 
-        c = Client()
-        response = c.get("/data_cache/bridging_neighborhoods/100/", secure=True)
+        with patch.object(requests, 'post', return_value=MockedGISResponse()), patch.object(requests, 'get', return_value=MockedGISResponse()):
+
+            c = Client()
+            response = c.get("/data_cache/bridging_neighborhoods/100/", secure=True)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['data']['attributes']['FID'], 100, "Data cache can be queried with a parameter")
 
@@ -417,15 +442,19 @@ class DataCacheTests(TestCase):
         init_gis_data()
 
         data_source = DataSource.objects.first()
-        data_source.refresh()
-        self.assertEqual(DataValue.objects.count(), 101)
+        with patch.object(requests, 'post', return_value=MockedGISResponse()), patch.object(requests, 'get', return_value=MockedGISResponse()):
+            data_source.refresh()
+
+        self.assertEqual(DataValue.objects.count(), 1)
 
         data_value = DataValue(data_source=data_source, data='{"foo": "bar"}', param="orphan")
         data_value.save()
         self.assertEqual(DataValue.objects.get(param="orphan").id, data_value.id)
 
-        # DataSource.refresh() should remove the orphan DataValue object
-        data_source.refresh()
+        with patch.object(requests, 'post', return_value=MockedGISResponse()), patch.object(requests, 'get', return_value=MockedGISResponse()):
+
+            # DataSource.refresh() should remove the orphan DataValue object
+            data_source.refresh()
 
         self.assertTrue(DataValue.objects.filter(param="orphan").count() == 0)
 
@@ -536,6 +565,9 @@ class DataCitySummaryTests(TestCase):
         cleanup_db()
         self.maxDiff = None
 
+    def tearDown(self):
+        cleanup_db()
+
     def test_get_city_data_summaries(self):
 
         init_test_data()
@@ -590,8 +622,10 @@ class DataCitySummaryTests(TestCase):
 class DataCacheRefreshTests(TestCase):
 
     def setUp(self):
-        cleanup_db()
         self.maxDiff = None
+
+    def tearDown(self):
+        cleanup_db()
 
     def test_refresh(self):
 

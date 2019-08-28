@@ -98,9 +98,9 @@ class DataCredential(models.Model):
         """
 
         try:
-            r = requests.post(self.url, data = { "username": self.username, "password": self.password })
-            if status.is_success(r.status_code):
-                return True, r.text
+            response = requests.post(self.url, data = { "username": self.username, "password": self.password }, timeout=120)
+            if status.is_success(response.status_code):
+                return True, response.text
         except:
             pass
 
@@ -175,7 +175,7 @@ class DataSource(models.Model):
                     del prev_data_values[param]
 
                 if settings.RUNNING_UNITTESTS and idx == 100:
-                    break
+                    break    # pragma: no cover
 
             # delete any 'orphans' at the end?
             for data_value in prev_data_values.values():

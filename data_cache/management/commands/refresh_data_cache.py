@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
+from django.conf import settings
 
 from data_cache.models import DataSource
 from data_cache.views import get_data_impl
@@ -43,8 +44,13 @@ class Command(BaseCommand):
         results = []
 
         # Kick off all the data source refreshes
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            results = executor.map(self.refresh, data_sources, timeout=TIMEOUT)
+        if settings.RUNNING_UNITTESTS:
+            # unit tests sqlite database cannot handle multiple threads
+            for data_source in data_sources:
+                self.refresh(data_source)
+        else:    # pragma: no cover
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                results = executor.map(self.refresh, data_sources, timeout=TIMEOUT)
 
         # Convert the results returned to a list just so we can
         # do list stuff to it (like call len() on it)
