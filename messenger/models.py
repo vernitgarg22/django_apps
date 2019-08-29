@@ -83,6 +83,8 @@ class MessengerNotification(models.Model):
 
     app_label = 'messenger'
 
+    FORMATTER_CHOICES = [('DHSEMFormatter', 'DHSEMFormatter'), ('ElectionFormatter', 'ElectionFormatter')]
+
     messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
     locations = models.ManyToManyField(MessengerLocation)
 
@@ -90,7 +92,7 @@ class MessengerNotification(models.Model):
     # REVIEW allow day to be a full timestamp?
     day = models.DateField('Day on which notification should be sent')
     geo_layer_url = models.CharField('Geo Layer URL', max_length=1024, blank=True, null=True)
-    formatter = models.CharField('Formatter class to render message', max_length=64, blank=True, null=True)
+    formatter = models.CharField('Formatter class to render message', max_length=64, blank=True, null=True, choices=FORMATTER_CHOICES)
 
     def get_message_by_lang(self, lang):
         """
