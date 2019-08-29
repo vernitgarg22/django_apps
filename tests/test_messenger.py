@@ -87,9 +87,14 @@ def setup_messenger():
     client.save()
     phone_number = MessengerPhoneNumber(messenger_client=client, phone_number='5005550006', description='Test phone number')
     phone_number.save()
+
+    for location in [ 48214 ]:
+        MessengerLocation(location_type="ZIP Code", value=location).save()
+
     notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5),
       geo_layer_url=url, formatter='ElectionFormatter')
     notification.save()
+    notification.locations.add(MessengerLocation.objects.first())
     message = MessengerMessage(messenger_notification=notification,
       message='Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}')
     message.save()
@@ -377,16 +382,13 @@ class MessengerDashboardTests(MessengerBaseTests):
     def test_get_all_locations(self):
         "Test returning all locations"
 
-        for location in [ 48214, 48226 ]:
-            MessengerLocation(location_type="ZIP Code", value=location).save()
-
         for location in [ 1, 2 ]:
             MessengerLocation(location_type="DHSEM Evacuation Zone", value=location).save()
 
         c = Client()
         response = c.get('/messenger/locations/')
 
-        expected = {'DHSEM Evacuation Zone': ['1', '2'], 'ZIP Code': ['48214', '48226']}
+        expected = {'DHSEM Evacuation Zone': ['1', '2'], 'ZIP Code': ['48214']}
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected, "Locations get returned")
@@ -394,8 +396,7 @@ class MessengerDashboardTests(MessengerBaseTests):
     def test_add_notification_location(self):
         "Test adding a notification with a location"
 
-
-        for location in [ 48214, 48226 ]:
+        for location in [ 48226 ]:
             MessengerLocation(location_type="ZIP Code", value=location).save()
 
         cl = Client()
@@ -483,7 +484,7 @@ class MessengerDashboardTests(MessengerBaseTests):
             'day': '2019-11-05T00:00:00.000Z',
             'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
             'formatter': 'ElectionFormatter',
-            'locations': {},
+            'locations': {'ZIP Code': ['48214']},
             'messages': [{'id': 1, 'lang': 'en', 'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'}]
         }
 
@@ -504,7 +505,7 @@ class MessengerDashboardTests(MessengerBaseTests):
             'day': '2019-11-05T00:00:00.000Z',
             'geo_layer_url': 'https://gis.detroitmi.gov',
             'formatter': 'ElectionFormatter',
-            'locations': {},
+            'locations': {'ZIP Code': ['48214']},
             'messages': [{'id': 1, 'lang': 'en', 'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'}]
         }
 
@@ -542,6 +543,9 @@ class MessengerDashboardTests(MessengerBaseTests):
     def test_get_notifications(self):
         "Test returning all notifications for a client"
 
+        for location in [ 48214, 48226 ]:
+            MessengerLocation(location_type="ZIP Code", value=location).save()
+
         c = Client()
         response = c.get('/messenger/clients/1/')
 
@@ -558,7 +562,7 @@ class MessengerDashboardTests(MessengerBaseTests):
                     'day': '2019-11-05T00:00:00.000Z',
                     'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
                     'formatter': 'ElectionFormatter',
-                    'locations': {},
+                    'locations': {'ZIP Code': ['48214']},
                     'messages': [
                         {
                             'id': 1,
