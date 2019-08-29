@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerMessage, MessengerSubscriber
+from messenger.models import *
 
 
 class MessengerClientAdmin(admin.ModelAdmin):
@@ -28,14 +28,27 @@ class MessengerPhoneNumberAdmin(admin.ModelAdmin):
 admin.site.register(MessengerPhoneNumber, MessengerPhoneNumberAdmin)
 
 
+class MessengerLocationAdmin(admin.ModelAdmin):
+
+    fieldsets = [
+        (None, {'fields': ['location_type', 'value']})
+    ]
+    list_display = ('location_type', 'value')
+    list_filter = ['location_type']
+    search_fields = []
+    ordering = ['location_type', 'value']
+
+admin.site.register(MessengerLocation, MessengerLocationAdmin)
+
+
 class MessengerNotificationAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['messenger_client', 'day', 'geo_layer_url', 'formatter']})
+        (None, {'fields': ['messenger_client', 'locations', 'day', 'geo_layer_url', 'formatter']})
     ]
     list_display = ('messenger_client', 'day', 'geo_layer_url', 'formatter')
     list_filter = ['day']
-    search_fields = []
+    search_fields = ['locations']
     ordering = ['day']
 
 admin.site.register(MessengerNotification, MessengerNotificationAdmin)

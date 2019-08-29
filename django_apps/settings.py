@@ -213,6 +213,7 @@ class DjangoAppsRouter(object):
         "MessengerClient": "messenger",
         "MessengerPhoneNumber": "messenger",
         "MessengerMessage": "messenger",
+        "MessengerLocation": "messenger",
         "MessengerNotification": "messenger",
         "MessengerSubscriber": "messenger",
         "EscrowBalance": "property_data",
