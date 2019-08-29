@@ -13,7 +13,7 @@ from rest_framework.exceptions import PermissionDenied
 from tests import test_util
 
 from messenger import views
-from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerMessage, MessengerNotification, MessengerSubscriber
+from messenger.models import *
 from messenger.util import NotificationException, send_messages
 
 from cod_utils import messaging
@@ -372,6 +372,50 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Notification gets added")
+
+    def test_add_notification_location(self):
+        "Test adding a notification with a location"
+
+
+        for location in [ 48214, 48226 ]:
+            MessengerLocation(location_type="ZIP Code", value=location).save()
+
+        cl = Client()
+        response = cl.post('/messenger/clients/1/notifications/', {
+            "client_id": 1,
+            "day": "2019/11/05",
+            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "formatter": "ElectionFormatter",
+            "location_type": "ZIP Code",
+            "locations": [ 48214, 48226 ]
+            })
+
+        expected = {
+            'id': 2,
+            'day': '2019-11-05T00:00:00.000Z',
+            'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+            'formatter': 'ElectionFormatter',
+            'messages': []
+        }
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, expected, "Notification gets added")
+
+    def test_add_invalid_notification_location(self):
+        "Test adding a notification with an invalid location"
+
+        cl = Client()
+        response = cl.post('/messenger/clients/1/notifications/', {
+            "client_id": 1,
+            "day": "2019/11/05",
+            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "formatter": "ElectionFormatter",
+            "location_type": "ZIP Code",
+            "locations": [ 10001 ]
+            })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {'error': 'ZIP Code with value 10001 is invalid '}, "Invalid locations are rejected")
 
     def test_add_notification_invalid_client(self):
         "Test adding a notification with invalid client id"
