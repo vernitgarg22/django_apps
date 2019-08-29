@@ -367,11 +367,29 @@ class MessengerDashboardTests(MessengerBaseTests):
             'day': '2019-11-05T00:00:00.000Z',
             'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
             'formatter': 'ElectionFormatter',
+            'locations': {},
             'messages': []
         }
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Notification gets added")
+
+    def test_get_all_locations(self):
+        "Test returning all locations"
+
+        for location in [ 48214, 48226 ]:
+            MessengerLocation(location_type="ZIP Code", value=location).save()
+
+        for location in [ 1, 2 ]:
+            MessengerLocation(location_type="DHSEM Evacuation Zone", value=location).save()
+
+        c = Client()
+        response = c.get('/messenger/locations/')
+
+        expected = {'DHSEM Evacuation Zone': ['1', '2'], 'ZIP Code': ['48214', '48226']}
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, expected, "Locations get returned")
 
     def test_add_notification_location(self):
         "Test adding a notification with a location"
@@ -395,6 +413,7 @@ class MessengerDashboardTests(MessengerBaseTests):
             'day': '2019-11-05T00:00:00.000Z',
             'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
             'formatter': 'ElectionFormatter',
+            'locations': {'ZIP Code': ['48214', '48226']},
             'messages': []
         }
 
@@ -464,6 +483,7 @@ class MessengerDashboardTests(MessengerBaseTests):
             'day': '2019-11-05T00:00:00.000Z',
             'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
             'formatter': 'ElectionFormatter',
+            'locations': {},
             'messages': [{'id': 1, 'lang': 'en', 'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'}]
         }
 
@@ -484,6 +504,7 @@ class MessengerDashboardTests(MessengerBaseTests):
             'day': '2019-11-05T00:00:00.000Z',
             'geo_layer_url': 'https://gis.detroitmi.gov',
             'formatter': 'ElectionFormatter',
+            'locations': {},
             'messages': [{'id': 1, 'lang': 'en', 'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'}]
         }
 
@@ -537,6 +558,7 @@ class MessengerDashboardTests(MessengerBaseTests):
                     'day': '2019-11-05T00:00:00.000Z',
                     'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
                     'formatter': 'ElectionFormatter',
+                    'locations': {},
                     'messages': [
                         {
                             'id': 1,
