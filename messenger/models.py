@@ -49,6 +49,17 @@ class MessengerLocation(models.Model):
     location_type = models.CharField('Location Type', max_length=32, choices=LOCATION_CHOICES)
     value = models.CharField('Value', max_length=128)
 
+    def to_json(self):
+        """
+        Returns json representation of this location.
+        """
+
+        return {
+            "location_type": self.location_type,
+            "value": self.value,
+        }
+
+
     def __str__(self):    # pragma: nocover (mostly just for debugging)
         return self.location_type + " " + self.value
 

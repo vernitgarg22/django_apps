@@ -111,6 +111,32 @@ def get_locations(request, format=None):
     return Response(get_locations_helper())
 
 
+@api_view(['GET'])
+def get_location_notifications(request, value, format=None):
+    """
+    Returns all notifications for the given location.
+    """
+
+    # REVIEW: Should really constrain location by client
+    # REVIEW: Should really constrain location by location type
+
+    if not MessengerLocation.objects.filter(value=value).exists():
+        raise NotFound(detail={ "error": "Location {value} not found".format(value=value) })
+
+    location = MessengerLocation.objects.filter(value=value).first()
+
+    response = {
+        "location": location.to_json(),
+        "notifications": []
+    }
+
+    for notification in location.messengernotification_set.all():
+
+        response["notifications"].append(notification.to_json())
+
+    return Response(response)
+
+
 def get_existing_object(cl_type, obj_id, cl_name, required=False):
     """
     Returns existing object with id matching obj_id, if any.
