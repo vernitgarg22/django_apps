@@ -44,13 +44,8 @@ class Command(BaseCommand):
         results = []
 
         # Kick off all the data source refreshes
-        if settings.RUNNING_UNITTESTS:
-            # unit tests sqlite database cannot handle multiple threads
-            for data_source in data_sources:
-                self.refresh(data_source)
-        else:    # pragma: no cover
-            with ThreadPoolExecutor(max_workers=8) as executor:
-                results = executor.map(self.refresh, data_sources, timeout=TIMEOUT)
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = executor.map(self.refresh, data_sources, timeout=TIMEOUT)
 
         # Convert the results returned to a list just so we can
         # do list stuff to it (like call len() on it)

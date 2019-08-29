@@ -1,6 +1,7 @@
 import csv, datetime, json, os, re
 from datetime import datetime
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -314,8 +315,24 @@ class RefreshDataCacheTest(TestCase):
         init_gis_data()
         self.assertEqual(DataSource.objects.first().datavalue_set.count(), 0)
 
+        def mock_executor_map(self, func, *iterables, timeout=None, chunksize=1):
+            """
+            Emulate ThreadPoolExecutor.map() in a single-threaded manner.
+
+            (The sqlite databases that unit tests use cannot handle multiple threads.)
+            """
+
+            results = []
+
+            for obj in iterables[0]:
+                results.append(func(obj))
+
+            return results
+
         with patch.object(requests, 'post', return_value=MockedGISResponse()), patch.object(requests, 'get', return_value=MockedGISResponse()):
-            call_command('refresh_data_cache')
+
+            with patch.object(ThreadPoolExecutor, 'map', new=mock_executor_map):
+                call_command('refresh_data_cache')
 
         self.assertEqual(DataSource.objects.first().datavalue_set.count(), 1)
 
