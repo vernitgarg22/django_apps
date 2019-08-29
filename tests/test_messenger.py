@@ -8,11 +8,12 @@ from django.core.management import call_command
 from django.utils.six import StringIO
 from django.core.management.base import CommandError
 
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 from tests import test_util
 
 from messenger import views
+from messenger.views import get_existing_object
 from messenger.models import *
 from messenger.util import NotificationException, send_messages
 
@@ -353,6 +354,17 @@ class MessengerTests(MessengerBaseTests):
 
             call_command('send_messages', 'elections', '--today=201911050', stdout=out)
 
+    def test_get_object_null_id(self):
+
+        with self.assertRaises(NotFound):
+
+            get_existing_object(cl_type=MessengerClient, obj_id=None, cl_name="Client", required=True)
+
+    def test_get_object_invalid_id(self):
+
+        with self.assertRaises(NotFound):
+
+            get_existing_object(cl_type=MessengerClient, obj_id="asdf", cl_name="Client")
 
 class MessengerDashboardTests(MessengerBaseTests):
 

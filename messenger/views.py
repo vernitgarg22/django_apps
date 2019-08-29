@@ -114,7 +114,7 @@ def get_locations(request, format=None):
 @api_view(['GET'])
 def get_location_notifications(request, client_id, value, format=None):
     """
-    Returns all notifications for the given location.
+    Returns all notifications for the given client and location.
     """
 
     # REVIEW: Should really constrain location by location type
@@ -151,7 +151,7 @@ def get_existing_object(cl_type, obj_id, cl_name, required=False):
 
     if not obj_id:
         if required:
-            raise_obj_error()    # pragma: no cover (should never get here)
+            raise_obj_error()
         else:
             return None
 
