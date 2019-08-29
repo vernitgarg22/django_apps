@@ -112,13 +112,14 @@ def get_locations(request, format=None):
 
 
 @api_view(['GET'])
-def get_location_notifications(request, value, format=None):
+def get_location_notifications(request, client_id, value, format=None):
     """
     Returns all notifications for the given location.
     """
 
-    # REVIEW: Should really constrain location by client
     # REVIEW: Should really constrain location by location type
+
+    client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
 
     if not MessengerLocation.objects.filter(value=value).exists():
         raise NotFound(detail={ "error": "Location {value} not found".format(value=value) })
@@ -130,7 +131,7 @@ def get_location_notifications(request, value, format=None):
         "notifications": []
     }
 
-    for notification in location.messengernotification_set.all():
+    for notification in location.messengernotification_set.filter(messenger_client=client):
 
         response["notifications"].append(notification.to_json())
 
@@ -169,7 +170,6 @@ def add_notification(request, client_id, notification_id=None, format=None):
     Creates or modifies a notification.
 
     {
-        "client_id": 1,
         "day": "2019/11/05",
         "geo_layer_url": "https://arcgis.com/layer",
         "formatter": "ElectionsFormatter",
@@ -180,7 +180,6 @@ def add_notification(request, client_id, notification_id=None, format=None):
 
     CODLogger.instance().log_api_call(name=__name__, msg=request.path)
 
-    client_id = request.data.get("client_id", None)
     client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
 
     # Are we updating an existing notification?

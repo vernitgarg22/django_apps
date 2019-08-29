@@ -361,7 +361,6 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         c = Client()
         response = c.post('/messenger/clients/1/notifications/', {
-            "client_id": 1,
             "day": "2019/11/05",
             "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
             "formatter": "ElectionFormatter"
@@ -396,10 +395,8 @@ class MessengerDashboardTests(MessengerBaseTests):
     def test_get_location_notifications(self):
         "Test returning notifications for a given location"
 
-        notification = MessengerNotification.objects.first()
-
         c = Client()
-        response = c.get('/messenger/locations/48214/notifications/')
+        response = c.get('/messenger/clients/1/locations/48214/notifications/')
 
         expected = {
             'location': {
@@ -427,6 +424,15 @@ class MessengerDashboardTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected, "Locations get returned")
 
+    def test_get_location_notifications_invalid_location(self):
+        "Test returning notifications for an invalid location"
+
+        c = Client()
+        response = c.get('/messenger/clients/1/locations/99/notifications/')
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data, { "error": "Location 99 not found"})
+
     def test_add_notification_location(self):
         "Test adding a notification with a location"
 
@@ -435,7 +441,6 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         cl = Client()
         response = cl.post('/messenger/clients/1/notifications/', {
-            "client_id": 1,
             "day": "2019/11/05",
             "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
             "formatter": "ElectionFormatter",
@@ -460,7 +465,6 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         cl = Client()
         response = cl.post('/messenger/clients/1/notifications/', {
-            "client_id": 1,
             "day": "2019/11/05",
             "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
             "formatter": "ElectionFormatter",
@@ -475,20 +479,18 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test adding a notification with invalid client id"
 
         c = Client()
-        response = c.post('/messenger/clients/1/notifications/', {
-            "client_id": "invalid",
+        response = c.post('/messenger/clients/99/notifications/', {
             "day": "2019/11/05"
             })
 
         self.assertEqual(response.status_code, 404)
-        self.assertEqual({'error': 'Client invalid not found'}, response.json())
+        self.assertEqual({'error': 'Client 99 not found'}, response.json())
 
     def test_add_notification_invalid_day(self):
         "Test adding a notification with invalid day format"
 
         c = Client()
         response = c.post('/messenger/clients/1/notifications/', {
-            "client_id": 1,
             "day": "2019/11/5"
             })
 
@@ -498,7 +500,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test adding a notification with invalid day format"
 
         c = Client()
-        response = c.post('/messenger/clients/1/notifications/', { "client_id": 1 })
+        response = c.post('/messenger/clients/1/notifications/', {})
 
         self.assertEqual(response.status_code, 400)
 
@@ -507,7 +509,6 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         c = Client()
         response = c.post('/messenger/clients/1/notifications/1/', {
-            "client_id": 1,
             "day": "2019/11/05",
             "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
             "formatter": "ElectionFormatter"
@@ -530,7 +531,6 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         c = Client()
         response = c.post('/messenger/clients/1/notifications/1/', {
-            "client_id": 1,
             "geo_layer_url": "https://gis.detroitmi.gov",
             })
 
@@ -551,12 +551,11 @@ class MessengerDashboardTests(MessengerBaseTests):
 
         c = Client()
         response = c.post('/messenger/clients/1/notifications/99/', {
-            "client_id": "invalid",
             "day": "2019/11/05"
             })
 
         self.assertEqual(response.status_code, 404)
-        self.assertEqual({'error': 'Client invalid not found'}, response.json())
+        self.assertEqual({'error': 'Notification 99 not found'}, response.json())
 
     def test_get_clients(self):
         "Test returning all notifications for all clients"
