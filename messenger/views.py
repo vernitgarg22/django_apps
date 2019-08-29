@@ -102,6 +102,15 @@ def subscribe(request):
     return Response(response, status=status.HTTP_201_CREATED)
 
 
+@api_view(['GET'])
+def get_locations(request, format=None):
+    """
+    Returns all locations currently available.
+    """
+
+    return Response(get_locations_helper())
+
+
 def get_existing_object(cl_type, obj_id, cl_name, required=False):
     """
     Returns existing object with id matching obj_id, if any.

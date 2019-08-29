@@ -44,8 +44,39 @@ class MessengerLocation(models.Model):
 
     app_label = 'messenger'
 
-    location_type = models.CharField('Location Type', max_length=32)
+    LOCATION_CHOICES = [('DHSEM Evacuation Zone', 'DHSEM Evacuation Zone'), ('ZIP Code', 'ZIP Code')]
+
+    location_type = models.CharField('Location Type', max_length=32, choices=LOCATION_CHOICES)
     value = models.CharField('Value', max_length=128)
+
+    def __str__(self):    # pragma: nocover (mostly just for debugging)
+        return self.location_type + " " + self.value
+
+
+def get_locations_helper(notification=None):
+    """
+    Returns all locations for the given notification.  If notification
+    is None, it returns all notifications available.
+    """
+
+    if notification:
+        location_types = notification.locations.all().values('location_type').order_by('location_type')
+    else:
+        location_types = MessengerLocation.objects.all().values('location_type').order_by('location_type')
+
+    response = {}
+
+    # Add all our location types.
+    for location_type in location_types:
+
+        response[location_type['location_type']] = []
+
+    # Add each location.
+    for location in MessengerLocation.objects.all().order_by('location_type', 'value'):
+
+        response[location.location_type].append(location.value)
+
+    return response
 
 
 class MessengerNotification(models.Model):
@@ -101,6 +132,8 @@ class MessengerNotification(models.Model):
         for message in self.messengermessage_set.all():
 
             data["messages"].append(message.to_json())
+
+        data["locations"] = get_locations_helper(notification=self)
 
         return data
 

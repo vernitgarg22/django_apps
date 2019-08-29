@@ -77,6 +77,14 @@ class ElectionFormatter(BaseNotificationFormatter):
 
 BaseNotificationFormatter.register(ElectionFormatter)
 
+class DHSEMFormatter(ElectionFormatter):
+
+    # REVIEW:  Make this unique when we know what the geo layer looks like
+
+    pass    # pragma: nocover
+
+BaseNotificationFormatter.register(DHSEMFormatter)
+
 
 def format_message(notification, subscriber):
     """
