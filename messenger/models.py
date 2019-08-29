@@ -40,11 +40,20 @@ class MessengerPhoneNumber(models.Model):
         return str(self.messenger_client) + ' - ' + self.phone_number
 
 
+class MessengerLocation(models.Model):
+
+    app_label = 'messenger'
+
+    location_type = models.CharField('Location Type', max_length=32)
+    value = models.CharField('Value', max_length=128)
+
+
 class MessengerNotification(models.Model):
 
     app_label = 'messenger'
 
     messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
+    locations = models.ManyToManyField(MessengerLocation)
 
     # REVIEW allow day to be null to indicate 'every day' ?
     # REVIEW allow day to be a full timestamp?
@@ -97,6 +106,7 @@ class MessengerNotification(models.Model):
 
     def __str__(self):    # pragma: nocover (mostly just for debugging)
         return str(self.id) + ' - ' + str(self.messenger_client) + ' - ' + str(self.day)
+
 
 # "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry=-82.9988157%2C+42.351591&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 # "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="

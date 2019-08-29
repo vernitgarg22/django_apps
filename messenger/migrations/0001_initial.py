@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
                 ('messenger_notification' , models.ForeignKey(to='messenger.MessengerNotification', on_delete=models.deletion.PROTECT)),
                 ('lang', models.CharField(verbose_name='Language', max_length=32, default='en')),
-                ('message', models.CharField(verbose_name='Messae', max_length=2048, blank=True, null=True)),
+                ('message', models.CharField(verbose_name='Message', max_length=2048)),
             ],
         ),
 

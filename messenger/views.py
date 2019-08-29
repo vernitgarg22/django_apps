@@ -129,7 +129,7 @@ def get_existing_object(cl_type, obj_id, cl_name, required=False):
 
 
 @api_view(['POST'])
-def add_notification(request, client_id, notification_id=None):
+def add_notification(request, client_id, notification_id=None, format=None):
     """
     Creates or modifies a notification.
 
@@ -137,7 +137,9 @@ def add_notification(request, client_id, notification_id=None):
         "client_id": 1,
         "day": "2019/11/05",
         "geo_layer_url": "https://arcgis.com/layer",
-        "formatter": "ElectionsFormatter"
+        "formatter": "ElectionsFormatter",
+        "location_type": "ZIP Code",
+        "locations": [ '48214', '48226' ]
     }
     """
 
@@ -183,6 +185,20 @@ def add_notification(request, client_id, notification_id=None):
             notification.formatter = formatter
 
     notification.save()
+
+    # Add our locations
+    location_type = request.data.get("location_type")
+    locations = request.data.getlist("locations")
+
+    for value in locations:
+
+        if not MessengerLocation.objects.filter(location_type=location_type, value=value).exists():
+            return Response({ "error": "{location_type} with value {value} is invalid ".format(location_type=location_type, value=value) },
+                status=status.HTTP_400_BAD_REQUEST)
+
+        location = MessengerLocation.objects.get(location_type=location_type, value=value)
+        if not notification.locations.filter(id=location.id).exists():
+            notification.locations.add(location)
 
     return Response(notification.to_json(), status=status.HTTP_201_CREATED)
 
