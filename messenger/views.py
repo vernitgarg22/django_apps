@@ -64,7 +64,7 @@ def subscribe(request):
     msg_handler = get_messenger_msg_handler(client)
 
     # Make sure the call came from twilio and is valid
-    # REVIEW: would be nice to validate earlier but we haven't yet been
+    # Note: would be nice to validate earlier but we haven't yet been
     # able to construct our msg_handler until now...
     msg_handler.validate(request)
 
@@ -82,7 +82,6 @@ def subscribe(request):
 
         msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
 
-        # REVIEW find a way to specify correct set of sender phone #s
         msg_handler.send_text(phone_number=phone_number_from, phone_sender=phone_number_to, text=msg)
 
         return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
@@ -95,7 +94,6 @@ def subscribe(request):
     # text the subscriber to ask them to confirm
     confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
 
-    # REVIEW find a way to specify correct set of sender phone #s
     msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
 
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
