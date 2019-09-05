@@ -19,6 +19,7 @@ if __name__ == "__main__":
     TestRunner = get_runner(settings)
     test_runner = TestRunner()
     test_labels = []
+
     # test_labels = ["tests"]
     # failures = test_runner.run_tests(["tests"])
     # test_labels = ["tests.test_cod_utils"]
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_data_cache.DataCitySummaryTests"]
     # test_labels = ["tests.test_data_cache.DataCacheTests.test_data_cache_invalid_source"]
     # test_labels = ["tests.test_messenger"]
+    # test_labels = ["tests.test_messenger.MessengerTests.test_subscribe_web"]
     # test_labels = ["tests.test_photo_survey"]
     # test_labels = ["tests.test_property_data"]
     # test_labels = ["tests.test_photo_survey.BridgingNeighborhoodsTests"]
@@ -41,7 +43,6 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_waste_wizard"]
     # test_labels = ["tests.test_waste_notifier.WasteNotifierTests.test_confirm_invalid_phone_number"]
     # test_labels = ["tests.test_website_data"]
-
 
     if not test_labels:
 

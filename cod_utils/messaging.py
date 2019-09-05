@@ -120,12 +120,12 @@ class MsgHandler():
         return number
 
     @staticmethod
-    def get_address(request):
+    def get_address(request, key='Body'):
         """
         Returns address of message sender.
         """
 
-        address = request.data.get('Body', '').upper().strip()
+        address = request.data.get(key, '').upper().strip()
 
         pos = address.find("DETROIT")
         if pos >= 0:

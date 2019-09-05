@@ -69,7 +69,7 @@ def subscribe(request):
     msg_handler.validate(request)
 
     # Clean up street address
-    street_address = MsgHandler.get_address(request)
+    street_address = MsgHandler.get_address(request=request)
 
     # Parse address string and get result from AddressPoint geocoder
     location, address = util.geocode_address(street_address=street_address)
@@ -86,13 +86,80 @@ def subscribe(request):
 
         return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
 
+    # REVIEW add this support
+    if MessengerSubscriber.objects.filter(messenger_client=client, phone_number=phone_number_from).exists():
+        return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
+
     # Create the Subscriber object
     subscriber = MessengerSubscriber(messenger_client=client, phone_number=phone_number_from, status='active',
         address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
     subscriber.save()
 
-    # text the subscriber to ask them to confirm
+    # Let the subscriber know they are now signed up.
     confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
+
+    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
+
+    response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
+    return Response(response, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+def subscribe_web(request, client_id):
+    """
+    Parse subscription request and text user request for confirmation.
+
+{
+    "phone_number": "2124831691",
+    "address": "27 Montclair Rd"
+}
+
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
+
+    msg_handler = get_messenger_msg_handler(client)
+
+    # Verify required fields are present
+    if not request.data.get('phone_number') or not request.data.get('address'):
+        return Response({"error": "Address and phone number are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Clean up phone number
+    phone_number_from = MsgHandler.get_fone_number(request, key='phone_number')
+
+    # Clean up street address
+    street_address = MsgHandler.get_address(request=request, key='address')
+
+    # Parse address string and get result from AddressPoint geocoder
+    location, address = util.geocode_address(street_address=street_address)
+    if not location:
+        invalid_addr_msg = 'Invalid {} signup: {} from {}'.format(client.name, street_address, phone_number_from)
+
+        CODLogger.instance().log_error(name=__name__, area="Messenger signup by text", msg=invalid_addr_msg)
+
+        SlackMsgHandler().send_admin_alert(invalid_addr_msg)
+
+        msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
+
+        msg_handler.send_text(phone_number=phone_number_from, text=msg)
+
+        return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # REVIEW add this support
+    if MessengerSubscriber.objects.filter(messenger_client=client, phone_number=phone_number_from).exists():
+        return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create the Subscriber object
+    subscriber = MessengerSubscriber(messenger_client=client, phone_number=phone_number_from, status='inactive',
+        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
+    subscriber.save()
+
+    # Ask the subscriber to to confirm.
+    # REVIEW clean this up
+    # confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
+    confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
 
     msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
 

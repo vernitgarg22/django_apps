@@ -135,6 +135,21 @@ class MessengerTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")
 
+    # Test subscribing from web page
+    def test_subscribe_web(self):
+        "Test subscribing from webpage"
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+
+            c = Client()
+            response = c.post('/messenger/clients/1/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl" })
+
+        mock_method.assert_called_once_with(phone_number='5005550006', text="Please reply with 'add me' to confirm you would like to receive alerts from Elections")
+
+        expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New Elections subscriber created'}
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+
     def test_subscribe_msg_missing_fone(self):
 
         with patch.object(RequestValidator, 'validate') as mock_validate:
