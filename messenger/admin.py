@@ -31,9 +31,9 @@ admin.site.register(MessengerPhoneNumber, MessengerPhoneNumberAdmin)
 class MessengerLocationAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['location_type', 'value']})
+        (None, {'fields': ['location_type', 'prefix', 'value']})
     ]
-    list_display = ('location_type', 'value')
+    list_display = ('location_type', 'prefix', 'value')
     list_filter = ['location_type']
     search_fields = []
     ordering = ['location_type', 'value']
