@@ -219,16 +219,18 @@ def add_notification(request, client_id, notification_id=None, format=None):
     notification.save()
 
     # Add our locations
-    location_type = request.data.get("location_type")
+    prefix = request.data.get("location_prefix")
     locations = request.data.getlist("locations")
 
     for value in locations:
 
-        if not MessengerLocation.objects.filter(location_type=location_type, value=value).exists():
-            return Response({ "error": "{location_type} with value {value} is invalid ".format(location_type=location_type, value=value) },
+        locations = MessengerLocation.objects.filter(prefix=prefix).filter(value=value)
+
+        if not locations.exists():
+            return Response({ "error": "{prefix} with value {value} is invalid ".format(prefix=prefix, value=value) },
                 status=status.HTTP_400_BAD_REQUEST)
 
-        location = MessengerLocation.objects.get(location_type=location_type, value=value)
+        location = locations.get()
         if not notification.locations.filter(id=location.id).exists():
             notification.locations.add(location)
 

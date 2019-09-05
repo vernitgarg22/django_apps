@@ -72,26 +72,29 @@ def get_locations_helper(notification=None):
     """
 
     if notification:
-        location_types = notification.locations.all().values('location_type').order_by('location_type')
+        location_types = notification.locations.all().values('location_type', 'prefix').order_by('location_type')
     else:
-        location_types = MessengerLocation.objects.all().values('location_type').order_by('location_type')
+        location_types = MessengerLocation.objects.all().values('location_type', 'prefix').order_by('location_type')
 
     response = {}
 
     # Add all our location types.
     for location_type in location_types:
 
-        response[location_type['location_type']] = []
+        response[location_type['prefix']] = {
+            "description": location_type['location_type'],
+            "values": []
+        }
 
     if notification:
-        locations = notification.locations.all().order_by('location_type', 'value')
+        locations = notification.locations.all().order_by('prefix', 'value')
     else:
-        locations = MessengerLocation.objects.all().order_by('location_type', 'value')
+        locations = MessengerLocation.objects.all().order_by('prefix', 'value')
 
     # Add each location.
     for location in locations:
 
-        response[location.location_type].append(location.value)
+        response[location.prefix]["values"].append(location.value)
 
     return response
 
