@@ -45,9 +45,10 @@ class MessengerLocation(models.Model):
     app_label = 'messenger'
 
     LOCATION_CHOICES = [('DHSEM Evacuation Zone', 'DHSEM Evacuation Zone'), ('ZIP Code', 'ZIP Code')]
+    PREFIX_CHOICES = [('dhsem_evac_zone', 'dhsem_evac_zone'), ('zipcode', 'zipcode')]
 
     location_type = models.CharField('Location Type', max_length=32, choices=LOCATION_CHOICES)
-    prefix = models.CharField('Prefix', max_length=16, default='citywide')
+    prefix = models.CharField('Prefix', max_length=16, default='citywide', choices=PREFIX_CHOICES)
     value = models.CharField('Value', max_length=128)
 
     def to_json(self):
