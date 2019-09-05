@@ -7,7 +7,7 @@ from django.core.management.base import CommandError
 
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
 
-from cod_utils.messaging import MsgHandler, get_elections_msg_handler
+from cod_utils.messaging import MsgHandler, get_dhsem_msg_handler, get_elections_msg_handler
 from cod_utils.util import date_json
 
 
@@ -18,13 +18,17 @@ def get_messenger_msg_handler(client):
 
     phone_sender_list = [ phone_number.phone_number for phone_number in client.messengerphonenumber_set.all() ]
 
-    if client.name == 'elections':
+    if client.name == 'Elections':
 
         return get_elections_msg_handler(phone_sender_list=phone_sender_list)
 
+    elif client.name == 'DHSEM':
+
+        return get_dhsem_msg_handler(phone_sender_list=phone_sender_list)
+
     else:  # pragma: nocover (should never get here)
 
-        raise NotificationException("Msg handler for client '{}' not available".format(client.name))
+        raise NotificationException(client_name=client.name, message="Msg handler for client '{}' not available".format(client.name))
 
 
 class NotificationException(Exception):

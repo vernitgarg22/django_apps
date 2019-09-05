@@ -44,8 +44,8 @@ class MessengerLocation(models.Model):
 
     app_label = 'messenger'
 
-    LOCATION_CHOICES = [('DHSEM Evacuation Zone', 'DHSEM Evacuation Zone'), ('ZIP Code', 'ZIP Code')]
-    PREFIX_CHOICES = [('dhsem_evac_zone', 'dhsem_evac_zone'), ('zipcode', 'zipcode')]
+    LOCATION_CHOICES = [('DHSEM Evacuation Zone', 'DHSEM Evacuation Zone'), ('ZIP Code', 'ZIP Code'), ('Citywide', 'Citywide')]
+    PREFIX_CHOICES = [('dhsem_evac_zone', 'dhsem_evac_zone'), ('zipcode', 'zipcode'), ('citywide', 'citywide')]
 
     location_type = models.CharField('Location Type', max_length=32, choices=LOCATION_CHOICES)
     prefix = models.CharField('Prefix', max_length=16, default='citywide', choices=PREFIX_CHOICES)
