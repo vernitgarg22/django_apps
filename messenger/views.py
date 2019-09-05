@@ -96,9 +96,11 @@ def subscribe(request):
     subscriber.save()
 
     # Let the subscriber know they are now signed up.
+    # REVIEW: figure out a way to handle confirmations during beta testing
     confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
 
-    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
+    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
+    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
 
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
     return Response(response, status=status.HTTP_201_CREATED)
@@ -161,7 +163,8 @@ def subscribe_web(request, client_id):
     # confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
     confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
 
-    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
+    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
+    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
 
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
     return Response(response, status=status.HTTP_201_CREATED)
