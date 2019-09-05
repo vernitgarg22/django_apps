@@ -47,21 +47,22 @@ class MessengerLocation(models.Model):
     LOCATION_CHOICES = [('DHSEM Evacuation Zone', 'DHSEM Evacuation Zone'), ('ZIP Code', 'ZIP Code')]
 
     location_type = models.CharField('Location Type', max_length=32, choices=LOCATION_CHOICES)
+    prefix = models.CharField('Prefix', max_length=16, default='citywide')
     value = models.CharField('Value', max_length=128)
 
     def to_json(self):
         """
-        Returns json representation of this location.
+        Returns json representing this location.
         """
 
         return {
             "location_type": self.location_type,
+            "prefix": self.prefix,
             "value": self.value,
         }
 
-
     def __str__(self):    # pragma: nocover (mostly just for debugging)
-        return self.location_type + " " + self.value
+        return self.prefix + " " + self.value
 
 
 def get_locations_helper(notification=None):

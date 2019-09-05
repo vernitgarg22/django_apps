@@ -110,19 +110,19 @@ def get_locations(request, format=None):
 
 
 @api_view(['GET'])
-def get_location_notifications(request, client_id, value, format=None):
+def get_location_notifications(request, client_id, prefix, value, format=None):
     """
     Returns all notifications for the given client and location.
     """
 
-    # REVIEW: Should really constrain location by location type
-
     client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
 
-    if not MessengerLocation.objects.filter(value=value).exists():
-        raise NotFound(detail={ "error": "Location {value} not found".format(value=value) })
+    locations = MessengerLocation.objects.filter(prefix=prefix).filter(value=value)
 
-    location = MessengerLocation.objects.filter(value=value).first()
+    if not locations.exists():
+        raise NotFound(detail={ "error": "{prefix} {value} not found".format(prefix=prefix, value=value) })
+
+    location = locations.first()
 
     response = {
         "location": location.to_json(),

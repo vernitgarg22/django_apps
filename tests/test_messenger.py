@@ -90,7 +90,7 @@ def setup_messenger():
     phone_number.save()
 
     for location in [ 48214 ]:
-        MessengerLocation(location_type="ZIP Code", value=location).save()
+        MessengerLocation(location_type="ZIP Code", prefix="zipcode", value=location).save()
 
     notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5),
       geo_layer_url=url, formatter='ElectionFormatter')
@@ -394,7 +394,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test returning all locations"
 
         for location in [ 1, 2 ]:
-            MessengerLocation(location_type="DHSEM Evacuation Zone", value=location).save()
+            MessengerLocation(location_type="DHSEM Evacuation Zone", prefix='dhsem_evac_zone', value=location).save()
 
         c = Client()
         response = c.get('/messenger/locations/')
@@ -408,11 +408,12 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test returning notifications for a given location"
 
         c = Client()
-        response = c.get('/messenger/clients/1/locations/48214/notifications/')
+        response = c.get('/messenger/clients/1/locations/zipcode/48214/notifications/')
 
         expected = {
             'location': {
                 'location_type': 'ZIP Code',
+                'prefix': 'zipcode',
                 'value': '48214'
             },
             'notifications': [
@@ -440,16 +441,16 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test returning notifications for an invalid location"
 
         c = Client()
-        response = c.get('/messenger/clients/1/locations/99/notifications/')
+        response = c.get('/messenger/clients/1/locations/zipcode/99/notifications/')
 
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.data, { "error": "Location 99 not found"})
+        self.assertEqual(response.data, { "error": "zipcode 99 not found"})
 
     def test_add_notification_location(self):
         "Test adding a notification with a location"
 
         for location in [ 48226 ]:
-            MessengerLocation(location_type="ZIP Code", value=location).save()
+            MessengerLocation(location_type="ZIP Code", prefix='zipcode', value=location).save()
 
         cl = Client()
         response = cl.post('/messenger/clients/1/notifications/', {
@@ -589,7 +590,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         "Test returning all notifications for a client"
 
         for location in [ 48214, 48226 ]:
-            MessengerLocation(location_type="ZIP Code", value=location).save()
+            MessengerLocation(location_type="ZIP Code", prefix='zipcode', value=location).save()
 
         c = Client()
         response = c.get('/messenger/clients/1/')
