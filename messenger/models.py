@@ -210,18 +210,14 @@ class MessengerSubscriber(models.Model):
     created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
 
-    @staticmethod
-    def get_or_create_subscriber(phone_number, client, **kwargs):
-        """
-        Gets or creates a subscriber object.
-        """
 
-        subscriber, created = MessengerSubscriber.objects.get_or_create(phone_number=phone_number)
-        if not created:
-            subscriber.save()
+    def update_subscriber(self, client=None, **kwargs):
+        """
+        Update attributes of the subscriber.
+        """
 
         # Add our client to the subscriber?
-        if not subscriber.messenger_clients.filter(id=client.id).exists():
+        if client and not subscriber.messenger_clients.filter(id=client.id).exists():
             subscriber.messenger_clients.add(client)
 
         changed = False
@@ -236,6 +232,27 @@ class MessengerSubscriber(models.Model):
             subscriber.save()
 
         return subscriber
+
+    @staticmethod
+    def get_or_create_subscriber(phone_number, client, **kwargs):
+        """
+        Gets or creates a subscriber object.
+        """
+
+        subscriber, created = MessengerSubscriber.objects.get_or_create(phone_number=phone_number)
+        if not created:
+            subscriber.save()
+
+        return subscriber.update_subscriber(client, kwargs)
+
+
+    def change_status(self, activate):
+        """
+        Internal use only:  changes status to active or inactive and
+        updates last_status_update to current time.
+        """
+
+        return subscriber.update_subscriber(client, kwargs={"status": "active" if activate else "inactive"})
 
     def save(self, *args, **kwargs):
         """
