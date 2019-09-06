@@ -210,6 +210,33 @@ class MessengerSubscriber(models.Model):
     created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
 
+    @staticmethod
+    def get_or_create_subscriber(phone_number, client, **kwargs):
+        """
+        Gets or creates a subscriber object.
+        """
+
+        subscriber, created = MessengerSubscriber.objects.get_or_create(phone_number=phone_number)
+        if not created:
+            subscriber.save()
+
+        # Add our client to the subscriber?
+        if not subscriber.messenger_clients.filter(id=client.id).exists():
+            subscriber.messenger_clients.add(client)
+
+        changed = False
+        for attribute in [ "activate", "address" ]:
+
+            value = kwargs.get(attribute, None)
+            if value:
+                setattr(subscriber, attribute, value)
+                changed = True
+
+        if changed:
+            subscriber.save()
+
+        return subscriber
+
     def save(self, *args, **kwargs):
         """
         Override Model.save() to update latitude / longitude based on subscriber's address, as
@@ -223,6 +250,8 @@ class MessengerSubscriber(models.Model):
             self.longitude = round(location['location']['x'], 8)
 
         self.last_status_update = timezone.now()
+
+        # REVIEW add validations here?
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
