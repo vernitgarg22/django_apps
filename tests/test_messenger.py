@@ -214,8 +214,11 @@ class MessengerTests(MessengerBaseTests):
     def test_send_messages(self):
         "Test sending a basic formatted message"
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        # REVIEW refactor subscriber creation in tests into a fn()
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
 
@@ -242,8 +245,10 @@ class MessengerTests(MessengerBaseTests):
         message.message = "Don't forget to vote today!"
         message.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
 
@@ -260,8 +265,10 @@ class MessengerTests(MessengerBaseTests):
             message='Recordatorio: hoy es el día de las elecciones. Su lugar de votación es {name}, situado en {location} - abrir en mapas: https://www.google.com/maps/search/?api=1&query={lat},{lng}')
         message.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl', lang='es')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl', lang='es')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
 
@@ -283,8 +290,10 @@ class MessengerTests(MessengerBaseTests):
         messenger_message.message = "Don't forget to vote today!"
         messenger_message.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
 
@@ -311,8 +320,10 @@ class MessengerTests(MessengerBaseTests):
         messenger_message.message = "Please wear sunscreen and seek shelter during the heatwave"
         messenger_message.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
 
@@ -326,9 +337,11 @@ class MessengerTests(MessengerBaseTests):
     def test_send_message_subscriber_outside_geo(self):
         "Test sending messages when subscriber is outside notification's polygon"
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active',
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active',
             address='132 Dikeman Street Ann Arbor, MI', latitude='42.201225', longitude='-83.150925')
         super(MessengerSubscriber, subscriber).save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         messages_meta = send_messages(client_name='Elections', day=date(2019, 11, 5))
         self.assertEqual('\nclient: Elections\nday:    2019-11-05\n\nnotifications:  (No notifications sent)', messages_meta.describe(), "No messages can be sent")
@@ -338,8 +351,10 @@ class MessengerTests(MessengerBaseTests):
         test_util.cleanup_model(MessengerMessage)
         test_util.cleanup_model(MessengerNotification)
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         messages_meta = send_messages(client_name='Elections', day=date(2019, 11, 5))
         self.assertEqual('\nclient: Elections\nday:    2019-11-05\n\nnotifications:  (No notifications sent)', messages_meta.describe(), "No messages can be sent")
@@ -349,8 +364,10 @@ class MessengerTests(MessengerBaseTests):
 
         test_util.cleanup_model(MessengerMessage)
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
         with self.assertRaises(NotificationException):
@@ -363,8 +380,10 @@ class MessengerTests(MessengerBaseTests):
         notification.formatter = None
         notification.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
         with self.assertRaises(NotificationException):
@@ -377,8 +396,10 @@ class MessengerTests(MessengerBaseTests):
         notification.formatter = "invalid"
         notification.save()
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
         with self.assertRaises(NotificationException):
@@ -400,8 +421,10 @@ class MessengerTests(MessengerBaseTests):
             def __init__(self):
                 self.ok = False
 
-        subscriber = MessengerSubscriber(messenger_client=MessengerClient.objects.first(), phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
+        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
         subscriber.save()
+
+        subscriber.messenger_clients.add(MessengerClient.objects.first())
 
         out = StringIO()
         with self.assertRaises(NotificationException):

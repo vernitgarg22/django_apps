@@ -87,13 +87,17 @@ def subscribe(request):
         return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
 
     # REVIEW add this support
-    if MessengerSubscriber.objects.filter(messenger_client=client, phone_number=phone_number_from).exists():
+    if MessengerSubscriber.objects.filter(messenger_clients=client, phone_number=phone_number_from).exists():
         return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Create the Subscriber object
-    subscriber = MessengerSubscriber(messenger_client=client, phone_number=phone_number_from, status='active',
+    subscriber = MessengerSubscriber(phone_number=phone_number_from, status='active',
         address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
     subscriber.save()
+
+    # Add our client to the subscriber?
+    if not subscriber.messenger_clients.filter(id=client.id).exists():
+        subscriber.messenger_clients.add(client)
 
     # Let the subscriber know they are now signed up.
     # REVIEW: figure out a way to handle confirmations during beta testing
@@ -150,13 +154,17 @@ def subscribe_web(request, client_id):
         return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
 
     # REVIEW add this support
-    if MessengerSubscriber.objects.filter(messenger_client=client, phone_number=phone_number_from).exists():
+    if MessengerSubscriber.objects.filter(messenger_clients=client, phone_number=phone_number_from).exists():
         return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Create the Subscriber object
-    subscriber = MessengerSubscriber(messenger_client=client, phone_number=phone_number_from, status='inactive',
+    subscriber = MessengerSubscriber(phone_number=phone_number_from, status='inactive',
         address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
     subscriber.save()
+
+    # Add our client to the subscriber?
+    if not subscriber.messenger_clients.filter(id=client.id).exists():
+        subscriber.messenger_clients.add(client)
 
     # Ask the subscriber to to confirm.
     # REVIEW clean this up

@@ -200,7 +200,7 @@ class MessengerSubscriber(models.Model):
         ('inactive', 'Inactive'),
     )
 
-    messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
+    messenger_clients = models.ManyToManyField(MessengerClient)
     phone_number = models.CharField('Subscriber phone number', unique=True, max_length=32)
     status = models.CharField('Subscriber status', max_length=32, choices=STATUS_CHOICES, default='inactive')
     address = models.CharField('Home address', max_length=128)
@@ -228,4 +228,4 @@ class MessengerSubscriber(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):    # pragma: nocover (mostly just for debugging)
-        return str(self.messenger_client) + ' - ' + self.phone_number + ' - ' + self.address
+        return self.phone_number + ' - ' + self.address
