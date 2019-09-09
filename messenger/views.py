@@ -17,7 +17,11 @@ from cod_utils.messaging import SlackMsgHandler, MsgHandler
 from cod_utils.cod_logger import CODLogger
 
 
-def subscriber_helper(client, phone_number_from, street_address, text_signup):
+def subscriber_helper(phone_number_from, msg_handler, client, street_address, text_signup):
+    """
+    Helper function for setting up subbscribers who are signing up by
+    web or via text msg.
+    """
 
     # Parse address string and get result from AddressPoint geocoder
     location, address = util.geocode_address(street_address=street_address)
@@ -33,22 +37,18 @@ def subscriber_helper(client, phone_number_from, street_address, text_signup):
 
         return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
 
-    # REVIEW add this support
-    if MessengerSubscriber.objects.filter(messenger_client=client, phone_number=phone_number_from).exists():
-        return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Create the Subscriber object
-    status = 'inactive' if text_signup else 'active'
-    subscriber = MessengerSubscriber(messenger_client=client, phone_number=phone_number_from, status=status,
-        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
-    subscriber.save()
+    # Initialize the subscriber
+    # REVIEW:  handle lang properly
+    subscriber_status = 'active' if text_signup else 'inactive'
+    subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number_from, client=client, status=subscriber_status,
+        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'], lang="en")
 
     # Send subscriber request to confirm (if text signup), otherwise a confirmation that they are signed up.
-    # REVIEW clean this up
     if text_signup:
-        confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
-    else:
         confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
+    else:
+        # REVIEW clean this up
+        confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
 
     # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
     msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
@@ -111,43 +111,7 @@ def subscribe(request):
     # Clean up street address
     street_address = MsgHandler.get_address(request=request)
 
-    # Parse address string and get result from AddressPoint geocoder
-    location, address = util.geocode_address(street_address=street_address)
-    if not location:
-        invalid_addr_msg = 'Invalid {} signup: {} from {}'.format(client.name, street_address, phone_number_from)
-
-        CODLogger.instance().log_error(name=__name__, area="Messenger signup by text", msg=invalid_addr_msg)
-
-        SlackMsgHandler().send_admin_alert(invalid_addr_msg)
-
-        msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
-
-        msg_handler.send_text(phone_number=phone_number_from, phone_sender=phone_number_to, text=msg)
-
-        return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
-
-    # REVIEW add this support
-    if MessengerSubscriber.objects.filter(messenger_clients=client, phone_number=phone_number_from).exists():
-        return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Create the Subscriber object
-    subscriber = MessengerSubscriber(phone_number=phone_number_from, status='active',
-        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
-    subscriber.save()
-
-    # Add our client to the subscriber?
-    if not subscriber.messenger_clients.filter(id=client.id).exists():
-        subscriber.messenger_clients.add(client)
-
-    # Let the subscriber know they are now signed up.
-    # REVIEW: figure out a way to handle confirmations during beta testing
-    confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
-
-    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
-    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
-
-    response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
-    return Response(response, status=status.HTTP_201_CREATED)
+    return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, text_signup=True)
 
 
 @api_view(['POST'])
@@ -178,44 +142,7 @@ def subscribe_web(request, client_id):
     # Clean up street address
     street_address = MsgHandler.get_address(request=request, key='address')
 
-    # Parse address string and get result from AddressPoint geocoder
-    location, address = util.geocode_address(street_address=street_address)
-    if not location:
-        invalid_addr_msg = 'Invalid {} signup: {} from {}'.format(client.name, street_address, phone_number_from)
-
-        CODLogger.instance().log_error(name=__name__, area="Messenger signup by text", msg=invalid_addr_msg)
-
-        SlackMsgHandler().send_admin_alert(invalid_addr_msg)
-
-        msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
-
-        msg_handler.send_text(phone_number=phone_number_from, text=msg)
-
-        return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
-
-    # REVIEW add this support
-    if MessengerSubscriber.objects.filter(messenger_clients=client, phone_number=phone_number_from).exists():
-        return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Create the Subscriber object
-    subscriber = MessengerSubscriber(phone_number=phone_number_from, status='inactive',
-        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
-    subscriber.save()
-
-    # Add our client to the subscriber?
-    if not subscriber.messenger_clients.filter(id=client.id).exists():
-        subscriber.messenger_clients.add(client)
-
-    # Ask the subscriber to to confirm.
-    # REVIEW clean this up
-    # confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
-    confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
-
-    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
-    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
-
-    response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
-    return Response(response, status=status.HTTP_201_CREATED)
+    return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, text_signup=False)
 
 
 @api_view(['GET'])

@@ -211,39 +211,39 @@ class MessengerSubscriber(models.Model):
     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
 
 
-    def update_subscriber(self, client=None, **kwargs):
+    def update_subscriber(self, **kwargs):
         """
         Update attributes of the subscriber.
         """
 
-        # Add our client to the subscriber?
-        if client and not subscriber.messenger_clients.filter(id=client.id).exists():
-            subscriber.messenger_clients.add(client)
-
         changed = False
-        for attribute in [ "activate", "address" ]:
+        for attribute in [ "status", "address", "latitude", "longitude", "lang" ]:
 
             value = kwargs.get(attribute, None)
             if value:
-                setattr(subscriber, attribute, value)
+                setattr(self, attribute, value)
                 changed = True
 
         if changed:
-            subscriber.save()
+            self.save()
 
-        return subscriber
+        return self
 
     @staticmethod
-    def get_or_create_subscriber(phone_number, client, **kwargs):
+    def init_subscriber(phone_number, client, **kwargs):
         """
-        Gets or creates a subscriber object.
+        Gets or creates a subscriber and initializes the subscriber's attributes.
         """
 
         subscriber, created = MessengerSubscriber.objects.get_or_create(phone_number=phone_number)
-        if not created:
+        if created:
             subscriber.save()
 
-        return subscriber.update_subscriber(client, kwargs)
+        # Add our client to the subscriber?
+        if subscriber.messenger_clients.filter(id=client.id).exists():
+            subscriber.messenger_clients.add(client)
+
+        return subscriber.update_subscriber(**kwargs)
 
 
     def change_status(self, activate):
@@ -252,7 +252,7 @@ class MessengerSubscriber(models.Model):
         updates last_status_update to current time.
         """
 
-        return subscriber.update_subscriber(client, kwargs={"status": "active" if activate else "inactive"})
+        return subscriber.update_subscriber({"status": "active" if activate else "inactive"})
 
     def save(self, *args, **kwargs):
         """
@@ -260,11 +260,13 @@ class MessengerSubscriber(models.Model):
         well as created_at / last_status_update.
         """
 
-        location, address = geocode_address(street_address=self.address)
-        if address:
+        if not self.latitude or self.longitude:
 
-            self.latitude = round(location['location']['y'], 8)
-            self.longitude = round(location['location']['x'], 8)
+            location, address = geocode_address(street_address=self.address)
+            if address:
+
+                self.latitude = round(location['location']['y'], 8)
+                self.longitude = round(location['location']['x'], 8)
 
         self.last_status_update = timezone.now()
 
