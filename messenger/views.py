@@ -145,6 +145,46 @@ def subscribe_web(request, client_id):
     return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, text_signup=False)
 
 
+@api_view(['POST'])
+def confirm(request, client_id):
+    """
+    Parse subscription confirmation and send a simple response.
+    """
+
+    CODLogger.instance().log_api_call(name=__name__, msg=request.path)
+
+    client = get_existing_object(cl_type=MessengerClient, obj_id=client_id, cl_name="Client", required=True)
+
+    msg_handler = get_messenger_msg_handler(client)
+
+    # Make sure the call came from twilio and is valid
+    msg_handler.validate(request)
+
+    # Verify required fields are present
+    if not request.data.get('From') or not request.data.get('Body'):
+        return Response({"error": "From and body values are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Clean up phone number
+    phone_number = MsgHandler.get_fone_number(request)
+
+    body = request.data['Body']
+
+    # unless user wants to be removed, add them
+    activate = "remove me" not in body.lower()
+
+    # Update the subscriber's status
+    # REVIEW throw an error if subscriber does not already exist?
+    subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number, client=client)
+    subscriber.change_status(activate=activate)
+
+    # Let the subscriber know they were activated.
+    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
+    # REVIEW:  make message configurable?
+    msg_handler.send_text(phone_number=phone_number, text="Your alerts have been activated", phone_sender="5005550006")
+
+    return Response({ "subscriber": str(subscriber), "message": body })
+
+
 @api_view(['GET'])
 def get_locations(request, format=None):
     """

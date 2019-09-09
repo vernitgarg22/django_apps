@@ -135,21 +135,6 @@ class MessengerTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Subscription signup returns correct message")
 
-    # Test subscribing from web page
-    def test_subscribe_web(self):
-        "Test subscribing from webpage"
-
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
-
-            c = Client()
-            response = c.post('/messenger/clients/1/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl" })
-
-        mock_method.assert_called_once_with(phone_number='5005550006', text="Please reply with 'add me' to confirm you would like to receive alerts from Elections", phone_sender="5005550006")
-
-        expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New Elections subscriber created'}
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
-
     def test_subscribe_msg_missing_fone(self):
 
         with patch.object(RequestValidator, 'validate') as mock_validate:
@@ -210,6 +195,60 @@ class MessengerTests(MessengerBaseTests):
         c = Client()
         response = c.post('/messenger/subscribe/', TEXT_DATA)
         self.assertEqual(response.status_code, 403, "MsgHandler.validate() catches invalid requests")
+
+    # Test subscribing from web page
+    def test_subscribe_web(self):
+        "Test subscribing from webpage"
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+
+            c = Client()
+            response = c.post('/messenger/clients/1/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl" })
+
+        mock_method.assert_called_once_with(phone_number='5005550006', text="Please reply with 'add me' to confirm you would like to receive alerts from Elections", phone_sender="5005550006")
+
+        expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New Elections subscriber created'}
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+        self.assertEqual(MessengerSubscriber.objects.first().status, "inactive", "Subscriber needs to confirm")
+
+    # Test subscribing from web page with address missing
+    def test_subscribe_web_missing_address(self):
+        "Test subscribing from webpage with address missing"
+
+        c = Client()
+        response = c.post('/messenger/clients/1/subscribe/', { "phone_number": "5005550006" })
+
+        expected = {'error': 'Address and phone number are required'}
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, expected, "Subscription signup returns correct message")
+
+    # Test confirming subscription
+    def test_confirm_subscription(self):
+        "Test confirming subscription"
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/clients/1/confirm/', TEXT_DATA)
+
+        mock_method.assert_called_once_with(phone_number='5005550006', phone_sender='5005550006', text='Your alerts have been activated')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MessengerSubscriber.objects.first().status, "active", "Subscriber got activated")
+
+    def test_confirm_subscription_missing_message(self):
+        "Test confirming subscription with user message missing"
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/clients/1/confirm/', {"From": "15005550006"})
+
+        mock_method.assert_not_called()
+        self.assertEqual(response.status_code, 400)
 
     def test_send_messages(self):
         "Test sending a basic formatted message"

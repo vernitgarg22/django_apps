@@ -240,7 +240,7 @@ class MessengerSubscriber(models.Model):
             subscriber.save()
 
         # Add our client to the subscriber?
-        if subscriber.messenger_clients.filter(id=client.id).exists():
+        if not subscriber.messenger_clients.filter(id=client.id).exists():
             subscriber.messenger_clients.add(client)
 
         return subscriber.update_subscriber(**kwargs)
@@ -252,7 +252,7 @@ class MessengerSubscriber(models.Model):
         updates last_status_update to current time.
         """
 
-        return subscriber.update_subscriber({"status": "active" if activate else "inactive"})
+        return self.update_subscriber(status="active" if activate else "inactive")
 
     def save(self, *args, **kwargs):
         """
