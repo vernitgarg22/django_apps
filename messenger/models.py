@@ -200,7 +200,7 @@ class MessengerSubscriber(models.Model):
         ('inactive', 'Inactive'),
     )
 
-    messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
+    messenger_clients = models.ManyToManyField(MessengerClient)
     phone_number = models.CharField('Subscriber phone number', unique=True, max_length=32)
     status = models.CharField('Subscriber status', max_length=32, choices=STATUS_CHOICES, default='inactive')
     address = models.CharField('Home address', max_length=128)
@@ -209,6 +209,50 @@ class MessengerSubscriber(models.Model):
     lang = models.CharField('Preferred Language', max_length=32, blank=True, null=True)
     created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
+
+
+    def update_subscriber(self, client=None, **kwargs):
+        """
+        Update attributes of the subscriber.
+        """
+
+        # Add our client to the subscriber?
+        if client and not subscriber.messenger_clients.filter(id=client.id).exists():
+            subscriber.messenger_clients.add(client)
+
+        changed = False
+        for attribute in [ "activate", "address" ]:
+
+            value = kwargs.get(attribute, None)
+            if value:
+                setattr(subscriber, attribute, value)
+                changed = True
+
+        if changed:
+            subscriber.save()
+
+        return subscriber
+
+    @staticmethod
+    def get_or_create_subscriber(phone_number, client, **kwargs):
+        """
+        Gets or creates a subscriber object.
+        """
+
+        subscriber, created = MessengerSubscriber.objects.get_or_create(phone_number=phone_number)
+        if not created:
+            subscriber.save()
+
+        return subscriber.update_subscriber(client, kwargs)
+
+
+    def change_status(self, activate):
+        """
+        Internal use only:  changes status to active or inactive and
+        updates last_status_update to current time.
+        """
+
+        return subscriber.update_subscriber(client, kwargs={"status": "active" if activate else "inactive"})
 
     def save(self, *args, **kwargs):
         """
@@ -224,8 +268,10 @@ class MessengerSubscriber(models.Model):
 
         self.last_status_update = timezone.now()
 
+        # REVIEW add validations here?
+
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)
 
     def __str__(self):    # pragma: nocover (mostly just for debugging)
-        return str(self.messenger_client) + ' - ' + self.phone_number + ' - ' + self.address
+        return self.phone_number + ' - ' + self.address
