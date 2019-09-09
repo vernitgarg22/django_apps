@@ -82,10 +82,9 @@ class MsgHandler():
 
         if not phone_sender:
 
-            PHONE_SENDERS = settings.AUTO_LOADED_DATA['TWILIO_PHONE_SENDERS']
             random.seed()
-            index = random.randrange(len(PHONE_SENDERS))
-            phone_sender = PHONE_SENDERS[index]
+            index = random.randrange(len(self.phone_senders))
+            phone_sender = list(self.phone_senders.values())[index]
 
         return phone_sender
 
@@ -133,11 +132,11 @@ class MsgHandler():
 
         return address
 
-
     def send_text(self, phone_number, text, phone_sender=None, dry_run_param=False):
         """
         Send a text message via twilio rest client
         """
+
         client = Client(self.config.account_sid, self.config.auth_token)
         if MsgHandler.DRY_RUN or dry_run_param:
             return False

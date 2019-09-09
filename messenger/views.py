@@ -17,6 +17,46 @@ from cod_utils.messaging import SlackMsgHandler, MsgHandler
 from cod_utils.cod_logger import CODLogger
 
 
+def subscriber_helper(client, phone_number_from, street_address, text_signup):
+
+    # Parse address string and get result from AddressPoint geocoder
+    location, address = util.geocode_address(street_address=street_address)
+    if not location:
+        invalid_addr_msg = 'Invalid {} signup: {} from {}'.format(client.name, street_address, phone_number_from)
+
+        SlackMsgHandler().send_admin_alert(invalid_addr_msg)
+
+        # Only do this for sms signups
+        if text_signup:
+            msg = "Unfortunately, address {} could not be located - please text the street address only, for example '1301 3rd ave'".format(street_address)
+            msg_handler.send_text(phone_number=phone_number_from, text=msg)
+
+        return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # REVIEW add this support
+    if MessengerSubscriber.objects.filter(messenger_client=client, phone_number=phone_number_from).exists():
+        return Response({"error": "Updating existing subscriber not yet supported"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create the Subscriber object
+    status = 'inactive' if text_signup else 'active'
+    subscriber = MessengerSubscriber(messenger_client=client, phone_number=phone_number_from, status=status,
+        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'])
+    subscriber.save()
+
+    # Send subscriber request to confirm (if text signup), otherwise a confirmation that they are signed up.
+    # REVIEW clean this up
+    if text_signup:
+        confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
+    else:
+        confirmation_message=client.confirmation_message.format(street_address=street_address, phone_number_from=phone_number_from)
+
+    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
+    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
+
+    response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
+    return Response(response, status=status.HTTP_201_CREATED)
+
+
 @api_view(['POST'])
 def subscribe(request):
     """
