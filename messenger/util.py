@@ -16,7 +16,7 @@ def get_messenger_msg_handler(client):
     Returns the msg handler for this client.
     """
 
-    phone_sender_list = [ phone_number.phone_number for phone_number in client.messengerphonenumber_set.all() ]
+    phone_sender_list = [ phone_number.phone_number for phone_number in client.messengerphonenumber_set.filter(number_type='sender') ]
 
     if client.name == 'Elections':
 
