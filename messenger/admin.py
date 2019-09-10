@@ -19,11 +19,11 @@ admin.site.register(MessengerClient, MessengerClientAdmin)
 class MessengerPhoneNumberAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['messenger_client', 'phone_number', 'description']})
+        (None, {'fields': ['messenger_client', 'phone_number', 'description', 'number_type']})
     ]
-    list_display = ('messenger_client', 'phone_number', 'description')
+    list_display = ('messenger_client', 'phone_number', 'description', 'number_type')
     search_fields = ['phone_number']
-    ordering = ['phone_number']
+    ordering = ['number_type', 'phone_number']
 
 admin.site.register(MessengerPhoneNumber, MessengerPhoneNumberAdmin)
 

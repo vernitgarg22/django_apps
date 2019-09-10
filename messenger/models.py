@@ -32,9 +32,12 @@ class MessengerPhoneNumber(models.Model):
 
     app_label = 'messenger'
 
+    TYPE_CHOICES = [('sender', 'Notificaton Sender'), ('text_signup', 'Text Signup')]
+
     messenger_client = models.ForeignKey(MessengerClient, on_delete=models.PROTECT)
     phone_number = models.CharField('Phone Number', max_length=10, db_index=True, unique=True)
     description = models.CharField('Description', max_length=512, blank=True, null=True)
+    number_type = models.CharField('Number Type', max_length=32, choices=TYPE_CHOICES, default='sender')
 
     def __str__(self):    # pragma: nocover (mostly just for debugging)
         return str(self.messenger_client) + ' - ' + self.phone_number
