@@ -143,7 +143,7 @@ def subscribe_web(request, client_id):
     # Clean up street address
     street_address = MsgHandler.get_address(request=request, key='address')
 
-    lang = request.data.get(key="lang", default="en")
+    lang = request.data.get("lang", "en")
 
     return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, lang=lang, text_signup=False)
 
