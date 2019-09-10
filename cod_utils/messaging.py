@@ -31,8 +31,8 @@ def get_elections_msg_handler(phone_sender_list):
     # REVIEW TODO once elections has set up a twilio acct, add their account strings
     # REVIEW move these config classes and functions somewhere else?
 
-    account_sid = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
-    auth_token = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
+    account_sid = settings.AUTO_LOADED_DATA["IET_TWILIO_ACCOUNT_SID"]
+    auth_token = settings.AUTO_LOADED_DATA['IET_TWILIO_AUTH_TOKEN']
 
     return MsgHandler(config=MsgHandlerConfig(account_sid=account_sid, auth_token=auth_token, phone_sender_list=phone_sender_list))
 
@@ -41,8 +41,8 @@ def get_dhsem_msg_handler(phone_sender_list):
     # REVIEW TODO once DHSEM has set up a twilio acct, add their account strings
     # REVIEW move these config classes and functions somewhere else?
 
-    account_sid = settings.AUTO_LOADED_DATA["TWILIO_ACCOUNT_SID"]
-    auth_token = settings.AUTO_LOADED_DATA['TWILIO_AUTH_TOKEN']
+    account_sid = settings.AUTO_LOADED_DATA["IET_TWILIO_ACCOUNT_SID"]
+    auth_token = settings.AUTO_LOADED_DATA['IET_TWILIO_AUTH_TOKEN']
 
     return MsgHandler(config=MsgHandlerConfig(account_sid=account_sid, auth_token=auth_token, phone_sender_list=phone_sender_list))
 
