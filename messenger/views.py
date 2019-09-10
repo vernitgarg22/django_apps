@@ -17,7 +17,7 @@ from cod_utils.messaging import SlackMsgHandler, MsgHandler
 from cod_utils.cod_logger import CODLogger
 
 
-def subscriber_helper(phone_number_from, msg_handler, client, street_address, text_signup):
+def subscriber_helper(phone_number_from, msg_handler, client, street_address, lang, text_signup):
     """
     Helper function for setting up subbscribers who are signing up by
     web or via text msg.
@@ -41,7 +41,7 @@ def subscriber_helper(phone_number_from, msg_handler, client, street_address, te
     # REVIEW:  handle lang properly
     subscriber_status = 'active' if text_signup else 'inactive'
     subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number_from, client=client, status=subscriber_status,
-        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'], lang="en")
+        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'], lang=lang)
 
     # Send subscriber request to confirm (if text signup), otherwise a confirmation that they are signed up.
     if text_signup:
@@ -50,8 +50,8 @@ def subscriber_helper(phone_number_from, msg_handler, client, street_address, te
         # REVIEW clean this up
         confirmation_message = "Please reply with 'add me' to confirm you would like to receive alerts from {client_name}".format(client_name=client.name)
 
-    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
-    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message, phone_sender="5005550006")
+    # Send the subscriber a message letting them know they are being signed up.
+    msg_handler.send_text(phone_number=phone_number_from, text=confirmation_message)
 
     response = { "received": { "phone_number": phone_number_from, "address": street_address }, "message": "New {} subscriber created".format(client.name) }
     return Response(response, status=status.HTTP_201_CREATED)
@@ -111,7 +111,7 @@ def subscribe(request):
     # Clean up street address
     street_address = MsgHandler.get_address(request=request)
 
-    return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, text_signup=True)
+    return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, lang='en', text_signup=True)
 
 
 @api_view(['POST'])
@@ -121,7 +121,8 @@ def subscribe_web(request, client_id):
 
 {
     "phone_number": "2124831691",
-    "address": "27 Montclair Rd"
+    "address": "27 Montclair Rd",
+    "lang": "en|es|ar|bn" (optional - default is "en")
 }
 
     """
@@ -142,7 +143,9 @@ def subscribe_web(request, client_id):
     # Clean up street address
     street_address = MsgHandler.get_address(request=request, key='address')
 
-    return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, text_signup=False)
+    lang = request.data.get(key="lang", default="en")
+
+    return subscriber_helper(phone_number_from=phone_number_from, msg_handler=msg_handler, client=client, street_address=street_address, lang=lang, text_signup=False)
 
 
 @api_view(['POST'])
@@ -177,10 +180,9 @@ def confirm(request, client_id):
     subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number, client=client)
     subscriber.change_status(activate=activate)
 
-    # Let the subscriber know they were activated.
-    # REVIEW:  fix sender with actual phone numbers (and remove 'phone_sender' here)
+    # Let the subscriber know their notifications were activated.
     # REVIEW:  make message configurable?
-    msg_handler.send_text(phone_number=phone_number, text="Your alerts have been activated", phone_sender="5005550006")
+    msg_handler.send_text(phone_number=phone_number, text="Your alerts have been activated")
 
     return Response({ "subscriber": str(subscriber), "message": body })
 

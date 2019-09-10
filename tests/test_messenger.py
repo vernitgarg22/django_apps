@@ -129,7 +129,7 @@ class MessengerTests(MessengerBaseTests):
             c = Client()
             response = c.post('/messenger/subscribe/', TEXT_DATA)
 
-        mock_method.assert_called_once_with(phone_number='5005550006', text='You will receive elections reminders for the address 7840 VAN DYKE PL', phone_sender="5005550006")
+        mock_method.assert_called_once_with(phone_number='5005550006', text='You will receive elections reminders for the address 7840 VAN DYKE PL')
 
         expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New Elections subscriber created'}
         self.assertEqual(response.status_code, 201)
@@ -205,7 +205,7 @@ class MessengerTests(MessengerBaseTests):
             c = Client()
             response = c.post('/messenger/clients/1/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl" })
 
-        mock_method.assert_called_once_with(phone_number='5005550006', text="Please reply with 'add me' to confirm you would like to receive alerts from Elections", phone_sender="5005550006")
+        mock_method.assert_called_once_with(phone_number='5005550006', text="Please reply with 'add me' to confirm you would like to receive alerts from Elections")
 
         expected = {'received': {'phone_number': '5005550006', 'address': '7840 VAN DYKE PL'}, 'message': 'New Elections subscriber created'}
         self.assertEqual(response.status_code, 201)
@@ -233,7 +233,7 @@ class MessengerTests(MessengerBaseTests):
             c = Client()
             response = c.post('/messenger/clients/1/confirm/', TEXT_DATA)
 
-        mock_method.assert_called_once_with(phone_number='5005550006', phone_sender='5005550006', text='Your alerts have been activated')
+        mock_method.assert_called_once_with(phone_number='5005550006', text='Your alerts have been activated')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(MessengerSubscriber.objects.first().status, "active", "Subscriber got activated")
