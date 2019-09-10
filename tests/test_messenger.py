@@ -233,7 +233,7 @@ class MessengerTests(MessengerBaseTests):
             c = Client()
             response = c.post('/messenger/clients/1/confirm/', TEXT_DATA)
 
-        mock_method.assert_called_once_with(phone_number='5005550006', text='Your alerts have been activated')
+        mock_method.assert_called_once_with(phone_number='5005550006', text='Your Elections alerts have been activated')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(MessengerSubscriber.objects.first().status, "active", "Subscriber got activated")

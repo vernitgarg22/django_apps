@@ -182,7 +182,7 @@ def confirm(request, client_id):
 
     # Let the subscriber know their notifications were activated.
     # REVIEW:  make message configurable?
-    msg_handler.send_text(phone_number=phone_number, text="Your alerts have been activated")
+    msg_handler.send_text(phone_number=phone_number, text="Your {} alerts have been activated".format(client.name))
 
     return Response({ "subscriber": str(subscriber), "message": body })
 
