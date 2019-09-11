@@ -1,7 +1,11 @@
+import re
+
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
-from cod_utils.util import geocode_address, date_json
+from cod_utils.util import is_address_valid, geocode_address, date_json
+from cod_utils.messaging import MsgHandler
 
 
 class MessengerClient(models.Model):
@@ -198,10 +202,8 @@ class MessengerSubscriber(models.Model):
 
     app_label = 'messenger'
 
-    STATUS_CHOICES = (
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-    )
+    STATUS_CHOICES = [('active', 'Active'), ('inactive', 'Inactive')]
+    LANG_CHOICES = [('ar', 'Arabic'), ('bn', 'Bengali'), ('en', 'English'), ('es', 'Spanish'), ('default', 'Default (English)')]
 
     messenger_clients = models.ManyToManyField(MessengerClient)
     phone_number = models.CharField('Subscriber phone number', unique=True, max_length=32)
@@ -209,7 +211,7 @@ class MessengerSubscriber(models.Model):
     address = models.CharField('Home address', max_length=128)
     latitude = models.CharField('Latitude', max_length=32)
     longitude = models.CharField('Longitude', max_length=32)
-    lang = models.CharField('Preferred Language', max_length=32, blank=True, null=True)
+    lang = models.CharField('Preferred Language', max_length=32, choices=LANG_CHOICES, default='default')
     created_at = models.DateTimeField('Time of initial subscription', default=timezone.now())
     last_status_update = models.DateTimeField('Time of last status change', default=timezone.now())
 
@@ -238,16 +240,15 @@ class MessengerSubscriber(models.Model):
         Gets or creates a subscriber and initializes the subscriber's attributes.
         """
 
-        subscriber, created = MessengerSubscriber.objects.get_or_create(phone_number=phone_number)
-        if created:
-            subscriber.save()
+        subscriber, _ = MessengerSubscriber.objects.get_or_create(defaults=kwargs, phone_number=phone_number)
+
+        subscriber.update_subscriber(**kwargs)
 
         # Add our client to the subscriber?
         if not subscriber.messenger_clients.filter(id=client.id).exists():
             subscriber.messenger_clients.add(client)
 
-        return subscriber.update_subscriber(**kwargs)
-
+        return subscriber
 
     def change_status(self, activate):
         """
@@ -257,23 +258,52 @@ class MessengerSubscriber(models.Model):
 
         return self.update_subscriber(status="active" if activate else "inactive")
 
+    def validate(self):
+        """
+        Throws an ValidationError exception if the subscriber's state is not valid.
+        """
+
+        if not re.fullmatch(r'\d{10}', self.phone_number):
+            raise ValidationError({'phone_number': "Phone number must be 10 digits"})
+
+        valid_statuses = [ status[0] for status in MessengerSubscriber.STATUS_CHOICES ]
+        if self.status not in valid_statuses:
+            raise ValidationError({'status': "Valid status values are {}".format(valid_statuses)})
+
+        if not is_address_valid(street_address=self.address):
+            raise ValidationError({'address': "Address '{}'' is not specific enough".format(self.address)})
+
+        if not (self.latitude and self.longitude):
+            raise ValidationError({'address': "Address '{}'' did not map to a latitude or longitude".format(self.address)})
+
+        valid_languages = [ choice[0] for choice in MessengerSubscriber.LANG_CHOICES ]
+        if self.lang not in valid_languages:
+            raise ValidationError({'lang': "Valid languages are {}".format(valid_languages)})
+
+        if not (self.created_at and self.last_status_update) or self.created_at > self.last_status_update:
+            raise ValidationError({'created_at': "Subscriber timestamps do not appear valid"})
+
     def save(self, *args, **kwargs):
         """
         Override Model.save() to update latitude / longitude based on subscriber's address, as
         well as created_at / last_status_update.
         """
 
+        self.phone_number = MsgHandler.clean_fone_number(phone_number=self.phone_number)
+
         if not self.latitude or self.longitude:
 
             location, address = geocode_address(street_address=self.address)
-            if address:
+            if not location:
+                raise ValidationError({'address': "Address '{}' could not be located".format(self.address)})
 
-                self.latitude = round(location['location']['y'], 8)
-                self.longitude = round(location['location']['x'], 8)
+            self.latitude = round(location['location']['y'], 8)
+            self.longitude = round(location['location']['x'], 8)
 
         self.last_status_update = timezone.now()
 
-        # REVIEW add validations here?
+        # Validate the subscriber
+        self.validate()
 
         # Call the "real" save() method in base class
         super().save(*args, **kwargs)

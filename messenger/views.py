@@ -38,7 +38,6 @@ def subscriber_helper(phone_number_from, msg_handler, client, street_address, la
         return Response({"error": "Street address '{}' not found".format(street_address)}, status=status.HTTP_400_BAD_REQUEST)
 
     # Initialize the subscriber
-    # REVIEW:  handle lang properly
     subscriber_status = 'active' if text_signup else 'inactive'
     subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number_from, client=client, status=subscriber_status,
         address=street_address, latitude=location['location']['y'], longitude=location['location']['x'], lang=lang)
@@ -170,21 +169,22 @@ def confirm(request, client_id):
     # Clean up phone number
     phone_number = MsgHandler.get_fone_number(request)
 
-    body = request.data['Body']
+    # Retrieve the subscriber
+    subscribers = MessengerSubscriber.objects.filter(phone_number=phone_number, messenger_clients=client)
+    if not subscribers.exists():
+        message = "Subscriber for phone_number {phone_number} for client {client_name} not found".format(phone_number=phone_number, client_name=client.name)
+        raise NotFound(detail={ "error": message })
 
-    # unless user wants to be removed, add them
-    activate = "remove me" not in body.lower()
+    subscriber = subscribers.get()
 
     # Update the subscriber's status
-    # REVIEW throw an error if subscriber does not already exist?
-    subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number, client=client)
-    subscriber.change_status(activate=activate)
+    subscriber.change_status(activate=True)
 
     # Let the subscriber know their notifications were activated.
     # REVIEW:  make message configurable?
     msg_handler.send_text(phone_number=phone_number, text="Your {} alerts have been activated".format(client.name))
 
-    return Response({ "subscriber": str(subscriber), "message": body })
+    return Response({ "subscriber": str(subscriber), "message": phone_number })
 
 
 @api_view(['GET'])
