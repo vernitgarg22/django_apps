@@ -107,16 +107,26 @@ class MsgHandler():
             raise PermissionDenied('Request failed twilio validation check')
 
     @staticmethod
+    def clean_fone_number(phone_number):
+        """
+        Strips leading characters ('+1') from phone number.
+        """
+
+        phone_number = phone_number.replace('+', '')
+        if phone_number.startswith('1'):
+            phone_number = phone_number[1:]
+
+        return phone_number
+
+
+    @staticmethod
     def get_fone_number(request, key='From'):
         """
         Returns phone number of message sender.
         """
 
-        number = request.data[key].replace('+', '')
-        if number.startswith('1'):
-            number = number[1:]
-
-        return number
+        phone_number = request.data[key].replace('+', '')
+        return MsgHandler.clean_fone_number(phone_number=phone_number)
 
     @staticmethod
     def get_address(request, key='Body'):

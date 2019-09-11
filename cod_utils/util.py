@@ -127,6 +127,16 @@ def get_parcel_id(path, offset):
     # Some callers replace '.' with '_'
     return parcel_id.replace('_', '.')
 
+def is_address_valid(street_address):
+    """
+    Returns True if street_address appears to be valid.
+    """
+
+    return re.search(r'\d\s\w', street_address)
+
+    # if street_address == 'detroit' or re.fullmatch('[0-9]*', street_address):
+    #     return None, None
+
 
 def geocode_address(street_address):
     """
@@ -138,7 +148,7 @@ def geocode_address(street_address):
 
     # Verify address is not just 'detroit' or a zip code, because those are not
     # specific enough.
-    if street_address == 'detroit' or re.fullmatch('[0-9]*', street_address):
+    if not is_address_valid(street_address=street_address):
         return None, None
 
     # Parse address string and get result from AddressPoint geocoder
