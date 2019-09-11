@@ -70,7 +70,7 @@ admin.site.register(MessengerMessage, MessengerMessageAdmin)
 class MessengerSubscriberAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (None, {'fields': ['messenger_client', 'phone_number', 'status', 'address', 'lang']}),
+        (None, {'fields': ['messenger_clients', 'phone_number', 'status', 'address', 'lang']}),
         ('Advanced', { 'classes': ('collapse',), 'fields': ('latitude', 'longitude', 'created_at', 'last_status_update') }),
     ]
     list_display = ('phone_number', 'status', 'address', 'lang', 'latitude', 'longitude')
