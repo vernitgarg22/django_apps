@@ -1,5 +1,6 @@
 import datetime
-from datetime import date
+from datetime import date, timedelta
+import requests
 
 from django.test import Client, TestCase
 import mock
@@ -79,10 +80,12 @@ TEXT_DATA = {
   ]
 }
 
+GEO_LAYER_URL="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=4326&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson"
+
 
 def setup_messenger():
 
-    url="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
+    # url="https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geogeometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token="
 
     client = MessengerClient(name='Elections', description='Elections Messenger', confirmation_message="You will receive elections reminders for the address {street_address}")
     client.save()
@@ -93,12 +96,28 @@ def setup_messenger():
         MessengerLocation(location_type="ZIP Code", prefix="zipcode", value=location).save()
 
     notification = MessengerNotification(messenger_client=client, day=datetime.date(year=2019, month=11, day=5),
-      geo_layer_url=url, formatter='ElectionFormatter')
+      geo_layer_url=GEO_LAYER_URL, formatter='ElectionFormatter')
     notification.save()
     notification.locations.add(MessengerLocation.objects.first())
     message = MessengerMessage(messenger_notification=notification,
       message='Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}')
     message.save()
+
+def setup_subscriber(**kwargs):
+
+    phone_number = kwargs.get("phone_number", "+15005550006")
+    status = kwargs.get("status", "active")
+    address = kwargs.get("address", "7840 Van Dyke Pl")
+    lang = kwargs.get("lang", "en")
+
+    subscriber = MessengerSubscriber(phone_number=phone_number, status=status, address=address, lang=lang)
+    subscriber.save()
+
+    client = MessengerClient.objects.first()
+    if client:
+        subscriber.messenger_clients.add(client)
+
+    return subscriber
 
 
 class MessengerBaseTests(TestCase):
@@ -227,6 +246,8 @@ class MessengerTests(MessengerBaseTests):
     def test_confirm_subscription(self):
         "Test confirming subscription"
 
+        setup_subscriber()
+
         with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
             mock_validate.return_value = True
 
@@ -238,8 +259,21 @@ class MessengerTests(MessengerBaseTests):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(MessengerSubscriber.objects.first().status, "active", "Subscriber got activated")
 
+    def test_confirm_subscription_invalid_user(self):
+        "Test confirming subscription with invalid user"
+
+        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+            mock_validate.return_value = True
+
+            c = Client()
+            response = c.post('/messenger/clients/1/confirm/', TEXT_DATA)
+
+        self.assertEqual(response.status_code, 404)
+
     def test_confirm_subscription_missing_message(self):
         "Test confirming subscription with user message missing"
+
+        setup_subscriber()
 
         with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
             mock_validate.return_value = True
@@ -253,11 +287,7 @@ class MessengerTests(MessengerBaseTests):
     def test_send_messages(self):
         "Test sending a basic formatted message"
 
-        # REVIEW refactor subscriber creation in tests into a fn()
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
 
@@ -266,7 +296,7 @@ class MessengerTests(MessengerBaseTests):
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
         message = 'Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST. - open in maps: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
-        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+        mock_method.assert_called_once_with(phone_number='5005550006', text=message)
 
     def test_send_messages_citywide(self):
         "Test sending a message to subscribers citywide"
@@ -284,10 +314,7 @@ class MessengerTests(MessengerBaseTests):
         message.message = "Don't forget to vote today!"
         message.save()
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
 
@@ -295,7 +322,7 @@ class MessengerTests(MessengerBaseTests):
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
-        mock_method.assert_called_once_with(phone_number='+15005550006', text="Don't forget to vote today!")
+        mock_method.assert_called_once_with(phone_number='5005550006', text="Don't forget to vote today!")
 
     def test_send_messages_multi_lang(self):
         "Test sending a basic formatted message with multi-language support"
@@ -304,10 +331,7 @@ class MessengerTests(MessengerBaseTests):
             message='Recordatorio: hoy es el día de las elecciones. Su lugar de votación es {name}, situado en {location} - abrir en mapas: https://www.google.com/maps/search/?api=1&query={lat},{lng}')
         message.save()
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl', lang='es')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber(lang="es")
 
         out = StringIO()
 
@@ -316,7 +340,7 @@ class MessengerTests(MessengerBaseTests):
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
         message = 'Recordatorio: hoy es el día de las elecciones. Su lugar de votación es MAR. GARVEY ACADEMY, situado en 2301 VAN DYKE ST. - abrir en mapas: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
-        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+        mock_method.assert_called_once_with(phone_number='5005550006', text=message)
 
     def test_send_messages_simple(self):
         "Test sending a message with no geo layer (just the message itself"
@@ -329,10 +353,7 @@ class MessengerTests(MessengerBaseTests):
         messenger_message.message = "Don't forget to vote today!"
         messenger_message.save()
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
 
@@ -341,7 +362,7 @@ class MessengerTests(MessengerBaseTests):
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
         message = "Don't forget to vote today!"
-        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+        mock_method.assert_called_once_with(phone_number='5005550006', text=message)
 
     def test_send_messages_dhsem(self):
         "Test sending a message for DHSEM"
@@ -359,10 +380,7 @@ class MessengerTests(MessengerBaseTests):
         messenger_message.message = "Please wear sunscreen and seek shelter during the heatwave"
         messenger_message.save()
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
 
@@ -371,7 +389,7 @@ class MessengerTests(MessengerBaseTests):
             call_command('send_messages', 'DHSEM', '--today=20191105', stdout=out)
 
         message = "Please wear sunscreen and seek shelter during the heatwave"
-        mock_method.assert_called_once_with(phone_number='+15005550006', text=message)
+        mock_method.assert_called_once_with(phone_number='5005550006', text=message)
 
     def test_send_message_subscriber_outside_geo(self):
         "Test sending messages when subscriber is outside notification's polygon"
@@ -390,10 +408,7 @@ class MessengerTests(MessengerBaseTests):
         test_util.cleanup_model(MessengerMessage)
         test_util.cleanup_model(MessengerNotification)
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         messages_meta = send_messages(client_name='Elections', day=date(2019, 11, 5))
         self.assertEqual('\nclient: Elections\nday:    2019-11-05\n\nnotifications:  (No notifications sent)', messages_meta.describe(), "No messages can be sent")
@@ -403,10 +418,7 @@ class MessengerTests(MessengerBaseTests):
 
         test_util.cleanup_model(MessengerMessage)
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
         with self.assertRaises(NotificationException):
@@ -419,10 +431,7 @@ class MessengerTests(MessengerBaseTests):
         notification.formatter = None
         notification.save()
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
         with self.assertRaises(NotificationException):
@@ -435,10 +444,7 @@ class MessengerTests(MessengerBaseTests):
         notification.formatter = "invalid"
         notification.save()
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
+        setup_subscriber()
 
         out = StringIO()
         with self.assertRaises(NotificationException):
@@ -452,23 +458,19 @@ class MessengerTests(MessengerBaseTests):
 
             call_command('send_messages', 'invalid', '--today=20191105', stdout=out)
 
-    @mock.patch('requests.get')
-    def test_send_messages_invalid_geo_layer_url(self, mocked_requests_get):
+    def test_send_messages_invalid_geo_layer_url(self):
+
+        setup_subscriber()
 
         class MockedResponse():
 
             def __init__(self):
                 self.ok = False
 
-        subscriber = MessengerSubscriber(phone_number='+15005550006', status='active', address='7840 Van Dyke Pl')
-        subscriber.save()
-
-        subscriber.messenger_clients.add(MessengerClient.objects.first())
-
-        out = StringIO()
-        with self.assertRaises(NotificationException):
-
+        with patch.object(requests, 'get') as mocked_requests_get, self.assertRaises(NotificationException):
             mocked_requests_get.return_value = MockedResponse()
+
+            out = StringIO()
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
     def test_send_messages_invalid_dryrun_param(self):
@@ -495,7 +497,73 @@ class MessengerTests(MessengerBaseTests):
 
         with self.assertRaises(NotFound):
 
-            get_existing_object(cl_type=MessengerClient, obj_id="asdf", cl_name="Client")
+            get_existing_object(cl_type=MessengerClient, obj_id="invalid", cl_name="Client")
+
+
+class MessengerSubscriberValidationTests(TestCase):
+
+    def setUp(self):
+        """
+        Set up each unit test, including making sure database is properly cleaned up before each test
+        """
+
+        test_util.cleanup_model(MessengerSubscriber)
+
+    def test_validate_address(self):
+
+        with self.assertRaises(ValidationError):
+
+            MessengerSubscriber(address="100 Invalid Street").save()
+
+    def test_validate_phone_number(self):
+
+        subscriber = setup_subscriber()
+        subscriber.phone_number = "48214"
+
+        with self.assertRaises(ValidationError):
+            subscriber.validate()
+
+    def test_validate_status(self):
+
+        subscriber = setup_subscriber()
+        subscriber.status = "invalid"
+
+        with self.assertRaises(ValidationError):
+            subscriber.validate()
+
+    def test_validate_address2(self):
+
+        subscriber = setup_subscriber()
+        subscriber.address = "48226"
+
+        with self.assertRaises(ValidationError):
+            subscriber.validate()
+
+    def test_validate_lat_long(self):
+
+        subscriber = setup_subscriber()
+        subscriber.latitude = ''
+        subscriber.longitude = ''
+
+        with self.assertRaises(ValidationError):
+            subscriber.validate()
+
+    def test_validate_lang(self):
+
+        subscriber = setup_subscriber()
+        subscriber.lang = "foobar"
+
+        with self.assertRaises(ValidationError):
+            subscriber.validate()
+
+    def test_validate_timestamps(self):
+
+        subscriber = setup_subscriber()
+        subscriber.last_status_update = subscriber.created_at - timedelta(days=1)
+
+        with self.assertRaises(ValidationError):
+            subscriber.validate()
+
 
 class MessengerDashboardTests(MessengerBaseTests):
 
@@ -505,14 +573,14 @@ class MessengerDashboardTests(MessengerBaseTests):
         c = Client()
         response = c.post('/messenger/clients/1/notifications/', {
             "day": "2019/11/05",
-            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "geo_layer_url": GEO_LAYER_URL,
             "formatter": "ElectionFormatter"
             })
 
         expected = {
             'id': 2,
             'day': '2019-11-05T00:00:00.000Z',
-            'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+            'geo_layer_url': GEO_LAYER_URL,
             'formatter': 'ElectionFormatter',
             'locations': {},
             'messages': []
@@ -560,7 +628,7 @@ class MessengerDashboardTests(MessengerBaseTests):
                 {
                     'id': 1,
                     'day': '2019-11-05T00:00:00.000Z',
-                    'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+                    'geo_layer_url': GEO_LAYER_URL,
                     'formatter': 'ElectionFormatter',
                     'messages': [
                         {
@@ -595,7 +663,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         cl = Client()
         response = cl.post('/messenger/clients/1/notifications/', {
             "day": "2019/11/05",
-            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "geo_layer_url": GEO_LAYER_URL,
             "formatter": "ElectionFormatter",
             "location_prefix": "zipcode",
             "locations": [ 48214, 48226 ]
@@ -604,7 +672,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         expected = {
             'id': 2,
             'day': '2019-11-05T00:00:00.000Z',
-            'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+            'geo_layer_url': GEO_LAYER_URL,
             'formatter': 'ElectionFormatter',
             'locations': {'zipcode': {'description': 'ZIP Code', 'values': ['48214', '48226']}},
             'messages': []
@@ -619,7 +687,7 @@ class MessengerDashboardTests(MessengerBaseTests):
         cl = Client()
         response = cl.post('/messenger/clients/1/notifications/', {
             "day": "2019/11/05",
-            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "geo_layer_url": GEO_LAYER_URL,
             "formatter": "ElectionFormatter",
             "location_prefix": "zipcode",
             "locations": [ 10001 ]
@@ -663,14 +731,14 @@ class MessengerDashboardTests(MessengerBaseTests):
         c = Client()
         response = c.post('/messenger/clients/1/notifications/1/', {
             "day": "2019/11/05",
-            "geo_layer_url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=",
+            "geo_layer_url": GEO_LAYER_URL,
             "formatter": "ElectionFormatter"
             })
 
         expected = {
             'id': 1,
             'day': '2019-11-05T00:00:00.000Z',
-            'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+            'geo_layer_url': GEO_LAYER_URL,
             'formatter': 'ElectionFormatter',
             'locations': {'zipcode': {'description': 'ZIP Code', 'values': ['48214']}},
             'messages': [{'id': 1, 'lang': 'en', 'message': 'Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}'}]
@@ -746,7 +814,7 @@ class MessengerDashboardTests(MessengerBaseTests):
                 {
                     'id': 1,
                     'day': '2019-11-05T00:00:00.000Z',
-                    'geo_layer_url': 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=1%3D1&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=',
+                    'geo_layer_url': GEO_LAYER_URL,
                     'formatter': 'ElectionFormatter',
                     'locations': {'zipcode': {'description': 'ZIP Code', 'values': ['48214']}},
                     'messages': [
