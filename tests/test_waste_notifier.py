@@ -56,7 +56,7 @@ def make_subscriber(waste_area_ids=None, service_type="all", address="7840 Van D
 
     if not waste_area_ids:
 
-        location, _ = util.geocode_address(street_address=address)
+        location = util.geocode_address(street_address=address)
         waste_area_ids = get_waste_area_ids(location=location)
         waste_area_ids = ''.join( [ str(num) + ',' for num in waste_area_ids ] )
 

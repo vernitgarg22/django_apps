@@ -157,7 +157,7 @@ class Subscriber(models.Model):
         waste_area_ids = data.get('waste_area_ids')
         if not waste_area_ids:
             # Parse address string and get result from AddressPoint geocoder
-            location, address = util.geocode_address(street_address=street_address)
+            location = util.geocode_address(street_address=street_address)
             if not location:
                 invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
 

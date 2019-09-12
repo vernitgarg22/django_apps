@@ -293,12 +293,12 @@ class MessengerSubscriber(models.Model):
 
         if not self.latitude or self.longitude:
 
-            location, address = geocode_address(street_address=self.address)
+            location = geocode_address(street_address=self.address)
             if not location:
                 raise ValidationError({'address': "Address '{}' could not be located".format(self.address)})
 
-            self.latitude = round(location['location']['y'], 8)
-            self.longitude = round(location['location']['x'], 8)
+            self.latitude = location.latitude
+            self.longitude = location.longitude
 
         self.last_status_update = timezone.now()
 

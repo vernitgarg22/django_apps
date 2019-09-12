@@ -81,7 +81,7 @@ def subscribe_address(request):
     street_address = MsgHandler.get_address(request)
 
     # Parse address string and get result from AddressPoint geocoder
-    location, address = util.geocode_address(street_address=street_address)
+    location = util.geocode_address(street_address=street_address)
     if not location:
         invalid_addr_msg = 'Invalid waste reminder text signup: {} from {}'.format(street_address, phone_number)
 
@@ -98,7 +98,7 @@ def subscribe_address(request):
     waste_area_ids = get_waste_area_ids(location=location)
 
     # Create the subscriber and activate them
-    subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids, "address": address.address, "latitude": location['location']['y'], "longitude": location['location']['x'] } )
+    subscriber, error = Subscriber.update_or_create_from_dict( { "phone_number": phone_number, "waste_area_ids": waste_area_ids, "address": location.address, "latitude": location.latitude, "longitude": location.longitude } )
     if error:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)    # pragma: no cover (should never get here)
 
@@ -316,7 +316,7 @@ def get_address_service_info(request, street_address, today = datetime.date.toda
     tomorrow = util.tomorrow(today)
 
     # Parse address string and get result from AddressPoint geocoder
-    location, address = util.geocode_address(street_address=street_address)
+    location = util.geocode_address(street_address=street_address)
     if not location:
         invalid_addr_msg = 'Invalid address received in service info request: {}'.format(street_address)
         CODLogger.instance().log_error(name=__name__, area="service info request", msg=invalid_addr_msg)

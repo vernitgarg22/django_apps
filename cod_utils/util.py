@@ -5,10 +5,9 @@ from pytz import timezone
 import re
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
-import direccion
+from arcgis import gis, geocoding
 
 
 def date_json(date, **options):
@@ -138,6 +137,15 @@ def is_address_valid(street_address):
     #     return None, None
 
 
+class GISLocation():
+
+    def __init__(self, latitude, longitude, address):
+
+        self.latitude = round(latitude, 8)
+        self.longitude = round(longitude, 8)
+        self.address = address
+
+
 def geocode_address(street_address):
     """
     Returns geocoded location and address object if address can be geocoded
@@ -149,13 +157,23 @@ def geocode_address(street_address):
     # Verify address is not just 'detroit' or a zip code, because those are not
     # specific enough.
     if not is_address_valid(street_address=street_address):
-        return None, None
+        return None
 
-    # Parse address string and get result from AddressPoint geocoder
-    address = direccion.Address(input=street_address, notify_fail=True)
-    location = address.geocode()
+    # Setup arcgis environment
+    AGO_USER = settings.AUTO_LOADED_DATA["AGO_USER"]
+    AGO_PASS = settings.AUTO_LOADED_DATA["AGO_PASS"]
+    ago = gis.GIS(url="https://detroitmi.maps.arcgis.com", username=AGO_USER, password=AGO_PASS)
 
-    if not location or location['score'] < 50:
-        return None, None
-    else:
-        return location, address
+    geocoder = geocoding.get_geocoders(ago)[0]
+
+    # Geocode the address
+    geocode_result = geocoding.geocode(address=street_address, as_featureset=True, out_sr=4326, geocoder=geocoder)
+    features = geocode_result.features
+
+    # No results found?
+    if not features or features[0].get_value("Score") < 50:
+        return None
+
+    # Return location information.
+    return GISLocation(latitude=features[0].get_value("geometry")["y"], longitude=features[0].get_value("geometry")["x"],
+        address=features[0].get_value("Match_addr"))

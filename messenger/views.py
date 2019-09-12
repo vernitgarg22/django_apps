@@ -24,7 +24,7 @@ def subscriber_helper(phone_number_from, msg_handler, client, street_address, la
     """
 
     # Parse address string and get result from AddressPoint geocoder
-    location, address = util.geocode_address(street_address=street_address)
+    location = util.geocode_address(street_address=street_address)
     if not location:
         invalid_addr_msg = 'Invalid {} signup: {} from {}'.format(client.name, street_address, phone_number_from)
 
@@ -40,7 +40,7 @@ def subscriber_helper(phone_number_from, msg_handler, client, street_address, la
     # Initialize the subscriber
     subscriber_status = 'active' if text_signup else 'inactive'
     subscriber = MessengerSubscriber.init_subscriber(phone_number=phone_number_from, client=client, status=subscriber_status,
-        address=street_address, latitude=location['location']['y'], longitude=location['location']['x'], lang=lang)
+        address=street_address, latitude=location.latitude, longitude=location.longitude, lang=lang)
 
     # Send subscriber request to confirm (if text signup), otherwise a confirmation that they are signed up.
     if text_signup:
