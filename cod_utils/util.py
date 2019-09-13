@@ -146,7 +146,19 @@ class GISLocation():
         self.address = address
 
 
-def geocode_address(street_address):
+def init_geocode():
+    """
+    Initializes a geocoder.
+    """
+
+    AGO_USER = settings.AUTO_LOADED_DATA["AGO_USER"]
+    AGO_PASS = settings.AUTO_LOADED_DATA["AGO_PASS"]
+    ago = gis.GIS(url="https://detroitmi.maps.arcgis.com", username=AGO_USER, password=AGO_PASS)
+
+    return geocoding.get_geocoders(ago)[0]
+
+
+def geocode_address(street_address, geocoder=None):
     """
     Returns geocoded location and address object if address can be geocoded
     with enough accuracy. Otherwise, returns None.
@@ -160,11 +172,8 @@ def geocode_address(street_address):
         return None
 
     # Setup arcgis environment
-    AGO_USER = settings.AUTO_LOADED_DATA["AGO_USER"]
-    AGO_PASS = settings.AUTO_LOADED_DATA["AGO_PASS"]
-    ago = gis.GIS(url="https://detroitmi.maps.arcgis.com", username=AGO_USER, password=AGO_PASS)
-
-    geocoder = geocoding.get_geocoders(ago)[0]
+    if not geocoder:
+        geocoder = init_geocode()
 
     # Geocode the address
     geocode_result = geocoding.geocode(address=street_address, as_featureset=True, out_sr=4326, geocoder=geocoder)
