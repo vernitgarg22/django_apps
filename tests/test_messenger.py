@@ -298,6 +298,10 @@ class MessengerTests(MessengerBaseTests):
         message = 'Reminder: today is election day.  Your polling location is MAR. GARVEY ACADEMY, located at 2301 VAN DYKE ST. - open in maps: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
         mock_method.assert_called_once_with(phone_number='5005550006', text=message)
 
+        expected = '\nclient: Elections\nday:    2019-11-05\n\nnotifications:\n\nid:                 1\nmessage:            Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}\ngeo layer url:      https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=4326&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson\nformatter:          ElectionFormatter\nnum messages sent:  1\n'
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
     def test_send_messages_citywide(self):
         "Test sending a message to subscribers citywide"
 
@@ -324,6 +328,10 @@ class MessengerTests(MessengerBaseTests):
 
         mock_method.assert_called_once_with(phone_number='5005550006', text="Don't forget to vote today!")
 
+        expected = "\nclient: Elections\nday:    2019-11-05\n\nnotifications:\n\nid:                 1\nmessage:            Don't forget to vote today!\ngeo layer url:      None\nformatter:          ElectionFormatter\nnum messages sent:  1\n"
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
     def test_send_messages_multi_lang(self):
         "Test sending a basic formatted message with multi-language support"
 
@@ -341,6 +349,10 @@ class MessengerTests(MessengerBaseTests):
 
         message = 'Recordatorio: hoy es el día de las elecciones. Su lugar de votación es MAR. GARVEY ACADEMY, situado en 2301 VAN DYKE ST. - abrir en mapas: https://www.google.com/maps/search/?api=1&query=42.35972900000,-83.00074500000'
         mock_method.assert_called_once_with(phone_number='5005550006', text=message)
+
+        expected = "\nclient: Elections\nday:    2019-11-05\n\nnotifications:\n\nid:                 1\nmessage:            Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}\ngeo layer url:      https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=4326&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson\nformatter:          ElectionFormatter\nnum messages sent:  1\n"
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
 
     def test_send_messages_simple(self):
         "Test sending a message with no geo layer (just the message itself"
@@ -363,6 +375,10 @@ class MessengerTests(MessengerBaseTests):
 
         message = "Don't forget to vote today!"
         mock_method.assert_called_once_with(phone_number='5005550006', text=message)
+
+        expected = "\nclient: Elections\nday:    2019-11-05\n\nnotifications:\n\nid:                 1\nmessage:            Don't forget to vote today!\ngeo layer url:      None\nformatter:          ElectionFormatter\nnum messages sent:  1\n"
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
 
     def test_send_messages_dhsem(self):
         "Test sending a message for DHSEM"
@@ -390,6 +406,11 @@ class MessengerTests(MessengerBaseTests):
 
         message = "Please wear sunscreen and seek shelter during the heatwave"
         mock_method.assert_called_once_with(phone_number='5005550006', text=message)
+
+        expected = '\nclient: DHSEM\nday:    2019-11-05\n\nnotifications:\n\nid:                 1\nmessage:            Please wear sunscreen and seek shelter during the heatwave\ngeo layer url:      None\nformatter:          DHSEMFormatter\nnum messages sent:  1\n'
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
 
     def test_send_message_subscriber_outside_geo(self):
         "Test sending messages when subscriber is outside notification's polygon"
@@ -425,6 +446,10 @@ class MessengerTests(MessengerBaseTests):
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
     def test_send_messages_no_formatter(self):
 
         notification = MessengerNotification.objects.first()
@@ -437,6 +462,10 @@ class MessengerTests(MessengerBaseTests):
         with self.assertRaises(NotificationException):
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
+
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
 
     def test_send_messages_invalid_formatter(self):
 
@@ -451,12 +480,20 @@ class MessengerTests(MessengerBaseTests):
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
     def test_send_messages_invalid_client_name(self):
 
         out = StringIO()
         with self.assertRaises(CommandError):
 
             call_command('send_messages', 'invalid', '--today=20191105', stdout=out)
+
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
 
     def test_send_messages_invalid_geo_layer_url(self):
 
@@ -473,6 +510,10 @@ class MessengerTests(MessengerBaseTests):
             out = StringIO()
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
     def test_send_messages_invalid_dryrun_param(self):
 
         out = StringIO()
@@ -480,12 +521,20 @@ class MessengerTests(MessengerBaseTests):
 
             call_command('send_messages', 'Elections', '--today=20191105', '--dry_run=maybe', stdout=out)
 
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
+
     def test_send_messages_invalid_date_param(self):
 
         out = StringIO()
         with self.assertRaises(CommandError):
 
             call_command('send_messages', 'Elections', '--today=201911050', stdout=out)
+
+        expected = ""
+        out.seek(0)
+        self.assertEqual(out.read(), expected)
 
     def test_get_object_null_id(self):
 

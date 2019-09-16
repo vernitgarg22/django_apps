@@ -38,4 +38,4 @@ class Command(BaseCommand):
 
         messages_meta = send_messages(client_name, day=today, dry_run_param=dry_run_param)
 
-        print(messages_meta.describe())
+        self.stdout.write(messages_meta.describe())

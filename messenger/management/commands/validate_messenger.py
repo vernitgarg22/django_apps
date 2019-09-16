@@ -12,6 +12,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        # REVIEW also validate subscribers? maybe only if an optional flag is specified?
+
         notifications = MessengerNotification.objects.all()
         for notification in notifications:
 
