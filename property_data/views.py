@@ -8,7 +8,7 @@ from cod_utils import util
 from cod_utils import security
 from cod_utils.cod_logger import CODLogger
 from cod_utils.util import get_parcel_id
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging.msg_handler import MsgHandler
 
 from data_cache.models import DTEActiveGasSite
 from property_data.models import EscrowBalance

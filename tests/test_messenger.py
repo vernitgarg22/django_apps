@@ -17,8 +17,9 @@ from messenger import views
 from messenger.views import get_existing_object
 from messenger.models import *
 from messenger.util import NotificationException, send_messages
+from messenger.messages_meta import MessagesMeta
 
-from cod_utils import messaging
+from cod_utils.messaging.msg_handler import MsgHandler
 
 from twilio.request_validator import RequestValidator
 
@@ -142,7 +143,7 @@ class MessengerTests(MessengerBaseTests):
     # Test actual API endpoints
     def test_subscribe(self):
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+        with patch.object(MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
             mock_validate.return_value = True
 
             c = Client()
@@ -219,7 +220,7 @@ class MessengerTests(MessengerBaseTests):
     def test_subscribe_web(self):
         "Test subscribing from webpage"
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(MsgHandler, 'send_text') as mock_method:
 
             c = Client()
             response = c.post('/messenger/clients/1/subscribe/', { "phone_number": "5005550006", "address": "7840 Van Dyke Pl" })
@@ -248,7 +249,7 @@ class MessengerTests(MessengerBaseTests):
 
         setup_subscriber()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+        with patch.object(MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
             mock_validate.return_value = True
 
             c = Client()
@@ -262,7 +263,7 @@ class MessengerTests(MessengerBaseTests):
     def test_confirm_subscription_invalid_user(self):
         "Test confirming subscription with invalid user"
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+        with patch.object(MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
             mock_validate.return_value = True
 
             c = Client()
@@ -275,7 +276,7 @@ class MessengerTests(MessengerBaseTests):
 
         setup_subscriber()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
+        with patch.object(MsgHandler, 'send_text') as mock_method, patch.object(RequestValidator, 'validate') as mock_validate:
             mock_validate.return_value = True
 
             c = Client()
@@ -291,7 +292,7 @@ class MessengerTests(MessengerBaseTests):
 
         out = StringIO()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(MsgHandler, 'send_text') as mock_method:
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
@@ -318,7 +319,7 @@ class MessengerTests(MessengerBaseTests):
 
         out = StringIO()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(MsgHandler, 'send_text') as mock_method:
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
@@ -335,7 +336,7 @@ class MessengerTests(MessengerBaseTests):
 
         out = StringIO()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(MsgHandler, 'send_text') as mock_method:
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
@@ -357,7 +358,7 @@ class MessengerTests(MessengerBaseTests):
 
         out = StringIO()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(MsgHandler, 'send_text') as mock_method:
 
             call_command('send_messages', 'Elections', '--today=20191105', stdout=out)
 
@@ -384,7 +385,7 @@ class MessengerTests(MessengerBaseTests):
 
         out = StringIO()
 
-        with patch.object(messaging.MsgHandler, 'send_text') as mock_method:
+        with patch.object(MsgHandler, 'send_text') as mock_method:
 
             call_command('send_messages', 'DHSEM', '--today=20191105', stdout=out)
 
@@ -871,3 +872,21 @@ class MessengerDashboardTests(MessengerBaseTests):
         expected = { 'id': 1, 'lang': 'en', 'message': 'Get out the vote!' }
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, expected, "Notifications get returned")
+
+
+class MessagesMetaTests(MessengerBaseTests):
+
+    def test_messages_metadata(self):
+        "Test MessagesMeta"
+
+        meta = MessagesMeta(client_name='Elections', day=datetime.date(year=2019, month=11, day=5))
+
+        with patch.object(MessagesMeta, 'do_send_alerts_update') as mock_do_send_alerts_update:
+            mock_do_send_alerts_update.return_value = True
+
+            meta.update(notification=MessengerNotification.objects.first())
+
+        description = meta.describe()
+
+        expected = "\nclient: Elections\nday:    2019-11-05\n\nnotifications:\n\nid:                 1\nmessage:            Reminder: today is election day.  Your polling location is {name}, located at {location} - open in maps: https://www.google.com/maps/search/?api=1&query={lat},{lng}\ngeo layer url:      https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Elections_2019/FeatureServer/0/query?where=&objectIds=&time=&geometry={lng}%2C+{lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=false&returnCentroid=false&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=4326&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson\nformatter:          ElectionFormatter\nnum messages sent:  1\n"
+        self.assertEqual(description, expected)

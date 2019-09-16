@@ -10,7 +10,7 @@ from rest_framework import status
 from cod_utils import util
 from cod_utils import security
 from cod_utils.cod_logger import CODLogger
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging.msg_handler import MsgHandler
 from cod_utils.util import get_parcel_id
 
 from data_cache.models import DataSet, DataSource, DataValue, DataDescriptor, DataCitySummary

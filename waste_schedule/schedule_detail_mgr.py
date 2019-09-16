@@ -159,7 +159,7 @@ class ScheduleDetailMgr():
         # TODO cache this
 
         # get the data from gis server
-        r = requests.get(ScheduleDetail.GIS_URL_ALL)
+        r = requests.get(ScheduleDetail.GIS_URL_ALL, timeout=60)
 
         # find the correct route info and return it
         for feature in r.json()['features']:
@@ -180,7 +180,7 @@ class ScheduleDetailMgr():
         week_route_info = WeekRouteInfo(date)
 
         # get the data from gis server
-        r = requests.get(ScheduleDetail.GIS_URL_ALL)
+        r = requests.get(ScheduleDetail.GIS_URL_ALL, timeout=60)
 
         # put each piece of route info, into the correct day
         for feature in r.json()['features']:

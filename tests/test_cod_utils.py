@@ -3,8 +3,6 @@ from datetime import datetime
 from datetime import timedelta
 import pytz
 
-from cod_utils.messaging import SlackMsgHandler
-
 from django.conf import settings
 
 from django.test import Client
@@ -15,7 +13,8 @@ from unittest.mock import patch
 
 from cod_utils import util
 from cod_utils import security
-from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
+from cod_utils.messaging.msg_handler import MsgHandler, get_dpw_msg_handler
+from cod_utils.messaging.slack import SlackMsgHandler
 
 from slackclient import SlackClient
 
@@ -160,10 +159,10 @@ class CODUtilsMsgHandlerTests(TestCase):
 
         mocked_slackclient_api_call.return_value = {'ok': True}
         previous_dry_run = SlackMsgHandler.DRY_RUN
-        MsgHandler.DRY_RUN = False
+        SlackMsgHandler.DRY_RUN = False
         sent = SlackMsgHandler().send_admin_alert(message="testing")
         self.assertTrue(sent, "MsgHandler sends an admin alert")
-        MsgHandler.DRY_RUN = previous_dry_run
+        SlackMsgHandler.DRY_RUN = previous_dry_run
 
 
 class SlackMsgHandlerTests(TestCase):

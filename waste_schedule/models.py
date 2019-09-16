@@ -213,7 +213,7 @@ class ScheduleDetail(models.Model):
         url = ScheduleDetail.GIS_URL_DAY.format(weekday_str)
 
         # retrieve data and parse out a map of route ids (FIDs) and A or B weeks
-        r = requests.get(url)
+        r = requests.get(url, timeout=60)
 
         # features = [ feature for feature in r.json()['features'] ]
         features = [ feature for feature in r.json()['features'] if ScheduleDetail.is_same_service_type(service_type, feature['attributes']['services']) ]

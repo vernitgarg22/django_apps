@@ -34,6 +34,7 @@ if __name__ == "__main__":
     # test_labels = ["tests.test_messenger"]
     # test_labels = ["tests.test_messenger.MessengerTests.test_confirm_subscription"]
     # test_labels = ["tests.test_messenger.MessengerSubscriberValidationTests.test_validate_timestamps"]
+    # test_labels = ["tests.test_messenger.MessagesMetaTests"]
     # test_labels = ["tests.test_photo_survey"]
     # test_labels = ["tests.test_property_data"]
     # test_labels = ["tests.test_photo_survey.BridgingNeighborhoodsTests"]

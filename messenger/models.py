@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 from cod_utils.util import is_address_valid, geocode_address, date_json
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging.msg_handler import MsgHandler
 
 
 class MessengerClient(models.Model):

@@ -5,7 +5,7 @@ import re
 from waste_schedule.models import ScheduleDetail
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from cod_utils import util
-from cod_utils.messaging import SlackMsgHandler
+from cod_utils.messaging.slack import SlackAlertProgressHandler
 
 from waste_wizard.models import WasteItem
 
@@ -58,36 +58,6 @@ def format_slack_alerts_summary(content):
         summary = summary + "\n\nTotal information notices sent out:  {}".format(len(content['citywide'].get('subscribers', [])))
 
     return summary
-
-
-class WasteNotifierSlackHandler():
-
-    def __init__(self):
-
-        self.slack_msg_handler = SlackMsgHandler()
-
-    def slack_alerts_start(self):
-        """
-        Slack a message indicating that waste alerts are beginning to channel #z_twilio.
-        """
-
-        self.slack_msg_handler.send(message="Beginning DPW Waste Pickup Reminders")
-
-    def slack_alerts_update(self, msg_cnt = 0):
-        """
-        Slacks a progress update of waste pickup alerts to channel #z_twilio.
-        """
-
-        message = "{} messages sent".format(msg_cnt)
-        self.slack_msg_handler.comment(message=message)
-
-    def slack_alerts_summary(self, content):
-        """
-        Slacks a summary of waste pickup alerts to channel #z_twilio.
-        """
-
-        summary = format_slack_alerts_summary(content)
-        self.slack_msg_handler.comment(message=summary)
 
 
 def includes_yard_waste(services):
@@ -187,7 +157,7 @@ def get_waste_area_ids(location, ids_only = True):
     # Now look up waste areas for this location
     GIS_ADDRESS_LOOKUP_URL = "https://gis.detroitmi.gov/arcgis/rest/services/DPW/2019Services/MapServer/0/query?where=&text=&objectIds=&time=&geometry={}%2C+{}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&f=json"
     url = GIS_ADDRESS_LOOKUP_URL.format(location['location']['x'], location['location']['y'])
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
 
     if ids_only:
         return [ feature['attributes']['FID'] for feature in response.json()['features'] ]
