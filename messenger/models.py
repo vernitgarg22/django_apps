@@ -3,6 +3,7 @@ import re
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 
 from cod_utils.util import is_address_valid, geocode_address, date_json
 from cod_utils.messaging import MsgHandler
@@ -121,6 +122,26 @@ class MessengerNotification(models.Model):
     day = models.DateField('Day on which notification should be sent')
     geo_layer_url = models.CharField('Geo Layer URL', max_length=1024, blank=True, null=True)
     formatter = models.CharField('Formatter class to render message', max_length=64, blank=True, null=True, choices=FORMATTER_CHOICES)
+
+    def validate(self):
+        """
+        Throws an ValidationError exception if the notification is not valid.
+        """
+
+        # All notifications must have a message.
+        if not self.messengermessage_set.exists():
+            raise ValidationError({'message': "Notification has no messages"})
+
+        # All notifications must have a location.
+        if not self.locations.exists():
+            raise ValidationError({'message': "Notification has no locations"})
+
+        # geo_layer_url must be a valid url.
+        validator = URLValidator()
+        try:
+            validator(self.geo_layer_url)
+        except ValidationError as err:
+            raise ValidationError({'geo_layer_url': "geo_layer_url {} is not valid".format(self.geo_layer_url)})
 
     def get_message_by_lang(self, lang):
         """

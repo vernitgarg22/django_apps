@@ -565,6 +565,56 @@ class MessengerSubscriberValidationTests(TestCase):
             subscriber.validate()
 
 
+class MessengerNotificationValidationTests(TestCase):
+
+    def setUp(self):
+        """
+        Set up each unit test, including making sure database is properly cleaned up before each test
+        """
+
+        test_util.cleanup_model(MessengerNotification)
+
+        setup_messenger()
+
+    def test_notification_missing_msg(self):
+        "Notification must have a message"
+
+        MessengerMessage.objects.all().delete()
+
+        with self.assertRaises(ValidationError):
+            MessengerNotification.objects.first().validate()
+
+    def test_notification_missing_location(self):
+        "Notification must have a location"
+
+        MessengerLocation.objects.all().delete()
+
+        with self.assertRaises(ValidationError):
+            MessengerNotification.objects.first().validate()
+
+    def test_notification_invalid_geo_layer_url(self):
+        "Notification must have a valid geo layer url"
+
+        notification = MessengerNotification.objects.first()
+        notification.geo_layer_url = "invalid"
+
+        with self.assertRaises(ValidationError):
+            notification.validate()
+
+    def test_notification_action(self):
+        "Notifications can be validated from command line"
+
+        notification = MessengerNotification.objects.first()
+        notification.geo_layer_url = "invalid"
+        notification.save()
+
+        out = StringIO()
+        call_command('validate_messenger', stdout=out)
+
+        out.seek(0)
+        self.assertEqual(out.read(), 'Notification 1 - Elections - 2019-11-05 is invalid: geo_layer_url invalid is not valid\n')
+
+
 class MessengerDashboardTests(MessengerBaseTests):
 
     def test_add_notification(self):
