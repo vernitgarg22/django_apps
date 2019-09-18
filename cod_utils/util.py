@@ -4,7 +4,6 @@ import pytz
 from pytz import timezone
 import re
 
-from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 

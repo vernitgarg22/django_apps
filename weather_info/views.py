@@ -33,7 +33,7 @@ def get_latest(request, lat="42.331427", lon="-83.045754"):
 
     url = "https://forecast.weather.gov/MapClick.php?lat={0}&lon={1}&unit=0&lg=english&FcstType=dwml".format(lat, lon)
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
     data = xmltodict.parse(response.text)
     new_data = remover(data)
 

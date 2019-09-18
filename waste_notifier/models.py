@@ -12,7 +12,8 @@ from waste_schedule.models import ScheduleDetail, BiWeekType
 from waste_schedule.schedule_detail_mgr import ScheduleDetailMgr
 from waste_notifier.util import get_waste_area_ids
 from cod_utils import util
-from cod_utils.messaging import get_dpw_msg_handler, SlackMsgHandler
+from cod_utils.messaging.msg_handler import get_dpw_msg_handler
+from cod_utils.messaging.slack import SlackMsgHandler
 from cod_utils.cod_logger import CODLogger
 
 

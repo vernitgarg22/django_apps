@@ -13,7 +13,8 @@ from messenger.util import get_messenger_msg_handler
 
 from cod_utils import util
 import cod_utils.security
-from cod_utils.messaging import SlackMsgHandler, MsgHandler
+from cod_utils.messaging.msg_handler import MsgHandler
+from cod_utils.messaging.slack import SlackMsgHandler
 from cod_utils.cod_logger import CODLogger
 
 

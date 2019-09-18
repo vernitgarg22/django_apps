@@ -6,7 +6,7 @@ import re
 from django.core.management.base import BaseCommand, CommandError
 
 from cod_utils import util
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging.msg_handler import MsgHandler
 
 from waste_notifier import views
 

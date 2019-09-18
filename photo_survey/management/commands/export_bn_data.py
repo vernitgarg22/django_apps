@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from photo_survey.models import ParcelMetadata, SurveyType, Survey
 from assessments.models import ParcelMaster
 
-from cod_utils.messaging import MsgHandler
+from cod_utils.messaging.msg_handler import MsgHandler
 
 
 def get_user_name(user):

@@ -62,7 +62,7 @@ def get_next_pickups(route_ids, schedule_details, today=datetime.date.today()):
     Get a dict object listing info about the next pickup for each service
     """
 
-    r = requests.get(ScheduleDetail.GIS_URL_ALL)
+    r = requests.get(ScheduleDetail.GIS_URL_ALL, timeout=60)
     routes = [ { "route": feature['attributes']['FID'], 'services': feature['attributes']['services'], 'day': feature['attributes']['day'], 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] if int(feature['attributes']['FID']) in route_ids ]
  
     content = {}

@@ -7,7 +7,6 @@ from rest_framework.exceptions import PermissionDenied
 
 from twilio.request_validator import RequestValidator
 from twilio.rest import Client
-from slackclient import SlackClient
 
 
 class MsgHandlerConfig():
@@ -164,55 +163,3 @@ class MsgHandler():
         except:    # pragma: no cover
             print("Error received sending twilio msg to number {}".format(phone_number))
             return False
-
-
-class SlackMsgHandler():
-
-    DRY_RUN = settings.DEBUG or settings.DRY_RUN
-
-    def __init__(self):
-
-        self.client = SlackClient(settings.AUTO_LOADED_DATA["SLACK_API_TOKEN"])
-        self.ts = None
-
-    def send(self, message, channel="#z_twilio"):
-        """
-        Slack a message to the City of Detroit #zzz slack channel
-        """
-
-        if SlackMsgHandler.DRY_RUN:
-            return False
-
-        result = self.client.api_call("chat.postMessage", channel=channel, text=message, timeout=60)
-
-        self.ts = result.get('ts', None)
-        return result.get('ok', False)
-
-    def comment(self, message, channel="#z_twilio"):
-
-        if SlackMsgHandler.DRY_RUN or not self.ts:
-            return False
-
-        result = self.client.api_call(
-            "chat.postMessage",
-            channel=channel,
-            text=message,
-            thread_ts=self.ts,
-            timeout=60
-        )
-
-        return result.get('ok', False)
-
-    def send_admin_alert(self, message, dry_run_param = False):
-        """
-        Send admins an alert.
-        """
-
-        if MsgHandler.DRY_RUN or dry_run_param:
-            return False    # pragma: no cover
-
-        # REVIEW: use a better channel (e.g., #alerts-admin?)
-        result = self.client.api_call("chat.postMessage", channel="#z_testing", text=message, timeout=60)
-
-        self.ts = result.get('ts', None)
-        return result.get('ok', False)

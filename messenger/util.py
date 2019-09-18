@@ -6,8 +6,9 @@ from urllib.parse import quote_plus
 from django.core.management.base import CommandError
 
 from messenger.models import MessengerClient, MessengerPhoneNumber, MessengerNotification, MessengerSubscriber
+from messenger.messages_meta import MessagesMeta
 
-from cod_utils.messaging import MsgHandler, get_dhsem_msg_handler, get_elections_msg_handler
+from cod_utils.messaging.msg_handler import MsgHandler, get_dhsem_msg_handler, get_elections_msg_handler
 from cod_utils.util import date_json
 
 
@@ -122,72 +123,6 @@ def format_message(notification, subscriber):
 
     formatter = klz(notification=notification, subscriber=subscriber, geo_layer_data=response.json())
     return formatter.format_message()
-
-
-class MessagesMeta():
-
-    class NotificationMeta():
-
-        def __init__(self, notification):
-
-            self.notification = notification
-            self.num_messages_sent = 0
-
-        def update(self):
-
-            self.num_messages_sent += 1
-
-        def describe(self):
-
-            messenger_message = self.notification.get_message_by_lang(lang=None)
-
-            description = """
-id:                 {id}
-message:            {message}
-geo layer url:      {geo_layer_url}
-formatter:          {formatter}
-num messages sent:  {num_messages_sent}
-""".format(id=self.notification.id,
-message=messenger_message.message, geo_layer_url=self.notification.geo_layer_url, formatter=self.notification.formatter, num_messages_sent=self.num_messages_sent)
-
-            return description
-
-    def __init__(self, client_name, day):
-
-        self.client_name = client_name
-        self.day = day
-        self.notifications_meta = {}
-
-    def update(self, notification):
-        """
-        Updates the notification metadata for each message sent.
-        """
-
-        if not self.notifications_meta.get(notification.id, None):
-
-            notification_meta = MessagesMeta.NotificationMeta(notification=notification)
-            self.notifications_meta[notification.id] = notification_meta
-
-        self.notifications_meta[notification.id].update()
-
-    def describe(self):
-
-        description = """
-client: {client_name}
-day:    {day}
-
-notifications:""".format(client_name=self.client_name, day=self.day)
-
-        if self.notifications_meta:
-
-            for notification_meta in self.notifications_meta.values():
-                description += "\n" + notification_meta.describe()
-
-
-        else:
-            description += "  (No notifications sent)"
-
-        return description
 
 
 def send_messages(client_name, day, dry_run_param=False):

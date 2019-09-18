@@ -18,7 +18,8 @@ from waste_schedule.util import *
 import cod_utils.util
 import cod_utils.security
 from cod_utils.util import date_json
-from cod_utils.messaging import MsgHandler, get_dpw_msg_handler
+from cod_utils.messaging.msg_handler import MsgHandler, get_dpw_msg_handler
+from cod_utils.messaging.slack import SlackMsgHandler, SlackAlertProgressHandler
 from cod_utils.cod_logger import CODLogger
 
 from waste_schedule.models import ScheduleDetail
@@ -254,7 +255,7 @@ def send_notifications(date, dry_run_param=False):
         subscribers_services_details.append(subscribers_services_detail)
 
     # Start a slack thread with progress report
-    slack_handler = WasteNotifierSlackHandler()
+    slack_handler = SlackAlertProgressHandler(description="DPW Waste Pickup Reminders")
     slack_handler.slack_alerts_start()
 
     msg_cnt = 0
@@ -288,7 +289,8 @@ def send_notifications(date, dry_run_param=False):
     content = NotificationContent(subscribers_services, subscribers_services_details, date, dry_run_param)
 
     # Slack the json response summary
-    slack_handler.slack_alerts_summary(content=content.get_content())
+    summary = format_slack_alerts_summary(content=content.get_content())
+    slack_handler.slack_alerts_summary(summary=summary)
 
     return content.get_content()
 
@@ -468,7 +470,7 @@ def get_route_info(request, format=None):
     routes_by_day = [ { day: [] } for day in ScheduleDetail.DAYS[:-2] ]
 
     # Build a list route info objects for all routes
-    r = requests.get(ScheduleDetail.GIS_URL_ALL)
+    r = requests.get(ScheduleDetail.GIS_URL_ALL, timeout=60)
     routes = [ { "route": feature['attributes']['FID'], 'services': feature['attributes']['services'], 'day': feature['attributes']['day'], 'week': feature['attributes']['week'], 'contractor': feature['attributes']['contractor'] } for feature in r.json()['features'] ]
 
     # Loop through the routes, adding each one to the correct day

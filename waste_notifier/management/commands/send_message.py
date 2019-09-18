@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from cod_utils.messaging import get_dpw_msg_handler
+from cod_utils.messaging.msg_handler import get_dpw_msg_handler
 
 
 class Command(BaseCommand):
